@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: zero_trust_backend
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: sh -c "python main.py && while true; do echo 'Agent translation log...'; sleep 2; done"
+    
+  frontend:
+    build: 
+      context: ./studio
+    container_name: zero_trust_frontend
+    ports:
+      - "3000:3000"
+    command: npm start
+
+  database_stream:
+    image: alpine
+    container_name: database_stream
+    command: sh -c "while true; do echo 'Database stream log...'; sleep 1; done"
+
+  bigquery_output:
+    image: alpine
+    container_name: bigquery_output
+    command: sh -c "while true; do echo 'BigQuery output log...'; sleep 3; done"

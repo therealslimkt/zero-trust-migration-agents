@@ -1,0 +1,14 @@
+# Tailscale Manual Installation for Jetson Nano (ARM64 Ubuntu)
+
+# 1. Add Tailscale's security key
+curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/$(lsb_release -cs).noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+
+# 2. Add the Tailscale repository
+curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/$(lsb_release -cs).tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+
+# 3. Update packages and install Tailscale
+sudo apt-get update
+sudo apt-get install tailscale -y
+
+# 4. Connect to the Tailnet
+sudo tailscale up
