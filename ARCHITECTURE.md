@@ -9,39 +9,31 @@ To solve the "Data Gravity" and privacy concerns of enterprise AI, this fleet op
 
 ---
 
-## 🏗️ The Fleet (Agent Roles)
+## 🏗️ The Infrastructure Layer (GCP vs Snowflake)
+A massive competitive advantage of this architecture is its native reliance on Google Cloud's infrastructure, which inherently supports legacy compute hosting—something pure data warehouses like Snowflake cannot do.
+
+*   **AS/400 & Mainframes:** Hosted natively using **IBM Power Systems on Google Cloud**.
+*   **Legacy Windows/Linux ERPs:** Hosted natively using **Google Cloud VMware Engine (GCVE)**.
+
+By hosting the "Cartridges" directly in GCP, the Agentic Fleet translates the proprietary streams (EBCDIC, Btrieve) entirely within the Google Cloud perimeter, eliminating the need for expensive 3rd-party integration middleware.
+
+---
+
+## 🤖 The Fleet (Agent Roles)
 
 ### 1. Orchestrator (Main Agent)
 *   **Role:** The manager. Receives the migration task, tracks state, and delegates work to specialized subagents.
 *   **Model:** Gemini 3.5 Pro (via Google Cloud Vertex AI).
-*   **SDK Feature:** Uses native `invoke_subagent` to spawn child conversations.
 
-### 2. Edge Security Agent (The "Privacy Buffer")
-*   **Role:** Runs *locally* on the edge (e.g., MacBook M5 Max / DGX). Scans all legacy data for Personally Identifiable Information (PII) before it leaves the internal network.
-*   **Model:** Gemma (Small Language Model).
-*   **SDK Feature:** `LiteRTAgentConfig` / `LocalOpenAIAgentConfig`. Runs entirely offline. Intercepts data via SDK lifecycle hooks (`pre_turn`).
+### 2. Edge Security Agent (The "Privacy Firewall")
+*   **Role:** Runs *locally* on edge hardware (Jetson Nano/Sparky). Scans all legacy data for Personally Identifiable Information (PII) before it leaves the internal network.
+*   **Model:** Gemma 2B (Local LLM) and SpaCy (NER).
 
 ### 3. Researcher Agent
-*   **Role:** Given a hex dump or legacy schema, searches the internet and documentation to find how to parse it.
-*   **Policy:** Read-only web access. Cannot execute code.
+*   **Role:** Given a hex dump or legacy schema, searches the internet to find open-source decoders.
 
 ### 4. Reverse-Engineer Agent
-*   **Role:** Writes the Python parsing scripts based on the Researcher's findings.
-*   **Policy:** Cannot execute code locally. Must pass code to the sandbox.
+*   **Role:** Writes the Google Cloud Dataflow (Apache Beam) pipelines based on the Researcher's findings.
 
 ### 5. Execution Agent (Cloud Sandbox)
-*   **Role:** Takes the code written by the Reverse-Engineer and tests it against sample data.
-*   **Infrastructure:** Runs in an isolated **Google Cloud Run** container.
-*   **Zero-Trust Aspect:** If the AI writes malicious or destructive code, the blast radius is confined to the ephemeral container.
-
-### 6. Pipeline Agent
-*   **Role:** Infers the final schema and pushes the parsed data to **Google BigQuery**.
-*   **SDK Feature:** Uses Pydantic structured output to guarantee the generated schema matches BigQuery's strict requirements.
-
----
-
-## 🛠️ Technology Stack
-*   **Framework:** Google Antigravity (AGY) SDK
-*   **Cloud Infrastructure:** Google Cloud Run, Google BigQuery, Vertex AI
-*   **Tooling Protocol:** Model Context Protocol (MCP) for isolated tool execution.
-*   **Observability:** Skin Studio Mission Control (Local React Dashboard)
+*   **Role:** Takes the code written by the Reverse-Engineer and executes it in an isolated Google Cloud Run container.
