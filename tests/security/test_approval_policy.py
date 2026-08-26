@@ -16,7 +16,8 @@ PolicyDenied = approval_policy.PolicyDenied
 authorize_run = approval_policy.authorize_run
 check_non_overridable = approval_policy.check_non_overridable
 
-VALID_DIGEST = "a" * 64
+VALID_DIGEST = "sha256:" + "a" * 64
+VALID_RUN_ID = "mig_123456789012"
 
 
 def make_record(**overrides):
@@ -24,7 +25,7 @@ def make_record(**overrides):
         "approver": "alice@example.com",
         "plan_digest": VALID_DIGEST,
         "timestamp": "2026-08-26T12:00:00Z",
-        "portfolio_run_id": "run-42",
+        "portfolio_run_id": VALID_RUN_ID,
     }
     fields.update(overrides)
     return ApprovalRecord(**fields)
@@ -34,7 +35,7 @@ def test_valid_approval_record_constructs():
     record = make_record()
     assert record.approver == "alice@example.com"
     assert record.plan_digest == VALID_DIGEST
-    assert record.portfolio_run_id == "run-42"
+    assert record.portfolio_run_id == VALID_RUN_ID
 
 
 @pytest.mark.parametrize(
@@ -43,9 +44,11 @@ def test_valid_approval_record_constructs():
         {"approver": ""},
         {"plan_digest": "not-a-digest"},
         {"plan_digest": "a" * 63},
+        {"plan_digest": "a" * 64},
         {"timestamp": ""},
         {"timestamp": "not-a-timestamp"},
         {"portfolio_run_id": ""},
+        {"portfolio_run_id": "run-42"},
     ],
 )
 def test_malformed_approval_record_rejected(overrides):
@@ -55,20 +58,28 @@ def test_malformed_approval_record_rejected(overrides):
 
 def test_authorize_run_succeeds_for_matching_digest_and_run():
     record = make_record()
-    result = authorize_run(record, plan_digest=VALID_DIGEST, portfolio_run_id="run-42")
+    result = authorize_run(record, plan_digest=VALID_DIGEST, portfolio_run_id=VALID_RUN_ID)
     assert result is record
 
 
 def test_authorize_run_denies_digest_mismatch():
     record = make_record()
     with pytest.raises(PolicyDenied):
-        authorize_run(record, plan_digest="b" * 64, portfolio_run_id="run-42")
+        authorize_run(
+            record,
+            plan_digest="sha256:" + "b" * 64,
+            portfolio_run_id=VALID_RUN_ID,
+        )
 
 
 def test_authorize_run_denies_portfolio_run_id_mismatch():
     record = make_record()
     with pytest.raises(PolicyDenied):
-        authorize_run(record, plan_digest=VALID_DIGEST, portfolio_run_id="run-99")
+        authorize_run(
+            record,
+            plan_digest=VALID_DIGEST,
+            portfolio_run_id="mig_999999999999",
+        )
 
 
 @pytest.mark.parametrize(
@@ -86,7 +97,7 @@ def test_non_overridable_denial_wins_even_with_valid_matching_approval():
         authorize_run(
             record,
             plan_digest=VALID_DIGEST,
-            portfolio_run_id="run-42",
+            portfolio_run_id=VALID_RUN_ID,
             categories={"raw_pii"},
         )
 
