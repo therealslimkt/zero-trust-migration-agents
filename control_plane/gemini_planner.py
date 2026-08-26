@@ -196,6 +196,19 @@ def _walk_keys(value: object, forbidden: frozenset[str], message: str) -> None:
             _walk_keys(child, forbidden, message)
 
 
+def _unwrap_json_text(response: str) -> str:
+    """Accept JSON or one exact Markdown fence, never explanatory prose."""
+
+    stripped = response.strip()
+    for opening in ("```json\n", "```JSON\n", "```\n"):
+        if stripped.startswith(opening) and stripped.endswith("\n```"):
+            inner = stripped[len(opening) : -4].strip()
+            if "```" in inner:
+                break
+            return inner
+    return stripped
+
+
 def _schema_validators() -> dict[str, Draft202012Validator]:
     schema_dir = Path(__file__).resolve().parents[1] / "contracts" / "schemas"
     names = {
@@ -451,7 +464,7 @@ class GeminiPlanCompiler:
             if len(response.encode("utf-8")) > MAX_MODEL_RESPONSE_BYTES:
                 raise PlanCompilationError("Gemini response exceeds the size limit")
             try:
-                draft = json.loads(response)
+                draft = json.loads(_unwrap_json_text(response))
             except json.JSONDecodeError:
                 raise PlanCompilationError("Gemini returned invalid JSON") from None
         elif isinstance(response, Mapping):

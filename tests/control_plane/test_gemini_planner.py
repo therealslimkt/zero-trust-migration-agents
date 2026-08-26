@@ -197,6 +197,24 @@ class GeminiPlanCompilerTests(unittest.IsolatedAsyncioTestCase):
         ).compile(RUN_ID, artifacts())
         self.assertEqual(first.portfolio_digest, second.portfolio_digest)
 
+    async def test_accepts_one_exact_json_fence_but_rejects_prose(self):
+        encoded = json.dumps(valid_draft())
+        portfolio = await GeminiPlanCompiler(
+            RecordingModel("```json\n" + encoded + "\n```"),
+            "gemini-3.5-flash",
+        ).compile(RUN_ID, artifacts())
+        self.assertEqual(len(portfolio.plans), 3)
+
+        for response in (
+            "Here is the plan: " + encoded,
+            "```json\n" + encoded + "\n``` trailing",
+            "```json\n```json\n" + encoded + "\n```\n```",
+        ):
+            with self.assertRaises(PlanCompilationError):
+                await GeminiPlanCompiler(
+                    RecordingModel(response), "gemini-3.5-flash"
+                ).compile(RUN_ID, artifacts())
+
     async def test_preflight_failures_do_not_call_model(self):
         variants = []
         missing = artifacts()
