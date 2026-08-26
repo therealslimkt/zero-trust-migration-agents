@@ -16,6 +16,7 @@ import math
 import re
 from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Callable
 
 from jsonschema import Draft202012Validator
@@ -40,9 +41,30 @@ class ExecutionResult:
 
     source_id: str
     target: dict[str, str]
-    rows: tuple[dict[str, dict[str, object]], ...] = dataclasses.field(repr=False)
+    rows: tuple[Mapping[str, Mapping[str, object]], ...] = dataclasses.field(
+        repr=False
+    )
     record_count: int
     output_digest: str
+
+    def __post_init__(self) -> None:
+        frozen_rows = tuple(
+            MappingProxyType(
+                {
+                    field: MappingProxyType(dict(cell))
+                    for field, cell in row.items()
+                }
+            )
+            for row in self.rows
+        )
+        object.__setattr__(self, "rows", frozen_rows)
+
+    def as_rows(self) -> tuple[dict[str, dict[str, object]], ...]:
+        """Return detached rows for a trusted destination writer."""
+
+        return tuple(
+            {field: dict(cell) for field, cell in row.items()} for row in self.rows
+        )
 
 
 _SCHEMA_DIR = Path(__file__).resolve().parents[1] / "contracts" / "schemas"
@@ -118,13 +140,13 @@ def _records_from_batch(batch: Mapping[str, object]) -> list[dict[str, _Cell]]:
     records: list[dict[str, _Cell]] = []
     expected_fields: frozenset[str] | None = None
 
-    for raw_record in raw_records:
+    for expected_ordinal, raw_record in enumerate(raw_records):
         record = _require_plain_mapping(raw_record, "batch_integrity")
         ordinal = record["ordinal"]
         record_id = record["recordId"]
         if not isinstance(ordinal, int) or isinstance(ordinal, bool):
             _reject("batch_ordinals")
-        if ordinal in ordinals:
+        if ordinal != expected_ordinal or ordinal in ordinals:
             _reject("batch_ordinals")
         if not isinstance(record_id, str) or record_id in record_ids:
             _reject("batch_record_ids")
@@ -251,15 +273,20 @@ def _cast_date(value: object) -> dt.date:
 
 
 def _cast_timestamp(value: object) -> dt.datetime:
+    result: dt.datetime
     if isinstance(value, dt.datetime):
-        return value
-    if isinstance(value, str):
+        result = value
+    elif isinstance(value, str):
         candidate = value[:-1] + "+00:00" if value.endswith("Z") else value
         try:
-            return dt.datetime.fromisoformat(candidate)
+            result = dt.datetime.fromisoformat(candidate)
         except ValueError as exc:
             raise ValueError from exc
-    raise ValueError
+    else:
+        raise ValueError
+    if result.tzinfo is None or result.utcoffset() is None:
+        raise ValueError
+    return result
 
 
 def _cast_boolean(value: object) -> bool:

@@ -158,6 +158,11 @@ def test_valid_closed_operations_and_every_declared_type():
     assert result.output_digest.startswith("sha256:")
     with pytest.raises(dataclasses.FrozenInstanceError):
         result.record_count = 2
+    with pytest.raises(TypeError):
+        result.rows[0]["string_value"]["value"] = "changed"
+    detached = result.as_rows()
+    detached[0]["string_value"]["value"] = "changed"
+    assert result.rows[0]["string_value"]["value"] == "kept"
 
 
 def test_output_is_deterministic_and_hashes_rows_only():
@@ -271,7 +276,7 @@ def test_duplicate_record_fields_are_rejected():
         _execute(batch=batch)
 
 
-@pytest.mark.parametrize("ordinals", [[0, 0], [0, 2]])
+@pytest.mark.parametrize("ordinals", [[0, 0], [0, 2], [1, 0]])
 def test_duplicate_or_missing_ordinals_are_rejected(ordinals):
     batch = _batch()
     batch["recordCount"] = 2
@@ -281,6 +286,27 @@ def test_duplicate_or_missing_ordinals_are_rejected(ordinals):
         record["ordinal"] = ordinal
     with pytest.raises(ExecutionRejected, match="^batch_ordinals$"):
         _execute(batch=batch)
+
+
+def test_naive_timestamp_is_rejected():
+    plan = _plan(
+        operations=[
+            {
+                "operation": "cast",
+                "field": "old",
+                "targetType": "timestamp",
+                "invalidPolicy": "reject",
+            }
+        ],
+        output_fields=[
+            {"name": "old", "type": "timestamp", "nullable": False}
+        ],
+    )
+    batch = _batch(
+        [{"field": "old", "protection": "sanitized", "value": "2026-08-26T12:00:00"}]
+    )
+    with pytest.raises(ExecutionRejected, match="^invalid_cast$"):
+        _execute(plan, batch)
 
 
 def test_record_count_and_record_ids_are_exact_and_unique():
