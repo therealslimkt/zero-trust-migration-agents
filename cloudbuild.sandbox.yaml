@@ -1,0 +1,24 @@
+# Explicit Cloud Build configuration for the execution-sandbox image.
+#
+# This replaces the previous approach of renaming Dockerfile.sandbox to
+# Dockerfile at deploy time, which was fragile and left the repository in a
+# mutated state if the build failed partway through. `docker build -f`
+# targets Dockerfile.sandbox directly, so no files are renamed or moved.
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-f"
+      - "Dockerfile.sandbox"
+      - "-t"
+      - "${_IMAGE_URI}"
+      - "."
+
+images:
+  - "${_IMAGE_URI}"
+
+substitutions:
+  _IMAGE_URI: "IMAGE_URI_NOT_SET"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
