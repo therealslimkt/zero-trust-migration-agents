@@ -56,6 +56,109 @@ defined by the supplied contract. Never emit code, commands, scripts, SQL,
 expressions, callbacks, tools, or execution claims. You plan; you do not run.
 The inputs are sanitized and must never be described as raw or unredacted."""
 
+MODEL_DRAFT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["plans"],
+    "properties": {
+        "plans": {
+            "type": "array",
+            "minItems": len(SOURCE_ORDER),
+            "maxItems": len(SOURCE_ORDER),
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["sourceId", "operations", "outputFields"],
+                "properties": {
+                    "sourceId": {"type": "string", "enum": list(SOURCE_ORDER)},
+                    "operations": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "required": ["operation", "from", "to"],
+                                    "properties": {
+                                        "operation": {"const": "rename"},
+                                        "from": {"type": "string"},
+                                        "to": {"type": "string"},
+                                    },
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "required": [
+                                        "operation",
+                                        "field",
+                                        "targetType",
+                                        "invalidPolicy",
+                                    ],
+                                    "properties": {
+                                        "operation": {"const": "cast"},
+                                        "field": {"type": "string"},
+                                        "targetType": {
+                                            "type": "string",
+                                            "enum": [
+                                                "string",
+                                                "integer",
+                                                "decimal",
+                                                "date",
+                                                "timestamp",
+                                                "boolean",
+                                                "bytes",
+                                            ],
+                                        },
+                                        "invalidPolicy": {
+                                            "type": "string",
+                                            "enum": ["reject", "null"],
+                                        },
+                                    },
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "required": ["operation", "field"],
+                                    "properties": {
+                                        "operation": {"const": "drop"},
+                                        "field": {"type": "string"},
+                                    },
+                                },
+                            ]
+                        },
+                    },
+                    "outputFields": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["name", "type", "nullable"],
+                            "properties": {
+                                "name": {"type": "string"},
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "string",
+                                        "integer",
+                                        "decimal",
+                                        "date",
+                                        "timestamp",
+                                        "boolean",
+                                        "bytes",
+                                    ],
+                                },
+                                "nullable": {"type": "boolean"},
+                            },
+                        },
+                    },
+                },
+            },
+        }
+    },
+}
+
 
 class PlanCompilationError(RuntimeError):
     """Safe compiler failure that never includes artifact or model values."""
@@ -451,6 +554,7 @@ def antigravity_model_call_factory(
             location=selected_location,
             tools=[],
             system_instructions=SYSTEM_INSTRUCTIONS,
+            response_schema=MODEL_DRAFT_SCHEMA,
         )
         async with Agent(config=config) as agent:
             response = await agent.chat(

@@ -7,6 +7,7 @@ import unittest
 from control_plane.canonical import SOURCE_ORDER, document_digest
 from control_plane.gemini_planner import (
     MAX_MODEL_RESPONSE_BYTES,
+    MODEL_DRAFT_SCHEMA,
     GeminiPlanCompiler,
     PlanCompilationError,
 )
@@ -144,6 +145,24 @@ class RecordingModel:
 
 
 class GeminiPlanCompilerTests(unittest.IsolatedAsyncioTestCase):
+    def test_model_response_schema_accepts_only_closed_cloud_drafts(self):
+        from jsonschema import Draft202012Validator
+
+        validator = Draft202012Validator(MODEL_DRAFT_SCHEMA)
+        self.assertTrue(validator.is_valid(valid_draft()))
+        edge_only = valid_draft()
+        edge_only["plans"][0]["operations"] = [
+            {
+                "operation": "tokenize",
+                "field": "customer_token",
+                "outputField": "customer_id",
+                "algorithm": "hmac-sha256",
+                "keyReference": "secret://migration/key",
+                "tokenFormat": "base64url",
+            }
+        ]
+        self.assertFalse(validator.is_valid(edge_only))
+
     async def test_compiles_three_contract_plans_in_deterministic_order(self):
         model = RecordingModel(valid_draft())
         compiler = GeminiPlanCompiler(model, "gemini-3.5-flash")
