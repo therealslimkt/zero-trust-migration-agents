@@ -11,7 +11,7 @@ The Zero-Trust Migration Fleet executes autonomous schema discovery, reverse-eng
 ### Role Separation: Build-Time vs. Product Runtime
 
 - **Build-Time Engineering & Review:** OpenAI Codex and Anthropic Claude act exclusively as developer tooling, static analysis checkers, and code reviewers during development. They have zero presence in production runtime.
-- **Product Runtime Engine:** Production runtime is powered exclusively by **Gemini 3.5 Flash** hosted on Google Cloud Vertex AI in `us-central1`.
+- **Product Runtime Engine:** The target runtime is powered exclusively by **Gemini 3.5 Flash or newer** through Google Cloud Vertex AI. The selected model and `us-central1` endpoint must pass the deployment availability probe before being described as live.
 
 ## 2. Edge Privacy Firewall & Ingestion Boundary
 
@@ -72,7 +72,7 @@ Edge sources -> Sparky privacy firewall -> Orchestrator
 | Dimension | Milestone 0 baseline | Target behavior |
 | --- | --- | --- |
 | Agent output | Loose chat and generated Python | Declarative schema-validated JSON only |
-| Region | Prototype uses `asia-northeast1` | Verified Vertex AI runtime in `us-central1` |
+| Region | Prototype uses `asia-northeast1` | Configure `us-central1` after the model-availability gate passes |
 | Edge privacy | Mock payload and cloud-based redaction | Deterministic rules plus true local Gemma |
 | Execution | Cloud Run arbitrary `exec()` | Trusted pre-registered Dataflow template |
 | Approval | Simulated automatic continuation | Blocking portfolio approval bound to digest |

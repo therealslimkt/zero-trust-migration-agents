@@ -76,5 +76,5 @@ The target `migration_audit` table records run ID, plan digest, source checksum,
 | IAM | Default Compute identity with Editor | Dedicated resource-scoped identities |
 | Runner | Contained arbitrary-execution Cloud Run service | Trusted Dataflow Flex Template |
 | Warehouse | No migration dataset | Four verified target/audit tables |
-| Region | Mixed regions | Verified and documented regional alignment |
+| Region | Mixed regions | One documented region after the model-availability gate passes |
 | Network | MaxDB still has a public IP | All source access through MagicDNS |
