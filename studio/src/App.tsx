@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 
-import { SOURCE_ORDER, buildMissionControlView, canApprove } from './mission-control/model';
-import { MissionControlClient } from './mission-control/client';
+import {
+  MIGRATION_SCHEMA_VERSION,
+  SOURCE_ORDER,
+  MissionControlModelError,
+  buildMissionControlView,
+  canApprove,
+} from './mission-control/model';
+import { MissionControlClient, MissionControlClientError } from './mission-control/client';
 import { ApprovalGate } from './mission-control/components/ApprovalGate';
 import { EvidencePanel } from './mission-control/components/EvidencePanel';
 import { MissionHeader } from './mission-control/components/MissionHeader';
@@ -14,7 +20,6 @@ import {
   laneEvidence,
   presentationFor,
   selectConnectionStatus,
-  selectEvents,
   selectLanes,
   selectPortfolioDigest,
 } from './mission-control/components/presentation';
@@ -23,7 +28,6 @@ import type { EvidenceFilter } from './mission-control/components/EvidencePanel'
 import type {
   ConnectionStatus,
   LaneSummary,
-  MissionControlClientLike,
   MissionControlSnapshot,
   MissionControlView,
   PortfolioDecisionInput,
@@ -71,13 +75,14 @@ function readConfig(): AppConfig {
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === 'string' && error) return error;
-  return 'Unknown error';
+  if (error instanceof MissionControlClientError || error instanceof MissionControlModelError) {
+    return error.message;
+  }
+  return 'Mission Control could not complete the operation.';
 }
 
 export default function App() {
-  const config = useMemo(readConfig, []);
+  const config = useMemo(() => readConfig(), []);
   const configured = config.missing.length === 0;
 
   const [snapshot, setSnapshot] = useState<MissionControlSnapshot | null>(null);
@@ -85,39 +90,61 @@ export default function App() {
   const [submission, setSubmission] = useState<DecisionSubmission>({ status: 'idle' });
   const [evidenceOpen, setEvidenceOpen] = useState(true);
   const [evidenceFilter, setEvidenceFilter] = useState<EvidenceFilter>('all');
-  const clientRef = useRef<MissionControlClientLike | null>(null);
+  const clientRef = useRef<MissionControlClient | null>(null);
 
   useEffect(() => {
     if (!configured) return;
 
-    // Single integration seam with the domain client; see components/types.ts.
-    let client: MissionControlClientLike;
-    try {
-      client = new MissionControlClient({
-        baseUrl: config.baseUrl,
-        runId: config.runId,
-        token: readToken(),
-      } as never) as unknown as MissionControlClientLike;
-    } catch (error) {
-      setClientError(describeError(error));
-      return;
-    }
+    const client = new MissionControlClient({
+      baseUrl: config.baseUrl,
+      token: readToken(),
+    });
 
     clientRef.current = client;
-    let unsubscribe: (() => void) | void;
-    try {
-      unsubscribe = client.subscribe((next) => {
+    const abort = new AbortController();
+    let active = true;
+    let connectionState: MissionControlSnapshot['connectionState'] = 'connecting';
+
+    const setConnectionState = (next: MissionControlSnapshot['connectionState']) => {
+      connectionState = next;
+      if (!active) return;
+      setSnapshot((current) => (current ? { ...current, connectionState: next } : current));
+    };
+
+    void (async () => {
+      try {
+        const initialRun = await client.getMigration(config.runId);
+        if (!active) return;
         setClientError(null);
-        setSnapshot(next);
-      });
-      client.start?.();
-    } catch (error) {
-      setClientError(describeError(error));
-    }
+        setSnapshot({ run: initialRun, events: [], connectionState });
+
+        for await (const event of client.streamEvents(config.runId, {
+          signal: abort.signal,
+          onConnectionStateChange: setConnectionState,
+        })) {
+          if (!active) return;
+          setSnapshot((current) => {
+            if (!current || current.events.some((candidate) => candidate.eventId === event.eventId)) return current;
+            return { ...current, events: [...current.events, event] };
+          });
+
+          // Events intentionally contain no counters. Refresh the closed run
+          // document after each persisted event so lane counts remain factual.
+          const refreshedRun = await client.getMigration(config.runId);
+          if (!active) return;
+          setSnapshot((current) =>
+            current ? { ...current, run: refreshedRun } : { run: refreshedRun, events: [event], connectionState },
+          );
+        }
+      } catch (error) {
+        if (!abort.signal.aborted && active) setClientError(describeError(error));
+      }
+    })();
 
     return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
-      client.stop?.();
+      active = false;
+      abort.abort();
+      client.close();
       clientRef.current = null;
     };
   }, [configured, config.baseUrl, config.runId]);
@@ -126,9 +153,9 @@ export default function App() {
     if (!snapshot) return { view: null, error: null as string | null };
     try {
       const view = buildMissionControlView(
-        snapshot.run as never,
-        snapshot.events as never,
-        snapshot.connectionState as never,
+        snapshot.run,
+        snapshot.events,
+        snapshot.connectionState,
       );
       return { view, error: null as string | null };
     } catch (error) {
@@ -137,7 +164,7 @@ export default function App() {
   }, [snapshot]);
 
   const domainView = composed.view;
-  const view = domainView as unknown as MissionControlView | null;
+  const view: MissionControlView | null = domainView;
 
   // Approval eligibility is the domain layer's decision. A throwing predicate
   // fails closed rather than opening the gate.
@@ -151,7 +178,7 @@ export default function App() {
   }, [domainView]);
 
   const lanes = useMemo(() => selectLanes(view), [view]);
-  const events = useMemo(() => selectEvents(view), [view]);
+  const events = useMemo(() => snapshot?.events ?? [], [snapshot?.events]);
   const summaries = useMemo<LaneSummary[]>(
     () =>
       SOURCE_ORDER.map((sourceId: SourceId) => {
@@ -179,10 +206,8 @@ export default function App() {
   const streamDegraded = connection === 'stale' || connection === 'disconnected' || connection === 'failed';
   const noRunData = Boolean(snapshot) && !view?.runId && lanes.size === 0;
 
-  // A new digest invalidates any decision recorded against the previous one.
-  useEffect(() => {
-    setSubmission({ status: 'idle' });
-  }, [digest]);
+  const currentSubmission =
+    submission.digest === undefined || submission.digest === digest ? submission : ({ status: 'idle' } as const);
 
   const blockedReasons = useMemo(() => {
     if (approvalAllowed) return [];
@@ -218,7 +243,7 @@ export default function App() {
       reasons.push('The control plane has not opened the approval gate for this digest.');
     }
     return reasons;
-  }, [approvalAllowed, configured, snapshot, streamDegraded, connection, digest, summaries, view?.state]);
+  }, [approvalAllowed, configured, snapshot, streamDegraded, connection, digest, summaries, view]);
 
   const handleDecision = useCallback(
     (input: Omit<PortfolioDecisionInput, 'planDigest'>) => {
@@ -232,8 +257,21 @@ export default function App() {
         return;
       }
       setSubmission({ status: 'submitting', decision: input.decision, digest });
-      void Promise.resolve(client.submitDecision({ planDigest: digest, ...input }))
-        .then(() => setSubmission({ status: 'submitted', decision: input.decision, digest }))
+      void client
+        .approveMigration(config.runId, {
+          schemaVersion: MIGRATION_SCHEMA_VERSION,
+          planDigest: digest,
+          decision: input.decision,
+          decidedBy: input.decidedBy,
+          ...(input.reason === undefined ? {} : { reason: input.reason }),
+        })
+        .then(async () => {
+          const refreshedRun = await client.getMigration(config.runId);
+          setSnapshot((current) =>
+            current ? { ...current, run: refreshedRun } : current,
+          );
+          setSubmission({ status: 'submitted', decision: input.decision, digest });
+        })
         .catch((error: unknown) =>
           setSubmission({
             status: 'error',
@@ -243,7 +281,7 @@ export default function App() {
           }),
         );
     },
-    [digest],
+    [config.runId, digest],
   );
 
   const handleOpenEvidence = useCallback((sourceId: SourceId) => {
@@ -362,13 +400,14 @@ export default function App() {
 
         <aside className="mc-aside" aria-label="Approval and evidence">
           <ApprovalGate
+            key={digest ?? 'no-digest'}
             approvalAllowed={approvalAllowed}
             blockedReasons={blockedReasons}
             defaultApprover={config.approver}
             digest={digest}
             onSubmit={handleDecision}
             runState={view?.state}
-            submission={submission}
+            submission={currentSubmission}
           />
           <EvidencePanel
             events={events}

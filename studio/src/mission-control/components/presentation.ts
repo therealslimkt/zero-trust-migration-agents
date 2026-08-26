@@ -151,53 +151,48 @@ export function humaniseCode(code?: string): string {
   return code.toLowerCase().replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
 
-type PresentationSource = Partial<SourcePresentationView> & {
-  name?: string;
-  title?: string;
-  format?: string;
-  bigQueryTable?: string;
-  target?: string;
-};
-
-/**
- * Reads `SOURCE_PRESENTATION` tolerantly so a naming difference in the domain
- * layer degrades to a plain label instead of a blank lane.
- */
+/** Map the frozen domain presentation into the compact UI labels. */
 export function presentationFor(sourceId: SourceId): SourcePresentationView {
-  const table = SOURCE_PRESENTATION as unknown as Record<string, PresentationSource | undefined>;
-  const raw = table?.[sourceId] ?? {};
-  const label = raw.label ?? raw.name ?? raw.title ?? sourceId;
+  const raw = SOURCE_PRESENTATION[sourceId];
+  const label = raw.humanLabel;
   return {
     label,
-    shortLabel: raw.shortLabel ?? label,
-    hostname: raw.hostname ?? '',
-    legacyFormat: raw.legacyFormat ?? raw.format ?? '',
-    bigQueryTarget: raw.bigQueryTarget ?? raw.bigQueryTable ?? raw.target ?? '',
+    shortLabel: sourceId === 'jde' ? 'JDE' : sourceId === 'maxdb' ? 'MaxDB' : 'Btrieve',
+    hostname: raw.hostname,
+    legacyFormat: `${raw.legacyDatabase} · ${raw.encoding}`,
+    bigQueryTarget: raw.bigQueryDestination,
   };
 }
 
 export function selectLanes(view: MissionControlView | null): Map<SourceId, LaneView> {
-  const lanes = view?.lanes ?? view?.sources ?? [];
+  const lanes = view?.lanes ?? [];
   const byId = new Map<SourceId, LaneView>();
   for (const lane of lanes) {
-    if (lane?.sourceId) byId.set(lane.sourceId, lane);
+    byId.set(lane.sourceId, {
+      sourceId: lane.sourceId,
+      hostname: lane.presentation.hostname,
+      state: lane.state,
+      recordsRead: lane.counts.read,
+      recordsWritten: lane.counts.written,
+      recordsRejected: lane.counts.rejected,
+      ...(lane.planDigest === undefined ? {} : { planDigest: lane.planDigest }),
+      ...(lane.failureCode === undefined ? {} : { failureCode: lane.failureCode }),
+      evidence: [...lane.evidence],
+      events: [...lane.events],
+    });
   }
   return byId;
 }
 
-export function selectEvents(view: MissionControlView | null): MissionEventView[] {
-  return (view?.events ?? []).filter((event) => Boolean(event?.eventId));
-}
-
 export function selectPortfolioDigest(view: MissionControlView | null): string | undefined {
-  return view?.portfolioPlanDigest ?? view?.planDigest ?? undefined;
+  return view?.planDigest;
 }
 
 export function selectConnectionStatus(
   view: MissionControlView | null,
   fallback: ConnectionStatus,
 ): ConnectionStatus {
-  const raw = (view?.connection?.status ?? view?.connectionState ?? '').toLowerCase();
+  const raw = (view?.connectionState ?? '').toLowerCase();
   switch (raw) {
     case 'live':
     case 'open':

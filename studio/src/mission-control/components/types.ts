@@ -10,7 +10,14 @@
  *
  * Names follow `contracts/schemas/common.schema.json`.
  */
-import type { SourceId } from '../model';
+import type {
+  ConnectionState,
+  MigrationRun,
+  MigrationSseEvent,
+  MissionControlView as DomainMissionControlView,
+  RunState,
+  SourceId,
+} from '../model';
 
 export const RUN_STATES = [
   'created',
@@ -26,7 +33,7 @@ export const RUN_STATES = [
   'cancelled',
 ] as const;
 
-export type RunState = (typeof RUN_STATES)[number];
+export type { RunState };
 
 export const EVIDENCE_KINDS = [
   'source_manifest',
@@ -71,24 +78,7 @@ export interface LaneView {
   events?: MissionEventView[];
 }
 
-export interface MissionControlView {
-  runId?: string;
-  portfolioName?: string;
-  state?: RunState;
-  portfolioPlanDigest?: string;
-  /** Alias tolerated while the domain layer settles on a digest field name. */
-  planDigest?: string;
-  failureCode?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  /** Echo of the `connectionState` argument passed to `buildMissionControlView`. */
-  connectionState?: string;
-  connection?: { status?: string; lastEventAt?: string };
-  lanes?: LaneView[];
-  /** Alias tolerated for the same reason as `planDigest`. */
-  sources?: LaneView[];
-  events?: MissionEventView[];
-}
+export type MissionControlView = DomainMissionControlView;
 
 /** How the UI describes the event channel. Domain values are normalised into this. */
 export type ConnectionStatus =
@@ -124,19 +114,7 @@ export interface PortfolioDecisionInput {
 }
 
 export interface MissionControlSnapshot {
-  run: unknown;
-  events: unknown[];
-  connectionState?: string;
-}
-
-/**
- * The client surface `App.tsx` consumes. The domain `MissionControlClient` is
- * expected to satisfy this; `start`/`stop` are invoked defensively so a client
- * that connects eagerly in its constructor still works.
- */
-export interface MissionControlClientLike {
-  subscribe(listener: (snapshot: MissionControlSnapshot) => void): (() => void) | void;
-  start?(): void;
-  stop?(): void;
-  submitDecision(input: PortfolioDecisionInput): Promise<unknown>;
+  run: MigrationRun;
+  events: MigrationSseEvent[];
+  connectionState: ConnectionState;
 }

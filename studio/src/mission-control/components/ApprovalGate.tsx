@@ -48,12 +48,6 @@ export function ApprovalGate({
     if (confirming) approverRef.current?.focus();
   }, [confirming]);
 
-  // A digest change invalidates any decision the operator was part-way through.
-  useEffect(() => {
-    setConfirming(false);
-    setAcknowledged(false);
-  }, [digest]);
-
   const busy = submission.status === 'submitting';
 
   function decide(decision: 'approve' | 'reject') {
@@ -61,8 +55,8 @@ export function ApprovalGate({
       setFormError('No portfolio digest is published, so no decision can be bound to it.');
       return;
     }
-    if (decision === 'approve' && !approvalAllowed) {
-      setFormError('Approval is closed for this portfolio.');
+    if (!approvalAllowed) {
+      setFormError('The decision gate is closed for this portfolio.');
       return;
     }
     const decidedBy = approver.trim();
@@ -222,7 +216,7 @@ export function ApprovalGate({
             <button
               className="mc-button mc-button--danger"
               type="button"
-              disabled={!digest || !acknowledged || busy}
+              disabled={!approvalAllowed || !digest || !acknowledged || busy}
               onClick={() => decide('reject')}
             >
               Reject portfolio
