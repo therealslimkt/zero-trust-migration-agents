@@ -75,7 +75,24 @@ def _execute(plan=None, batch=None, approval=None):
         record_batch=batch or _batch(),
         approval=approval or _approval(),
         portfolio_digest=PORTFOLIO_DIGEST,
+        policy_categories=frozenset(),
     )
+
+
+@pytest.mark.parametrize(
+    "category",
+    ["raw_pii", "arbitrary_execution", "public_source_database", "unapproved_run"],
+)
+def test_non_overridable_policy_findings_block_before_batch_read(category):
+    malformed_batch = {"protected_sentinel": "must not be inspected"}
+    with pytest.raises(PolicyDenied, match="non-overridable denial"):
+        execute_plan(
+            plan=_plan(),
+            record_batch=malformed_batch,
+            approval=_approval(),
+            portfolio_digest=PORTFOLIO_DIGEST,
+            policy_categories={category},
+        )
 
 
 def _resign(plan):

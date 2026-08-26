@@ -59,7 +59,12 @@ def test_malformed_approval_record_rejected(overrides):
 
 def test_authorize_run_succeeds_for_matching_digest_and_run():
     record = make_record()
-    result = authorize_run(record, plan_digest=VALID_DIGEST, portfolio_run_id=VALID_RUN_ID)
+    result = authorize_run(
+        record,
+        plan_digest=VALID_DIGEST,
+        portfolio_run_id=VALID_RUN_ID,
+        categories=frozenset(),
+    )
     assert result is record
 
 
@@ -70,6 +75,7 @@ def test_authorize_run_denies_digest_mismatch():
             record,
             plan_digest="sha256:" + "b" * 64,
             portfolio_run_id=VALID_RUN_ID,
+            categories=frozenset(),
         )
 
 
@@ -80,6 +86,7 @@ def test_authorize_run_denies_portfolio_run_id_mismatch():
             record,
             plan_digest=VALID_DIGEST,
             portfolio_run_id="mig_999999999999",
+            categories=frozenset(),
         )
 
 
@@ -103,7 +110,30 @@ def test_non_overridable_denial_wins_even_with_valid_matching_approval():
         )
 
 
+def test_authorize_run_requires_an_explicit_policy_finding_set():
+    record = make_record()
+    with pytest.raises(TypeError):
+        authorize_run(
+            record,
+            plan_digest=VALID_DIGEST,
+            portfolio_run_id=VALID_RUN_ID,
+        )
+    with pytest.raises(PolicyDenied, match="policy categories are required"):
+        authorize_run(
+            record,
+            plan_digest=VALID_DIGEST,
+            portfolio_run_id=VALID_RUN_ID,
+            categories=None,
+        )
+
+
 def test_overridable_category_does_not_trigger_non_overridable_denial():
     # A category outside the fixed denial set is not itself a policy
     # violation at this layer; it simply passes the non-overridable check.
     check_non_overridable({"routine_migration"})
+
+
+@pytest.mark.parametrize("categories", [None, "raw_pii", b"raw_pii", {1}])
+def test_policy_categories_must_be_an_explicit_string_collection(categories):
+    with pytest.raises(PolicyDenied, match="policy categories are invalid"):
+        check_non_overridable(categories)

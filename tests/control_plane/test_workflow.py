@@ -224,7 +224,9 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
             side_effect=recording_executor,
         ):
             result = execute_portfolio(
-                prepared=self.prepared, approval=_approval(self.prepared)
+                prepared=self.prepared,
+                approval=_approval(self.prepared),
+                policy_categories=frozenset(),
             )
 
         self.assertEqual(len(self.compiler.calls), 1)
@@ -250,7 +252,9 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
         plan_copy["target"]["dataset"] = "caller_mutation"
 
         result = execute_portfolio(
-            prepared=self.prepared, approval=_approval(self.prepared)
+            prepared=self.prepared,
+            approval=_approval(self.prepared),
+            policy_categories=frozenset(),
         )
 
         self.assertNotEqual(self.prepared.portfolio_digest, detached["portfolioDigest"])
@@ -360,7 +364,9 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
                 PortfolioWorkflowError, "^compiled portfolio is invalid$"
             ) as caught:
                 execute_portfolio(
-                    prepared=corrupted, approval=_approval(self.prepared)
+                    prepared=corrupted,
+                    approval=_approval(self.prepared),
+                    policy_categories=frozenset(),
                 )
         executor.assert_not_called()
         self.assertNotIn(SENTINEL, repr(caught.exception))
@@ -377,8 +383,24 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaisesRegex(
                     PortfolioWorkflowError, "^portfolio approval was rejected$"
                 ):
-                    execute_portfolio(prepared=self.prepared, approval=approval)
+                    execute_portfolio(
+                        prepared=self.prepared,
+                        approval=approval,
+                        policy_categories=frozenset(),
+                    )
             executor.assert_not_called()
+
+    async def test_non_overridable_policy_precedes_snapshot_and_record_work(self):
+        with mock.patch("control_plane.workflow._decode_prepared") as decoder:
+            with self.assertRaisesRegex(
+                PortfolioWorkflowError, "^portfolio policy was rejected$"
+            ):
+                execute_portfolio(
+                    prepared=self.prepared,
+                    approval=_approval(self.prepared),
+                    policy_categories={"raw_pii"},
+                )
+        decoder.assert_not_called()
 
     async def test_executor_failure_returns_no_partial_result_and_is_safe(self):
         called = []
@@ -397,7 +419,9 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
                 PortfolioWorkflowError, "^portfolio execution failed$"
             ) as caught:
                 execute_portfolio(
-                    prepared=self.prepared, approval=_approval(self.prepared)
+                    prepared=self.prepared,
+                    approval=_approval(self.prepared),
+                    policy_categories=frozenset(),
                 )
 
         self.assertEqual(called, ["jde", "maxdb"])

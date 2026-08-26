@@ -202,6 +202,16 @@ func TestServerMuxMountsAuthenticatedControlPlaneOnlyWhenConfigured(t *testing.T
 	if disabled.Code != http.StatusNotFound {
 		t.Fatalf("disabled API status = %d, want 404", disabled.Code)
 	}
+	for _, path := range []string{"/api/status", "/ws"} {
+		response := httptest.NewRecorder()
+		newServerMux(nil).ServeHTTP(
+			response,
+			httptest.NewRequest(http.MethodGet, path, nil),
+		)
+		if response.Code != http.StatusNotFound {
+			t.Fatalf("legacy route %s status = %d, want 404", path, response.Code)
+		}
+	}
 
 	t.Setenv("MISSION_CONTROL_STATE_PATH", filepath.Join(t.TempDir(), "state.json"))
 	t.Setenv("MISSION_CONTROL_API_TOKEN", "test-token")
@@ -216,5 +226,15 @@ func TestServerMuxMountsAuthenticatedControlPlaneOnlyWhenConfigured(t *testing.T
 	)
 	if unauthorized.Code != http.StatusUnauthorized {
 		t.Fatalf("configured API status = %d, want 401", unauthorized.Code)
+	}
+	for _, path := range []string{"/api/status", "/ws"} {
+		response := httptest.NewRecorder()
+		newServerMux(controlPlane).ServeHTTP(
+			response,
+			httptest.NewRequest(http.MethodPost, path, nil),
+		)
+		if response.Code != http.StatusNotFound {
+			t.Fatalf("legacy route %s status = %d, want 404", path, response.Code)
+		}
 	}
 }

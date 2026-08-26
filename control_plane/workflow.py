@@ -28,7 +28,12 @@ from control_plane.gemini_planner import (
     GeminiPlanCompiler,
     PlanCompilationError,
 )
-from ztm_security.approval import ApprovalRecord, authorize_run
+from ztm_security.approval import (
+    ApprovalRecord,
+    PolicyDenied,
+    authorize_run,
+    check_non_overridable,
+)
 
 
 class PortfolioWorkflowError(ValueError):
@@ -429,14 +434,28 @@ def execute_portfolio(
     *,
     prepared: PreparedPortfolio,
     approval: ApprovalRecord,
+    policy_categories,
 ) -> PortfolioExecutionResult:
     """Authorize and execute a complete prepared portfolio, or return nothing."""
+
+    try:
+        if isinstance(policy_categories, (str, bytes)):
+            raise PolicyDenied("policy categories are invalid")
+        normalized_categories = frozenset(policy_categories)
+        check_non_overridable(normalized_categories)
+    except (PolicyDenied, TypeError):
+        raise PortfolioWorkflowError("portfolio policy was rejected") from None
 
     run_id, portfolio_digest, sources = _decode_prepared(prepared)
     try:
         if not isinstance(approval, ApprovalRecord):
             _reject("portfolio approval was rejected")
-        authorize_run(approval, portfolio_digest, run_id)
+        authorize_run(
+            approval,
+            portfolio_digest,
+            run_id,
+            categories=normalized_categories,
+        )
     except PortfolioWorkflowError:
         raise
     except Exception:
@@ -452,6 +471,7 @@ def execute_portfolio(
                 record_batch=record_batch,
                 approval=approval,
                 portfolio_digest=portfolio_digest,
+                policy_categories=normalized_categories,
             )
             results.append(_reconciliation(source_id, plan, execution))
     except Exception:

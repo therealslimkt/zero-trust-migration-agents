@@ -447,6 +447,7 @@ def execute_plan(
     record_batch: dict,
     approval: ApprovalRecord,
     portfolio_digest: str,
+    policy_categories,
 ) -> ExecutionResult:
     """Apply one approved declarative plan to one sanitized record batch.
 
@@ -463,7 +464,12 @@ def execute_plan(
 
     # The approval is for the whole three-source portfolio and exact run.  It
     # must be checked before any batch records are inspected.
-    authorize_run(approval, portfolio_digest, str(plan_document["runId"]))
+    authorize_run(
+        approval,
+        portfolio_digest,
+        str(plan_document["runId"]),
+        categories=policy_categories,
+    )
 
     batch_document = _require_plain_mapping(record_batch, "batch_contract")
     _validate_contract(_BATCH_VALIDATOR, batch_document, "batch_contract")

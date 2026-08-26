@@ -106,8 +106,6 @@ func configuredControlPlane() (http.Handler, error) {
 
 func newServerMux(controlPlane http.Handler) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/status", handleStatusPost)
-	mux.HandleFunc("/ws", handleConnections)
 	if controlPlane != nil {
 		mux.Handle("/api/v1/", controlPlane)
 	}
@@ -115,9 +113,6 @@ func newServerMux(controlPlane http.Handler) *http.ServeMux {
 }
 
 func main() {
-	// Start the broadcaster in a goroutine
-	go handleMessages()
-
 	controlPlane, err := configuredControlPlane()
 	if err != nil {
 		log.Fatal("Mission Control control-plane configuration is invalid")

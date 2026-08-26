@@ -67,7 +67,15 @@ def check_non_overridable(categories) -> None:
     This check takes no ApprovalRecord on purpose: these categories cannot
     be approved around by any approver, digest, or run binding.
     """
-    hit = NON_OVERRIDABLE_DENIALS.intersection(categories)
+    if categories is None or isinstance(categories, (str, bytes)):
+        raise PolicyDenied("policy categories are invalid")
+    try:
+        normalized = frozenset(categories)
+    except TypeError:
+        raise PolicyDenied("policy categories are invalid") from None
+    if any(not isinstance(category, str) for category in normalized):
+        raise PolicyDenied("policy categories are invalid")
+    hit = NON_OVERRIDABLE_DENIALS.intersection(normalized)
     if hit:
         raise PolicyDenied(f"non-overridable denial: {sorted(hit)}")
 
@@ -76,7 +84,8 @@ def authorize_run(
     record: ApprovalRecord,
     plan_digest: str,
     portfolio_run_id: str,
-    categories=(),
+    *,
+    categories,
 ) -> ApprovalRecord:
     """Authorize a run against a matching, well-formed ApprovalRecord.
 
@@ -84,6 +93,8 @@ def authorize_run(
     the approval's validity, then the approval's plan digest and portfolio
     run ID must exactly match the requested execution context.
     """
+    if categories is None:
+        raise PolicyDenied("policy categories are required")
     check_non_overridable(categories)
 
     if record.plan_digest != plan_digest:

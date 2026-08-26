@@ -158,7 +158,14 @@ def _execute(args: argparse.Namespace) -> dict[str, object]:
         timestamp=_now(),
         portfolio_run_id=prepared.run_id,
     )
-    result = execute_portfolio(prepared=prepared, approval=approval)
+    # The edge artifact/report validators have proved no non-overridable
+    # category is present. Passing the empty finding set is explicit and
+    # mandatory; omission is rejected by the execution API.
+    result = execute_portfolio(
+        prepared=prepared,
+        approval=approval,
+        policy_categories=frozenset(),
+    )
     return {
         "status": "passed",
         "runId": result.run_id,
