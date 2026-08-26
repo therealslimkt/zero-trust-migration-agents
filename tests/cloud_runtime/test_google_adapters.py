@@ -11,6 +11,7 @@ from cloud_runtime.google_adapters import (
     GCSObjectStore,
     GoogleAdapterError,
 )
+from cloud_runtime.orchestrator import CloudSourceResult
 
 
 class _Blob:
@@ -30,7 +31,9 @@ class _Blob:
             self.fail_after_store = False
             raise RuntimeError("response was lost after the create")
 
-    def download_as_bytes(self):
+    def download_as_bytes(self, *, start, end):
+        assert start == 0
+        assert end == GCSObjectStore._MAX_BUNDLE_BYTES
         if self.data is None:
             raise RuntimeError("missing")
         return self.data
@@ -169,12 +172,14 @@ def test_dataflow_adapter_locks_private_workers_and_canonical_terminal_state():
         job_name="ztm-jde-test",
         template_spec_uri="gs://trusted-bucket/template.json",
         worker_service_account="worker@example.iam.gserviceaccount.com",
+        worker_subnetwork="regions/us-central1/subnetworks/ztm-dataflow",
         parameters={"expected_source_id": "jde"},
         labels={"ztm_source": "jde"},
     )
     assert job_id == "job-jde-1"
     environment = service.launch_request["body"]["launchParameter"]["environment"]
     assert environment["ipConfiguration"] == "WORKER_IP_PRIVATE"
+    assert environment["subnetwork"] == "regions/us-central1/subnetworks/ztm-dataflow"
     assert "block_project_ssh_keys" in environment["additionalExperiments"]
     assert "enable_portable_runner" in environment["additionalExperiments"]
     assert (
@@ -261,6 +266,7 @@ def test_dataflow_launch_preserves_opaque_real_shaped_job_id():
         job_name="ztm-jde-approved-run",
         template_spec_uri="gs://trusted-bucket/template.json",
         worker_service_account="worker@example.iam.gserviceaccount.com",
+        worker_subnetwork="regions/us-central1/subnetworks/ztm-dataflow",
         parameters={"expected_source_id": "jde"},
         labels={"ztm_source": "jde"},
     )
@@ -292,9 +298,13 @@ class _BoundedQueryResult:
             {
                 "row_count": 1,
                 "distinct_ordinal_count": 1,
+                "minimum_ordinal": 0,
+                "maximum_ordinal": 0,
                 "plan_digests": ["sha256:" + "1" * 64],
                 "output_digests": ["sha256:" + "2" * 64],
                 "bundle_digests": ["sha256:" + "3" * 64],
+                "approval_digests": ["sha256:" + "4" * 64],
+                "policy_digests": ["sha256:" + "5" * 64],
                 "job_names": ["ztm-jde-approved-run"],
             }
         ]
@@ -339,3 +349,131 @@ def test_bigquery_observation_uses_a_bounded_result_timeout(monkeypatch):
 
     assert observation.row_count == 1
     assert client.query_job.timeout is not None
+
+
+class _AuditQueryResult:
+    def __init__(self, rows):
+        self.rows = rows
+        self.timeout = None
+
+    def result(self, *, timeout):
+        assert 0 < timeout <= 300
+        self.timeout = timeout
+        return self.rows
+
+
+class _AuditBigQueryClient:
+    def __init__(self, rows):
+        self.query_job = _AuditQueryResult(rows)
+        self.query_call = None
+
+    def query(self, sql, **kwargs):
+        self.query_call = (sql, kwargs)
+        return self.query_job
+
+
+def _audit_sources():
+    project = "ztm-agent-9049c3"
+    dataset = "legacy_migration"
+    digest = lambda character: "sha256:" + character * 64
+    tables = {
+        "jde": "jde_f0101",
+        "maxdb": "sap_kna1",
+        "btrieve": "accpac_arcus",
+    }
+    return tuple(
+        CloudSourceResult(
+            source_id=source_id,
+            job_id=f"2026-08-26_17_42_01-{index}",
+            job_name=f"ztm-{source_id}-approved-run",
+            terminal_state="JOB_STATE_DONE",
+            table_spec=f"{project}:{dataset}.{tables[source_id]}",
+            record_count=index,
+            plan_digest=digest("1"),
+            output_digest=digest("2"),
+            bundle_digest=digest("3"),
+            approval_digest=digest("4"),
+            policy_digest=digest("5"),
+        )
+        for index, source_id in enumerate(("jde", "maxdb", "btrieve"), start=1)
+    )
+
+
+def _audit_rows(sources, *, run_id, portfolio_digest, audit_digest):
+    return sorted(
+        [
+            {
+                "run_id": run_id,
+                "source_id": source.source_id,
+                "portfolio_digest": portfolio_digest,
+                "audit_digest": audit_digest,
+                "job_id": source.job_id,
+                "job_name": source.job_name,
+                "terminal_state": source.terminal_state,
+                "table_spec": source.table_spec,
+                "record_count": source.record_count,
+                "plan_digest": source.plan_digest,
+                "output_digest": source.output_digest,
+                "bundle_digest": source.bundle_digest,
+                "approval_digest": source.approval_digest,
+                "policy_digest": source.policy_digest,
+            }
+            for source in sources
+        ],
+        key=lambda row: row["source_id"],
+    )
+
+
+def test_bigquery_audit_is_parameterized_idempotent_and_reread(monkeypatch):
+    _install_fake_bigquery(monkeypatch)
+    run_id = "mig_CLOUDRUNTIME01"
+    portfolio_digest = "sha256:" + "a" * 64
+    audit_digest = "sha256:" + "b" * 64
+    sources = _audit_sources()
+    client = _AuditBigQueryClient(
+        _audit_rows(
+            sources,
+            run_id=run_id,
+            portfolio_digest=portfolio_digest,
+            audit_digest=audit_digest,
+        )
+    )
+    gateway = BigQueryWarehouseGateway(client, location="us-central1")
+
+    assert gateway.ensure_portfolio_audit(
+        run_id=run_id,
+        portfolio_digest=portfolio_digest,
+        audit_digest=audit_digest,
+        sources=sources,
+    ) == audit_digest
+    sql, kwargs = client.query_call
+    assert "MERGE `ztm-agent-9049c3.legacy_migration.migration_audit`" in sql
+    assert "ORDER BY source_id" in sql
+    assert all("tok_" not in str(parameter.value) for parameter in kwargs["job_config"].query_parameters)
+    assert client.query_job.timeout is not None
+
+
+def test_bigquery_audit_rejects_a_conflicting_existing_record(monkeypatch):
+    _install_fake_bigquery(monkeypatch)
+    run_id = "mig_CLOUDRUNTIME01"
+    portfolio_digest = "sha256:" + "a" * 64
+    audit_digest = "sha256:" + "b" * 64
+    sources = _audit_sources()
+    rows = _audit_rows(
+        sources,
+        run_id=run_id,
+        portfolio_digest=portfolio_digest,
+        audit_digest=audit_digest,
+    )
+    rows[0]["job_id"] = "conflicting-job"
+    gateway = BigQueryWarehouseGateway(
+        _AuditBigQueryClient(rows), location="us-central1"
+    )
+
+    with pytest.raises(GoogleAdapterError, match="^bigquery_audit_mismatch$"):
+        gateway.ensure_portfolio_audit(
+            run_id=run_id,
+            portfolio_digest=portfolio_digest,
+            audit_digest=audit_digest,
+            sources=sources,
+        )

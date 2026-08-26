@@ -9,6 +9,9 @@ writes them with lineage columns to the pre-approved BigQuery table.
 from __future__ import annotations
 
 import argparse
+import base64
+import datetime as dt
+import decimal
 import json
 import re
 from collections.abc import Iterator, Mapping
@@ -30,6 +33,7 @@ class TemplateInputRejected(ValueError):
 
 _PROJECT_RE = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
 _DATASET_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,1023}$")
+_FIELD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,127}$")
 _BQ_TYPES = {
     "string": "STRING",
     "integer": "INTEGER",
@@ -47,6 +51,7 @@ _BUNDLE_KEYS = {
     "portfolioDigest",
     "planDigest",
     "approvalDigest",
+    "policyDigest",
     "target",
     "outputFields",
     "recordCount",
@@ -60,12 +65,64 @@ _LINEAGE_FIELDS = (
     {"name": "_ztm_plan_digest", "type": "STRING", "mode": "REQUIRED"},
     {"name": "_ztm_output_digest", "type": "STRING", "mode": "REQUIRED"},
     {"name": "_ztm_bundle_digest", "type": "STRING", "mode": "REQUIRED"},
+    {"name": "_ztm_approval_digest", "type": "STRING", "mode": "REQUIRED"},
+    {"name": "_ztm_policy_digest", "type": "STRING", "mode": "REQUIRED"},
+    {"name": "_ztm_job_name", "type": "STRING", "mode": "REQUIRED"},
     {"name": "_ztm_row_ordinal", "type": "INTEGER", "mode": "REQUIRED"},
 )
 
 
 def _reject(code: str) -> None:
     raise TemplateInputRejected(code)
+
+
+def _valid_value(value: object, declared_type: str, nullable: bool) -> bool:
+    if value is None:
+        return nullable
+    if declared_type == "string":
+        return isinstance(value, str)
+    if declared_type == "integer":
+        return (
+            isinstance(value, int)
+            and not isinstance(value, bool)
+            and -(2**63) <= value <= 2**63 - 1
+        )
+    if declared_type == "decimal" and isinstance(value, str):
+        try:
+            numeric = decimal.Decimal(value)
+        except decimal.InvalidOperation:
+            return False
+        normalized = numeric.normalize()
+        if normalized == 0:
+            normalized = decimal.Decimal(0)
+        return (
+            numeric.is_finite()
+            and abs(normalized) < decimal.Decimal("1e29")
+            and normalized.as_tuple().exponent >= -9
+        )
+    if declared_type == "date" and isinstance(value, str):
+        try:
+            return dt.date.fromisoformat(value).isoformat() == value
+        except ValueError:
+            return False
+    if declared_type == "timestamp" and isinstance(value, str):
+        try:
+            parsed = dt.datetime.fromisoformat(
+                value[:-1] + "+00:00" if value.endswith("Z") else value
+            )
+            return parsed.tzinfo is not None and parsed.utcoffset() is not None
+        except ValueError:
+            return False
+    if declared_type == "boolean":
+        return isinstance(value, bool)
+    if declared_type == "bytes" and isinstance(value, str):
+        try:
+            return base64.b64encode(base64.b64decode(value, validate=True)).decode(
+                "ascii"
+            ) == value
+        except (ValueError, TypeError):
+            return False
+    return False
 
 
 def parse_table_spec(value: str) -> tuple[str, str, str]:
@@ -101,6 +158,7 @@ def bigquery_schema(output_fields: object) -> dict[str, object]:
         nullable = declaration.get("nullable")
         if (
             not isinstance(name, str)
+            or _FIELD_RE.fullmatch(name) is None
             or name.startswith("_ztm_")
             or name in seen
             or declared_type not in _BQ_TYPES
@@ -145,6 +203,7 @@ def validate_bundle_document(
             expected_plan_digest,
             expected_bundle_digest,
             document.get("approvalDigest"),
+            document.get("policyDigest"),
             document.get("outputDigest"),
         ):
             require_digest(digest)
@@ -168,9 +227,8 @@ def validate_bundle_document(
         _reject("template_bundle_digest")
 
     schema = bigquery_schema(document.get("outputFields"))
-    declared_names = tuple(
-        str(field["name"]) for field in schema["fields"][:-len(_LINEAGE_FIELDS)]
-    )
+    declarations = tuple(schema["fields"][:-len(_LINEAGE_FIELDS)])
+    declared_names = tuple(str(field["name"]) for field in declarations)
     rows = document.get("rows")
     record_count = document.get("recordCount")
     if (
@@ -183,20 +241,32 @@ def validate_bundle_document(
     for row in rows:
         if type(row) is not dict or set(row) != set(declared_names):
             _reject("template_rows")
-        for name in declared_names:
+        for declaration in declarations:
+            name = str(declaration["name"])
             cell = row[name]
             if type(cell) is not dict or set(cell) != {"protection", "value"}:
                 _reject("template_rows")
             if cell.get("protection") not in {"sanitized", "tokenized"}:
+                _reject("template_rows")
+            inverse_types = {value: key for key, value in _BQ_TYPES.items()}
+            if not _valid_value(
+                cell.get("value"),
+                inverse_types[str(declaration["type"])],
+                declaration["mode"] == "NULLABLE",
+            ):
                 _reject("template_rows")
     if sha256_digest(canonical_json_bytes(rows)) != document.get("outputDigest"):
         _reject("template_output_digest")
     return document
 
 
-def destination_rows(document: Mapping[str, object]) -> Iterator[dict[str, object]]:
+def destination_rows(
+    document: Mapping[str, object], *, expected_job_name: str
+) -> Iterator[dict[str, object]]:
     """Flatten validated protected cells and attach immutable lineage."""
 
+    if re.fullmatch(r"[a-z][-a-z0-9]{2,62}", expected_job_name) is None:
+        _reject("template_job_name")
     rows = document["rows"]
     if not isinstance(rows, list):  # validate_bundle_document owns this invariant
         _reject("template_rows")
@@ -217,6 +287,9 @@ def destination_rows(document: Mapping[str, object]) -> Iterator[dict[str, objec
                 "_ztm_plan_digest": document["planDigest"],
                 "_ztm_output_digest": document["outputDigest"],
                 "_ztm_bundle_digest": document["bundleDigest"],
+                "_ztm_approval_digest": document["approvalDigest"],
+                "_ztm_policy_digest": document["policyDigest"],
+                "_ztm_job_name": expected_job_name,
                 "_ztm_row_ordinal": ordinal,
             }
         )
@@ -233,6 +306,7 @@ def _decode_and_validate(
     expected_bundle_digest: str,
     output_table: str,
     expected_bigquery_schema: Mapping[str, object],
+    expected_job_name: str,
 ) -> Iterator[dict[str, object]]:
     try:
         document = json.loads(line)
@@ -249,7 +323,7 @@ def _decode_and_validate(
     )
     if bigquery_schema(validated["outputFields"]) != expected_bigquery_schema:
         _reject("template_schema_binding")
-    yield from destination_rows(validated)
+    yield from destination_rows(validated, expected_job_name=expected_job_name)
 
 
 def run(argv: list[str] | None = None) -> None:
@@ -264,6 +338,7 @@ def run(argv: list[str] | None = None) -> None:
     parser.add_argument("--expected_plan_digest", required=True)
     parser.add_argument("--expected_bundle_digest", required=True)
     parser.add_argument("--output_schema_json", required=True)
+    parser.add_argument("--expected_job_name", required=True)
     known, pipeline_args = parser.parse_known_args(argv)
     parse_table_spec(known.output_table)
     try:
@@ -290,6 +365,7 @@ def run(argv: list[str] | None = None) -> None:
                 expected_bundle_digest=known.expected_bundle_digest,
                 output_table=known.output_table,
                 expected_bigquery_schema=expected_bigquery_schema,
+                expected_job_name=known.expected_job_name,
             )
         )
         rows | "Write protected rows" >> beam.io.WriteToBigQuery(

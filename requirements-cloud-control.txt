@@ -1,0 +1,5 @@
+# Google Cloud control-plane clients. Kept out of the edge and worker
+# dependency sets so those runtimes do not receive cloud-launch authority.
+google-cloud-storage==3.13.1
+google-cloud-bigquery==3.44.0
+google-api-python-client==2.199.0

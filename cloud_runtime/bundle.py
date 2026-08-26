@@ -23,6 +23,7 @@ from control_plane.canonical import (
     TARGET_TABLES,
     canonical_json_bytes,
     document_digest,
+    portfolio_plan_digest,
     require_digest,
     require_run_id,
     sha256_digest,
@@ -35,11 +36,14 @@ class CloudBundleRejected(ValueError):
     """A fail-closed rejection with a safe, repository-owned error code."""
 
 
-_FIELD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.]{0,127}$")
+_FIELD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,127}$")
 _TOKEN_RE = re.compile(r"^tok_[A-Za-z0-9_-]{8,256}$")
 _ALLOWED_TYPES = frozenset(
     {"string", "integer", "decimal", "date", "timestamp", "boolean", "bytes"}
 )
+_INT64_MIN = -(2**63)
+_INT64_MAX = 2**63 - 1
+_NUMERIC_LIMIT = decimal.Decimal("1e29")
 
 
 def _reject(code: str) -> None:
@@ -108,15 +112,25 @@ def _json_value(value: object, declared_type: str, nullable: bool) -> object:
     if declared_type == "string" and isinstance(value, str):
         return value
     if declared_type == "integer" and isinstance(value, int) and not isinstance(value, bool):
-        return value
+        if _INT64_MIN <= value <= _INT64_MAX:
+            return value
+        _reject("cloud_numeric_domain")
     if declared_type == "decimal" and not isinstance(value, bool):
+        numeric: decimal.Decimal | None = None
         if isinstance(value, decimal.Decimal):
             if value.is_finite():
-                return format(value, "f")
+                numeric = value
         elif isinstance(value, int):
-            return str(value)
+            numeric = decimal.Decimal(value)
         elif isinstance(value, float) and math.isfinite(value):
-            return str(value)
+            numeric = decimal.Decimal(str(value))
+        if numeric is not None:
+            normalized = numeric.normalize()
+            if normalized == 0:
+                normalized = decimal.Decimal(0)
+            if abs(normalized) < _NUMERIC_LIMIT and normalized.as_tuple().exponent >= -9:
+                return format(normalized, "f")
+            _reject("cloud_numeric_domain")
     if declared_type == "date" and isinstance(value, dt.date) and not isinstance(value, dt.datetime):
         return value.isoformat()
     if declared_type == "timestamp" and isinstance(value, dt.datetime):
@@ -173,7 +187,7 @@ def _validated_inputs(
     execution: PortfolioExecutionResult,
     approval: ApprovalRecord,
     policy_categories: Iterable[str],
-) -> tuple[dict[str, object], tuple[object, ...]]:
+) -> tuple[dict[str, object], tuple[object, ...], frozenset[str]]:
     if not isinstance(prepared, PreparedPortfolio):
         _reject("cloud_prepared")
     if not isinstance(execution, PortfolioExecutionResult):
@@ -184,6 +198,8 @@ def _validated_inputs(
         _reject("cloud_policy")
     try:
         categories = frozenset(policy_categories)
+        if any(not isinstance(category, str) for category in categories):
+            _reject("cloud_policy")
         authorize_run(
             approval,
             prepared.portfolio_digest,
@@ -217,7 +233,32 @@ def _validated_inputs(
     raw_sources = document.get("sources")
     if not isinstance(raw_sources, list) or len(raw_sources) != len(SOURCE_ORDER):
         _reject("cloud_prepared")
-    return document, tuple(execution.reconciliations)
+    plans: list[dict[str, object]] = []
+    for expected_source_id, raw_source in zip(SOURCE_ORDER, raw_sources):
+        if type(raw_source) is not dict or raw_source.get("sourceId") != expected_source_id:
+            _reject("cloud_source_order")
+        plan = raw_source.get("plan")
+        if (
+            type(plan) is not dict
+            or plan.get("runId") != document["runId"]
+            or plan.get("sourceId") != expected_source_id
+        ):
+            _reject("cloud_plan_binding")
+        plan_digest = plan.get("planDigest")
+        try:
+            require_digest(plan_digest)
+        except (TypeError, ValueError):
+            _reject("cloud_plan_binding")
+        if document_digest(plan, omit=("planDigest",)) != plan_digest:
+            _reject("cloud_plan_digest")
+        plans.append(plan)
+    try:
+        recomputed_portfolio_digest = portfolio_plan_digest(plans)
+    except (TypeError, ValueError):
+        _reject("cloud_portfolio_digest")
+    if recomputed_portfolio_digest != document["portfolioDigest"]:
+        _reject("cloud_portfolio_digest")
+    return document, tuple(execution.reconciliations), categories
 
 
 def build_cloud_bundles(
@@ -229,8 +270,16 @@ def build_cloud_bundles(
 ) -> tuple[CloudBundle, ...]:
     """Return exactly three create-only bundle payloads in canonical order."""
 
-    document, results = _validated_inputs(
+    document, results, categories = _validated_inputs(
         prepared, execution, approval, policy_categories
+    )
+    policy_digest = sha256_digest(
+        canonical_json_bytes(
+            {
+                "schemaVersion": SCHEMA_VERSION,
+                "nonOverridableCategories": sorted(categories),
+            }
+        )
     )
     raw_sources = document["sources"]
     bundles: list[CloudBundle] = []
@@ -280,6 +329,7 @@ def build_cloud_bundles(
             "portfolioDigest": document["portfolioDigest"],
             "planDigest": plan_digest,
             "approvalDigest": _approval_digest(approval),
+            "policyDigest": policy_digest,
             "target": dict(target),
             "outputFields": list(declarations),
             "recordCount": row_count,

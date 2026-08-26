@@ -10,6 +10,8 @@
     {"name": "expected_portfolio_digest", "label": "Approved portfolio digest", "regexes": ["^sha256:[a-f0-9]{64}$"]},
     {"name": "expected_plan_digest", "label": "Source plan digest", "regexes": ["^sha256:[a-f0-9]{64}$"]},
     {"name": "expected_bundle_digest", "label": "Immutable bundle digest", "regexes": ["^sha256:[a-f0-9]{64}$"]},
+    {"name": "expected_job_name", "label": "Deterministic Dataflow job name", "regexes": ["^[a-z][-a-z0-9]{2,62}$"]},
+    {"name": "sdk_container_image", "label": "Digest-pinned Beam SDK image", "regexes": ["^[a-z]+-[a-z]+[0-9]+-docker\\.pkg\\.dev/[a-z][a-z0-9-]{4,28}[a-z0-9]/[a-z0-9._/-]+@sha256:[a-f0-9]{64}$"]},
     {"name": "output_schema_json", "label": "Bound BigQuery schema", "regexes": ["^.{20,8192}$"]}
   ]
 }
