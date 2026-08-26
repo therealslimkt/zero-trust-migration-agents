@@ -2,6 +2,22 @@
 
 This document breaks down the implementation of the Zero-Trust Migration Agents into four distinct phases, prioritizing the "Wow" factor for the hackathon demo video.
 
+## Current milestone sequence
+
+- Milestones 0-2: baseline, contracts/security, and live three-source edge gate
+  are passed.
+- Milestone 3: canonical artifacts, Gemini planning, persistent portfolio state,
+  and digest-bound approval is active.
+- **Milestone 4:** the queued
+  [Real Mission Control plan](../docs/execution/MILESTONE_4_MISSION_CONTROL_PLAN.md)
+  rebuilds the themed UI around three event-driven migration swim lanes,
+  Sparky/optional Jetty infrastructure, one portfolio approval gate, and
+  truthful BigQuery evidence.
+
+The historical phases below describe the original concept. Milestone gate
+documents are authoritative when their implementation or security boundaries
+differ from that concept.
+
 ## Phase 1: The "Cartridge" Simulator (Authentic Legacy DB Mocking)
 *Goal: Create authentic VM/Container environments that simulate exact legacy backend file formats (e.g., AS/400 Db2) so we can prove our agents can bypass the proprietary application layer entirely.*
 
