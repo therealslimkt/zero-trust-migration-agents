@@ -50,8 +50,13 @@ class ApprovalRecord:
             raise ValueError("plan_digest must be a contract SHA-256 digest")
         if not self.timestamp:
             raise ValueError("timestamp is required")
-        # Raises ValueError itself if not a valid ISO-8601 timestamp.
-        _dt.datetime.fromisoformat(self.timestamp.replace("Z", "+00:00"))
+        # Raises ValueError itself if not valid ISO-8601. A timezone is required
+        # so approval ordering cannot depend on a process-local timezone.
+        parsed_timestamp = _dt.datetime.fromisoformat(
+            self.timestamp.replace("Z", "+00:00")
+        )
+        if parsed_timestamp.tzinfo is None or parsed_timestamp.utcoffset() is None:
+            raise ValueError("timestamp must include a timezone")
         if _RUN_ID_RE.fullmatch(self.portfolio_run_id or "") is None:
             raise ValueError("portfolio_run_id must be a contract migration run ID")
 

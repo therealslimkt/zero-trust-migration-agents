@@ -47,6 +47,7 @@ def test_valid_approval_record_constructs():
         {"plan_digest": "a" * 64},
         {"timestamp": ""},
         {"timestamp": "not-a-timestamp"},
+        {"timestamp": "2026-08-26T12:00:00"},
         {"portfolio_run_id": ""},
         {"portfolio_run_id": "run-42"},
     ],
