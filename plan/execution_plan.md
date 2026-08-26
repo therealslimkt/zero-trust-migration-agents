@@ -42,3 +42,6 @@ This document breaks down the implementation of the Zero-Trust Migration Agents 
     *   This script utilizes open-source JARs to decode the proprietary binary into ASCII.
 2.  **MCP Sandbox Deployment:** Our MCP server deploys the Agent's generated Beam pipeline to Google Cloud Dataflow.
 3.  **BigQuery Ingestion:** The Dataflow pipeline streams the decoded, PII-scrubbed JSON directly into Google BigQuery.
+
+## Post-Hackathon / Access Unlocked
+*   **[PENDING] Migrate to Gemini 3.5 Pro:** The `gemini-2.5-pro` model is currently serving as our production fallback on Vertex AI while our `ztm-agent-9049c3` project awaits preview access to `gemini-3.5-pro`. Once Google Cloud grants access in Model Garden, update `main.py` and `local_gemma_agent.py` to target the 3.5 generation for enhanced planning and orchestration.

@@ -1,0 +1,14 @@
+{
+  "agents": {
+    "reverse-engineer": {
+      "id": "reverse-engineer",
+      "name": "Reverse-Engineer",
+      "modelPolicy": "strict"
+    },
+    "pipeline-agent": {
+      "id": "pipeline-agent",
+      "name": "Pipeline Agent",
+      "modelPolicy": "strict"
+    }
+  }
+}

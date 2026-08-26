@@ -1,0 +1,6 @@
+name: accpac-btrieve-migration
+description: "Preset 3: Targets legacy Accpac running on Btrieve (Pervasive)."
+version: 1.0.0
+capabilities:
+  - "Reverse-engineers Btrieve DDF (Data Definition Files)."
+  - "Reads raw .BTR pages and extracts tabular data."

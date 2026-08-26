@@ -1,0 +1,33 @@
+# seed_data.yml
+# This file defines the pre-seeded data for the unique challenges
+
+jde_as400:
+  table: "F0101"
+  description: "Address Book with Julian Dates and packed decimals"
+  rows:
+    - ABAN8: "1001"
+      ABALPH: "Wayne Enterprises"
+      ABUPMJ: "123165" # Julian Date (Century 1, Year 23, Day 165)
+      ABAT1: "C"
+    - ABAN8: "1002"
+      ABALPH: "Stark Industries"
+      ABUPMJ: "123166"
+      ABAT1: "C"
+
+sap_maxdb:
+  table: "KNA1"
+  description: "Customer Master Data with MaxDB Clustered Layout"
+  rows:
+    - KUNNR: "0000001001"
+      NAME1: "Acme Corp"
+      ORT01: "New York"
+      LAND1: "US"
+    - KUNNR: "0000001002"
+      NAME1: "Globex"
+      ORT01: "Springfield"
+      LAND1: "US"
+
+accpac_btrieve:
+  file: "ARCUS.BTR"
+  description: "Raw Btrieve file for Accounts Receivable Customers"
+  hex_dump: "00 01 00 00 41 52 43 55 53 00 00 00 00 00 00 00"

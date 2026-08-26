@@ -1,0 +1,7 @@
+name: sap-maxdb-migration
+description: "Preset 2: Targets SAP 7.9 running on MaxDB."
+version: 1.0.0
+capabilities:
+  - "Bypasses SAP NetWeaver/App layer."
+  - "Connects directly to MaxDB cluster."
+  - "Handles MaxDB clustered tables and proprietary B-Tree layouts."

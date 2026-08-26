@@ -1,0 +1,41 @@
+:root {
+  --skin-postcard-blue: #3b79a6;
+  --skin-cherry-red: #b43a36;
+  --skin-butter-yellow: #f6e4a6;
+  --skin-espresso-brown: #2b211d;
+  --skin-taupe: #8b7d73;
+  --skin-pistachio-green: #a8c98a;
+
+  --skin-cream: #fff9e8;
+  --skin-paper: #fffdf5;
+  --skin-espresso-soft: #493a32;
+  --skin-blue-soft: #d9e8f1;
+  --skin-red-soft: #f5d8d2;
+  --skin-green-soft: #e2efd5;
+
+  --skin-space-1: 0.25rem;
+  --skin-space-2: 0.5rem;
+  --skin-space-3: 0.75rem;
+  --skin-space-4: 1rem;
+  --skin-space-5: 1.5rem;
+  --skin-space-6: 2rem;
+  --skin-space-7: 3rem;
+
+  --skin-radius-sm: 0.375rem;
+  --skin-radius-md: 0.75rem;
+  --skin-radius-lg: 1.125rem;
+  --skin-border-width: 1px;
+  --skin-shadow-resting: 0 0.75rem 2rem rgb(43 33 29 / 0.1);
+  --skin-shadow-raised: 0 1rem 2.5rem rgb(43 33 29 / 0.16);
+
+  --skin-duration-fast: 120ms;
+  --skin-duration-standard: 220ms;
+  --skin-duration-expressive: 420ms;
+  --skin-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --skin-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --skin-font-display: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  --skin-font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --skin-font-data: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
+

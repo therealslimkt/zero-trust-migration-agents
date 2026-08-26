@@ -1,0 +1,7 @@
+name: live-system-researcher
+description: "The Teaser: An interactive agent that prompts the user for any proprietary system and autonomously researches raw file formats and networking requirements."
+version: 1.0.0
+capabilities:
+  - "Interactive user prompts."
+  - "Autonomous web and documentation research."
+  - "Dynamic architecture recommendation."

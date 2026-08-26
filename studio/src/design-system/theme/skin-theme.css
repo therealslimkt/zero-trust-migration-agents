@@ -1,0 +1,66 @@
+@layer theme {
+  :root,
+  [data-theme="skin-day"] {
+    color-scheme: light;
+    --background: var(--skin-cream);
+    --foreground: var(--skin-espresso-brown);
+    --surface: var(--skin-paper);
+    --surface-secondary: var(--skin-butter-yellow);
+    --surface-tertiary: var(--skin-blue-soft);
+    --overlay: var(--skin-paper);
+    --muted: var(--skin-taupe);
+    --accent: var(--skin-postcard-blue);
+    --accent-foreground: var(--skin-paper);
+    --success: var(--skin-pistachio-green);
+    --success-foreground: var(--skin-espresso-brown);
+    --warning: var(--skin-butter-yellow);
+    --warning-foreground: var(--skin-espresso-brown);
+    --danger: var(--skin-cherry-red);
+    --danger-foreground: var(--skin-paper);
+    --focus: var(--skin-postcard-blue);
+    --separator: color-mix(in srgb, var(--skin-taupe) 38%, transparent);
+    --field-background: var(--skin-paper);
+    --field-hover: color-mix(in srgb, var(--skin-blue-soft) 48%, var(--skin-paper));
+  }
+
+  [data-theme="skin-night"] {
+    color-scheme: dark;
+    --background: var(--skin-espresso-brown);
+    --foreground: var(--skin-cream);
+    --surface: var(--skin-espresso-soft);
+    --surface-secondary: color-mix(in srgb, var(--skin-espresso-soft) 82%, var(--skin-butter-yellow));
+    --surface-tertiary: color-mix(in srgb, var(--skin-espresso-soft) 76%, var(--skin-postcard-blue));
+    --overlay: #352922;
+    --muted: #c0afa3;
+    --accent: #79acd0;
+    --accent-foreground: var(--skin-espresso-brown);
+    --success: #b8d79d;
+    --success-foreground: var(--skin-espresso-brown);
+    --warning: #f7de86;
+    --warning-foreground: var(--skin-espresso-brown);
+    --danger: #e37569;
+    --danger-foreground: var(--skin-espresso-brown);
+    --focus: #9cc9e6;
+    --separator: color-mix(in srgb, var(--skin-taupe) 50%, transparent);
+    --field-background: #352922;
+    --field-hover: #42352e;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-muted: var(--muted);
+  --font-sans: var(--skin-font-body);
+  --font-mono: var(--skin-font-data);
+}
+

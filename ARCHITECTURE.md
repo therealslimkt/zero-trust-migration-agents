@@ -23,7 +23,7 @@ By hosting the "Cartridges" directly in GCP, the Agentic Fleet translates the pr
 
 ### 1. Orchestrator (Main Agent)
 *   **Role:** The manager. Receives the migration task, tracks state, and delegates work to specialized subagents.
-*   **Model:** Gemini 3.5 Pro (via Google Cloud Vertex AI).
+*   **Model:** Gemini 3.5 Flash (via Google Cloud Vertex AI or Developer API).
 
 ### 2. Edge Security Agent (The "Privacy Firewall")
 *   **Role:** Runs *locally* on edge hardware (Jetson Nano/Sparky). Scans all legacy data for Personally Identifiable Information (PII) before it leaves the internal network.

@@ -1,0 +1,7 @@
+name: jde-as400-migration
+description: "Preset 1: Targets JD Edwards running on an AS/400 (IBM Power Systems) backend."
+version: 1.0.0
+capabilities:
+  - "Parses EBCDIC."
+  - "Parses packed decimals (COMP-3)."
+  - "Converts JDE Julian date formats to standard dates."
