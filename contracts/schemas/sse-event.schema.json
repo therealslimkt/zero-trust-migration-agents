@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/1.0.0/sse-event.schema.json",
+  "title": "Migration Server-Sent Event Data",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "runId", "eventType", "timestamp", "summary", "evidenceReferences", "state"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "eventId": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"},
+    "runId": {"$ref": "common.schema.json#/$defs/runId"},
+    "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "source.inventory.started",
+        "source.inventory.completed",
+        "source.redaction.completed",
+        "source.plan.ready",
+        "source.execution.started",
+        "source.execution.completed",
+        "source.verification.completed",
+        "source.failed",
+        "migration.created",
+        "portfolio.awaiting_approval",
+        "portfolio.approved",
+        "portfolio.rejected",
+        "migration.completed",
+        "migration.failed",
+        "migration.cancelled"
+      ]
+    },
+    "timestamp": {"type": "string", "format": "date-time"},
+    "summary": {"type": "string", "minLength": 1, "maxLength": 280},
+    "evidenceReferences": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"$ref": "common.schema.json#/$defs/evidenceReference"}
+    },
+    "state": {"$ref": "common.schema.json#/$defs/runState"}
+  },
+  "oneOf": [
+    {
+      "required": ["sourceId"],
+      "properties": {
+        "eventType": {
+          "enum": [
+            "source.inventory.started",
+            "source.inventory.completed",
+            "source.redaction.completed",
+            "source.plan.ready",
+            "source.execution.started",
+            "source.execution.completed",
+            "source.verification.completed",
+            "source.failed"
+          ]
+        }
+      }
+    },
+    {
+      "not": {"required": ["sourceId"]},
+      "properties": {
+        "eventType": {
+          "enum": [
+            "migration.created",
+            "portfolio.awaiting_approval",
+            "portfolio.approved",
+            "portfolio.rejected",
+            "migration.completed",
+            "migration.failed",
+            "migration.cancelled"
+          ]
+        }
+      }
+    }
+  ]
+}

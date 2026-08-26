@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "planId": "plan_JDE000000001",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "jde",
+  "sourceManifestDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "target": {"dataset": "legacy_migration", "table": "jde_f0101"},
+  "operations": [
+    {"operation": "decode_text", "inputField": "ALPH_raw", "outputField": "customer_name", "encoding": "ebcdic-cp037", "trimPadding": true},
+    {"operation": "packed_decimal", "inputField": "AN8_raw", "outputField": "address_number", "precision": 8, "scale": 0, "signed": true},
+    {"operation": "map_date", "inputField": "UPMJ", "outputField": "updated_date", "inputFormat": "jde-cyyddd", "outputFormat": "iso-8601-date", "invalidPolicy": "reject"},
+    {"operation": "tokenize", "field": "customer_name", "outputField": "customer_token", "algorithm": "hmac-sha256", "keyReference": "secret://edge/migration-token-key", "tokenFormat": "hex"},
+    {"operation": "drop", "field": "customer_name"}
+  ],
+  "outputFields": [
+    {"name": "address_number", "type": "decimal", "nullable": false},
+    {"name": "updated_date", "type": "date", "nullable": true},
+    {"name": "customer_token", "type": "string", "nullable": false}
+  ],
+  "planDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

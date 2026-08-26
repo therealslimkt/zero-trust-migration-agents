@@ -1,0 +1,147 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Zero-Trust Migration Portfolio API",
+    "version": "1.0.0",
+    "description": "Creates and observes one migration portfolio containing JDE/AS400, SAP MaxDB, and Accpac/Btrieve."
+  },
+  "servers": [{"url": "/"}],
+  "security": [{"bearerAuth": []}],
+  "paths": {
+    "/api/v1/migrations": {
+      "post": {
+        "operationId": "createMigration",
+        "summary": "Create one three-source migration portfolio",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "./schemas/migration-request.schema.json"}
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Portfolio accepted",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "./schemas/migration-run.schema.json"}
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/Problem"},
+          "401": {"$ref": "#/components/responses/Problem"},
+          "409": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/v1/migrations/{run_id}": {
+      "parameters": [{"$ref": "#/components/parameters/RunId"}],
+      "get": {
+        "operationId": "getMigration",
+        "summary": "Get the current portfolio state",
+        "responses": {
+          "200": {
+            "description": "Current portfolio state",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "./schemas/migration-run.schema.json"}
+              }
+            }
+          },
+          "401": {"$ref": "#/components/responses/Problem"},
+          "404": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/v1/migrations/{run_id}/events": {
+      "parameters": [
+        {"$ref": "#/components/parameters/RunId"},
+        {"$ref": "#/components/parameters/LastEventId"}
+      ],
+      "get": {
+        "operationId": "streamMigrationEvents",
+        "summary": "Stream resumable migration events",
+        "responses": {
+          "200": {
+            "description": "SSE stream. Each data field is a JSON document conforming to x-sse-data-schema.",
+            "headers": {
+              "Cache-Control": {"schema": {"type": "string"}, "description": "Always no-cache"}
+            },
+            "content": {
+              "text/event-stream": {
+                "schema": {"type": "string"},
+                "x-sse-data-schema": {"$ref": "./schemas/sse-event.schema.json"}
+              }
+            }
+          },
+          "401": {"$ref": "#/components/responses/Problem"},
+          "404": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/v1/migrations/{run_id}/approval": {
+      "parameters": [{"$ref": "#/components/parameters/RunId"}],
+      "post": {
+        "operationId": "decideMigrationApproval",
+        "summary": "Approve or reject the complete portfolio plan digest",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "./schemas/approval-request.schema.json"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Portfolio decision recorded",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "./schemas/approval-response.schema.json"}
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/Problem"},
+          "401": {"$ref": "#/components/responses/Problem"},
+          "404": {"$ref": "#/components/responses/Problem"},
+          "409": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "RunId": {
+        "name": "run_id",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "string", "pattern": "^mig_[A-Za-z0-9]{12,64}$"}
+      },
+      "LastEventId": {
+        "name": "Last-Event-ID",
+        "in": "header",
+        "required": false,
+        "description": "Resume after the most recently processed event.",
+        "schema": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"}
+      }
+    },
+    "responses": {
+      "Problem": {
+        "description": "Request failed",
+        "content": {
+          "application/problem+json": {
+            "schema": {"$ref": "./schemas/problem.schema.json"}
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/1.0.0/migration-run.schema.json",
+  "title": "Migration Portfolio Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "portfolioName", "state", "sources", "createdAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "runId": {"$ref": "common.schema.json#/$defs/runId"},
+    "portfolioName": {"type": "string", "minLength": 1, "maxLength": 120},
+    "state": {"$ref": "common.schema.json#/$defs/runState"},
+    "sources": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"$ref": "common.schema.json#/$defs/sourceProgress"},
+      "allOf": [
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "jde"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "maxdb"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "btrieve"}}}, "minContains": 1, "maxContains": 1}
+      ]
+    },
+    "portfolioPlanDigest": {"$ref": "common.schema.json#/$defs/digest"},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"},
+    "failureCode": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,63}$"}
+  }
+}

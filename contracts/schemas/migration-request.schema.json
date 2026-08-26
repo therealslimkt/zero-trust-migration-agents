@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/1.0.0/migration-request.schema.json",
+  "title": "Create Migration Portfolio Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "portfolioName", "sources"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "portfolioName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9 _.-]*$"
+    },
+    "sources": {"$ref": "common.schema.json#/$defs/sourceSet"},
+    "requestedBy": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9@._ -]*$"
+    }
+  }
+}

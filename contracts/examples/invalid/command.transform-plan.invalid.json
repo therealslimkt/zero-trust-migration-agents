@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "planId": "plan_INVALIDCMD001",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "btrieve",
+  "sourceManifestDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "target": {"dataset": "legacy_migration", "table": "accpac_arcus"},
+  "operations": [{"operation": "cast", "field": "SWACTV", "targetType": "boolean", "invalidPolicy": "reject", "command": "REJECTED"}],
+  "outputFields": [{"name": "is_active", "type": "boolean", "nullable": false}],
+  "planDigest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+}

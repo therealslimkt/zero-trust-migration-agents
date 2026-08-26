@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0.0",
+  "portfolioName": "Invalid IP Portfolio",
+  "sources": [
+    {"sourceId": "jde", "hostname": "100.106.76.39"},
+    {"sourceId": "maxdb", "hostname": "legacy-maxdb"},
+    {"sourceId": "btrieve", "hostname": "legacy-btrieve-db"}
+  ]
+}

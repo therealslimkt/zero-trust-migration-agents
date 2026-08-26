@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/1.0.0/problem.schema.json",
+  "title": "Migration API Problem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "type", "title", "status"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "type": {"type": "string", "format": "uri"},
+    "title": {"type": "string", "minLength": 1, "maxLength": 120},
+    "status": {"type": "integer", "minimum": 400, "maximum": 599},
+    "detail": {"type": "string", "maxLength": 500},
+    "requestId": {"type": "string", "pattern": "^req_[A-Za-z0-9]{12,64}$"}
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "eventId": "evt_PORTFOLIOEV01",
+  "runId": "mig_PORTFOLIO0001",
+  "eventType": "portfolio.awaiting_approval",
+  "timestamp": "2026-08-26T14:02:01Z",
+  "summary": "All three source plans are ready for one portfolio decision.",
+  "evidenceReferences": [],
+  "state": "awaiting_approval"
+}

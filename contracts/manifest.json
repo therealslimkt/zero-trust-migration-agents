@@ -1,0 +1,15 @@
+{
+  "contractVersion": "1.0.0",
+  "jsonSchemaDraft": "2020-12",
+  "openapi": "openapi.json",
+  "schemas": [
+    "schemas/common.schema.json",
+    "schemas/migration-request.schema.json",
+    "schemas/migration-run.schema.json",
+    "schemas/transform-plan.schema.json",
+    "schemas/approval-request.schema.json",
+    "schemas/approval-response.schema.json",
+    "schemas/sse-event.schema.json",
+    "schemas/problem.schema.json"
+  ]
+}

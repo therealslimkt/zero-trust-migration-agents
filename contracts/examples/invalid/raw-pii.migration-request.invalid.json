@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "portfolioName": "Invalid Raw PII Portfolio",
+  "sources": [
+    {"sourceId": "jde", "hostname": "legacy-jde-db"},
+    {"sourceId": "maxdb", "hostname": "legacy-maxdb"},
+    {"sourceId": "btrieve", "hostname": "legacy-btrieve-db"}
+  ],
+  "rawPii": {"customerName": "REDACTED-INVALID-FIXTURE"}
+}

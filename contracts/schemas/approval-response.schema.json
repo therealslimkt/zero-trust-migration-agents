@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/1.0.0/approval-response.schema.json",
+  "title": "Portfolio Approval Response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "approvalId", "runId", "planDigest", "decision", "resultingState", "decidedBy", "decidedAt"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "approvalId": {"type": "string", "pattern": "^apr_[A-Za-z0-9]{12,64}$"},
+    "runId": {"$ref": "common.schema.json#/$defs/runId"},
+    "planDigest": {"$ref": "common.schema.json#/$defs/digest"},
+    "decision": {"type": "string", "enum": ["approve", "reject"]},
+    "resultingState": {"type": "string", "enum": ["approved", "cancelled"]},
+    "decidedBy": {"type": "string", "minLength": 1, "maxLength": 120},
+    "decidedAt": {"type": "string", "format": "date-time"}
+  },
+  "oneOf": [
+    {"properties": {"decision": {"const": "approve"}, "resultingState": {"const": "approved"}}},
+    {"properties": {"decision": {"const": "reject"}, "resultingState": {"const": "cancelled"}}}
+  ]
+}

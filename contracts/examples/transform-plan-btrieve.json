@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "planId": "plan_BTRIEVE00001",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "btrieve",
+  "sourceManifestDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "target": {"dataset": "legacy_migration", "table": "accpac_arcus"},
+  "operations": [
+    {"operation": "decode_text", "inputField": "IDCUST_raw", "outputField": "customer_number", "encoding": "latin-1", "trimPadding": true},
+    {"operation": "rename", "from": "SWACTV", "to": "is_active"},
+    {"operation": "cast", "field": "is_active", "targetType": "boolean", "invalidPolicy": "reject"},
+    {"operation": "tokenize", "field": "NAMECUST", "outputField": "customer_token", "algorithm": "hmac-sha256", "keyReference": "secret://edge/migration-token-key", "tokenFormat": "base64url"},
+    {"operation": "drop", "field": "NAMECUST"}
+  ],
+  "outputFields": [
+    {"name": "customer_number", "type": "string", "nullable": false},
+    {"name": "is_active", "type": "boolean", "nullable": false},
+    {"name": "customer_token", "type": "string", "nullable": false}
+  ],
+  "planDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

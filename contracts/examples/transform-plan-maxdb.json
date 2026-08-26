@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0.0",
+  "planId": "plan_MAXDB0000001",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "maxdb",
+  "sourceManifestDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "target": {"dataset": "legacy_migration", "table": "sap_kna1"},
+  "operations": [
+    {"operation": "rename", "from": "KUNNR", "to": "customer_number"},
+    {"operation": "cast", "field": "customer_number", "targetType": "string", "invalidPolicy": "reject"},
+    {"operation": "tokenize", "field": "NAME1", "outputField": "customer_token", "algorithm": "hmac-sha256", "keyReference": "secret://edge/migration-token-key", "tokenFormat": "hex"},
+    {"operation": "drop", "field": "NAME1"}
+  ],
+  "outputFields": [
+    {"name": "customer_number", "type": "string", "nullable": false},
+    {"name": "customer_token", "type": "string", "nullable": false}
+  ],
+  "planDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+}

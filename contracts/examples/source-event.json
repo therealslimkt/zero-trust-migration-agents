@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "eventId": "evt_SOURCEEVENT01",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "jde",
+  "eventType": "source.plan.ready",
+  "timestamp": "2026-08-26T14:02:00Z",
+  "summary": "JDE transform plan is ready for portfolio approval.",
+  "evidenceReferences": [
+    {"artifactId": "art_jde-plan-001", "kind": "transform_plan", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+  ],
+  "state": "awaiting_approval"
+}

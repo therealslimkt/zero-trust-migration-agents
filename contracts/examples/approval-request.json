@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1.0.0",
+  "planDigest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "decision": "approve",
+  "decidedBy": "migration-operator",
+  "reason": "Reconciliation previews and redaction reports reviewed."
+}

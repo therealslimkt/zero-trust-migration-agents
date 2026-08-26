@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "approvalId": "apr_APPROVAL000001",
+  "runId": "mig_PORTFOLIO0001",
+  "planDigest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "decision": "approve",
+  "resultingState": "approved",
+  "decidedBy": "migration-operator",
+  "decidedAt": "2026-08-26T14:03:00Z"
+}

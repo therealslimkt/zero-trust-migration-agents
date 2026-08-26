@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "mig_PORTFOLIO0001",
+  "portfolioName": "Legacy ERP Portfolio",
+  "state": "awaiting_approval",
+  "sources": [
+    {"sourceId": "jde", "hostname": "legacy-jde-db", "state": "awaiting_approval", "recordsRead": 100, "recordsWritten": 0, "recordsRejected": 0, "planDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    {"sourceId": "maxdb", "hostname": "legacy-maxdb", "state": "awaiting_approval", "recordsRead": 120, "recordsWritten": 0, "recordsRejected": 0, "planDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+    {"sourceId": "btrieve", "hostname": "legacy-btrieve-db", "state": "awaiting_approval", "recordsRead": 80, "recordsWritten": 0, "recordsRejected": 1, "planDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
+  ],
+  "portfolioPlanDigest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "createdAt": "2026-08-26T14:00:00Z",
+  "updatedAt": "2026-08-26T14:02:00Z"
+}

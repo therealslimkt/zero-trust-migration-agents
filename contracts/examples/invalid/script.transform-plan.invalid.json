@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "planId": "plan_INVALIDSCRPT1",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "maxdb",
+  "sourceManifestDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "target": {"dataset": "legacy_migration", "table": "sap_kna1"},
+  "operations": [{"operation": "rename", "from": "KUNNR", "to": "customer_number", "script": "REJECTED"}],
+  "outputFields": [{"name": "customer_number", "type": "string", "nullable": false}],
+  "planDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+}

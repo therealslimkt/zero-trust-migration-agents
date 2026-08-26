@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/1.0.0/transform-plan.schema.json",
+  "title": "Declarative Transform Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "planId", "runId", "sourceId", "sourceManifestDigest", "target", "operations", "outputFields", "planDigest"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "planId": {"type": "string", "pattern": "^plan_[A-Za-z0-9]{12,64}$"},
+    "runId": {"$ref": "common.schema.json#/$defs/runId"},
+    "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+    "sourceManifestDigest": {"$ref": "common.schema.json#/$defs/digest"},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dataset", "table"],
+      "properties": {
+        "dataset": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,1023}$"},
+        "table": {"type": "string", "enum": ["jde_f0101", "sap_kna1", "accpac_arcus"]}
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/operation"}
+    },
+    "outputFields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/outputField"}
+    },
+    "planDigest": {"$ref": "common.schema.json#/$defs/digest"}
+  },
+  "$defs": {
+    "fieldName": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.]{0,127}$"
+    },
+    "decodeText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "inputField", "outputField", "encoding"],
+      "properties": {
+        "operation": {"const": "decode_text"},
+        "inputField": {"$ref": "#/$defs/fieldName"},
+        "outputField": {"$ref": "#/$defs/fieldName"},
+        "encoding": {"type": "string", "enum": ["ebcdic-cp037", "ebcdic-cp500", "utf-8", "latin-1"]},
+        "trimPadding": {"type": "boolean"}
+      }
+    },
+    "packedDecimal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "inputField", "outputField", "precision", "scale", "signed"],
+      "properties": {
+        "operation": {"const": "packed_decimal"},
+        "inputField": {"$ref": "#/$defs/fieldName"},
+        "outputField": {"$ref": "#/$defs/fieldName"},
+        "precision": {"type": "integer", "minimum": 1, "maximum": 38},
+        "scale": {"type": "integer", "minimum": 0, "maximum": 38},
+        "signed": {"type": "boolean"}
+      }
+    },
+    "mapDate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "inputField", "outputField", "inputFormat", "outputFormat", "invalidPolicy"],
+      "properties": {
+        "operation": {"const": "map_date"},
+        "inputField": {"$ref": "#/$defs/fieldName"},
+        "outputField": {"$ref": "#/$defs/fieldName"},
+        "inputFormat": {"type": "string", "enum": ["jde-cyyddd", "yyyyMMdd", "iso-8601", "unix-days"]},
+        "outputFormat": {"const": "iso-8601-date"},
+        "invalidPolicy": {"type": "string", "enum": ["reject", "null"]}
+      }
+    },
+    "rename": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "from", "to"],
+      "properties": {
+        "operation": {"const": "rename"},
+        "from": {"$ref": "#/$defs/fieldName"},
+        "to": {"$ref": "#/$defs/fieldName"}
+      }
+    },
+    "cast": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "field", "targetType", "invalidPolicy"],
+      "properties": {
+        "operation": {"const": "cast"},
+        "field": {"$ref": "#/$defs/fieldName"},
+        "targetType": {"type": "string", "enum": ["string", "integer", "decimal", "date", "timestamp", "boolean", "bytes"]},
+        "invalidPolicy": {"type": "string", "enum": ["reject", "null"]}
+      }
+    },
+    "drop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "field"],
+      "properties": {
+        "operation": {"const": "drop"},
+        "field": {"$ref": "#/$defs/fieldName"}
+      }
+    },
+    "tokenize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "field", "outputField", "algorithm", "keyReference", "tokenFormat"],
+      "properties": {
+        "operation": {"const": "tokenize"},
+        "field": {"$ref": "#/$defs/fieldName"},
+        "outputField": {"$ref": "#/$defs/fieldName"},
+        "algorithm": {"const": "hmac-sha256"},
+        "keyReference": {"type": "string", "pattern": "^secret://[A-Za-z0-9][A-Za-z0-9/_-]{2,255}$"},
+        "tokenFormat": {"type": "string", "enum": ["hex", "base64url"]}
+      }
+    },
+    "operation": {
+      "oneOf": [
+        {"$ref": "#/$defs/decodeText"},
+        {"$ref": "#/$defs/packedDecimal"},
+        {"$ref": "#/$defs/mapDate"},
+        {"$ref": "#/$defs/rename"},
+        {"$ref": "#/$defs/cast"},
+        {"$ref": "#/$defs/drop"},
+        {"$ref": "#/$defs/tokenize"}
+      ]
+    },
+    "outputField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "nullable"],
+      "properties": {
+        "name": {"$ref": "#/$defs/fieldName"},
+        "type": {"type": "string", "enum": ["string", "integer", "decimal", "date", "timestamp", "boolean", "bytes"]},
+        "nullable": {"type": "boolean"}
+      }
+    }
+  }
+}

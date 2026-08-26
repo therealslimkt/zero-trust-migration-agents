@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "planId": "plan_INVALIDCODE01",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "jde",
+  "sourceManifestDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "target": {"dataset": "legacy_migration", "table": "jde_f0101"},
+  "operations": [{"operation": "drop", "field": "unsafe", "code": "REJECTED"}],
+  "outputFields": [{"name": "safe", "type": "string", "nullable": true}],
+  "planDigest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+}
