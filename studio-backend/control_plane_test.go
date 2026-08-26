@@ -641,6 +641,21 @@ func TestControlPlane_CorruptStateErrorHidesPathsAndValues(t *testing.T) {
 // State machine
 // ---------------------------------------------------------------------------
 
+func TestPortfolioPlanDigest_MatchesPythonCanonicalVector(t *testing.T) {
+	run := &ControlPlaneRun{
+		RunID: "mig_DIGESTVECTOR01",
+		Sources: []ControlPlaneSource{
+			{SourceID: "jde", PlanDigest: "sha256:" + strings.Repeat("1", 64)},
+			{SourceID: "maxdb", PlanDigest: "sha256:" + strings.Repeat("2", 64)},
+			{SourceID: "btrieve", PlanDigest: "sha256:" + strings.Repeat("3", 64)},
+		},
+	}
+	const expected = "sha256:e2288ef0c6e5ce4f8ffd669604e5bbf3f125d1142eba04f80954024608ab76e5"
+	if got := cpPortfolioPlanDigest(run); got != expected {
+		t.Fatalf("digest = %q, want shared canonical vector %q", got, expected)
+	}
+}
+
 func TestOrchestration_ValidSequenceReachesCompletion(t *testing.T) {
 	h := cpTestNew(t)
 	run := cpTestCreate(t, h)

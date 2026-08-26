@@ -512,22 +512,32 @@ func cpRandomID(prefix string, n int) (string, error) {
 	return prefix + string(out), nil
 }
 
-// cpPortfolioPlanDigest derives the portfolio plan digest from the run
-// identity and the three per-source plan digests in canonical order. The
-// derivation is deterministic, so an approval digest can be bound exactly to
-// the plans it was shown.
+// cpPortfolioPlanDigest implements the language-neutral canonical digest used
+// by control_plane/canonical.py. Each plan digest already binds its run ID, so
+// the portfolio anchor contains only the frozen schema version and the three
+// source/digest pairs in canonical order.
 func cpPortfolioPlanDigest(run *ControlPlaneRun) string {
-	h := sha256.New()
-	_, _ = io.WriteString(h, "zero-trust-migration/portfolio-plan/"+cpSchemaVersion+"\n")
-	_, _ = io.WriteString(h, run.RunID+"\n")
+	plans := make([]map[string]string, 0, len(cpCanonicalSources))
 	for _, c := range cpCanonicalSources {
 		src := cpFindSource(run, c.SourceID)
 		if src == nil {
 			return ""
 		}
-		_, _ = io.WriteString(h, c.SourceID+" "+src.PlanDigest+"\n")
+		plans = append(plans, map[string]string{
+			"sourceId":   c.SourceID,
+			"planDigest": src.PlanDigest,
+		})
 	}
-	return "sha256:" + hex.EncodeToString(h.Sum(nil))
+	payload := map[string]any{
+		"schemaVersion": cpSchemaVersion,
+		"plans":         plans,
+	}
+	encoded, err := json.Marshal(payload)
+	if err != nil { // The payload contains only repository-owned JSON values.
+		return ""
+	}
+	digest := sha256.Sum256(encoded)
+	return "sha256:" + hex.EncodeToString(digest[:])
 }
 
 func cpFindSource(run *ControlPlaneRun, sourceID string) *ControlPlaneSource {
