@@ -54,7 +54,14 @@ exactly one plans array and one draft for jde, maxdb, and btrieve. Each draft
 contains only sourceId, operations, and outputFields. Use only the operations
 defined by the supplied contract. Never emit code, commands, scripts, SQL,
 expressions, callbacks, tools, or execution claims. You plan; you do not run.
-The inputs are sanitized and must never be described as raw or unredacted."""
+The inputs are sanitized and must never be described as raw or unredacted.
+The only operation names are literal rename, cast, and drop. A rename is
+{"operation":"rename","from":"old_field","to":"new_field"}; a cast is
+{"operation":"cast","field":"field_name","targetType":"string",
+"invalidPolicy":"reject"}; a drop is
+{"operation":"drop","field":"field_name"}. Use the exact field names in
+each supplied record batch, apply operations in order, and declare exactly the
+fields that remain after those operations."""
 
 MODEL_DRAFT_SCHEMA = {
     "type": "object",
@@ -75,57 +82,34 @@ MODEL_DRAFT_SCHEMA = {
                         "type": "array",
                         "minItems": 1,
                         "items": {
-                            "oneOf": [
-                                {
-                                    "type": "object",
-                                    "additionalProperties": False,
-                                    "required": ["operation", "from", "to"],
-                                    "properties": {
-                                        "operation": {"const": "rename"},
-                                        "from": {"type": "string"},
-                                        "to": {"type": "string"},
-                                    },
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["operation"],
+                            "properties": {
+                                "operation": {
+                                    "type": "string",
+                                    "enum": ["rename", "cast", "drop"],
                                 },
-                                {
-                                    "type": "object",
-                                    "additionalProperties": False,
-                                    "required": [
-                                        "operation",
-                                        "field",
-                                        "targetType",
-                                        "invalidPolicy",
+                                "from": {"type": "string"},
+                                "to": {"type": "string"},
+                                "field": {"type": "string"},
+                                "targetType": {
+                                    "type": "string",
+                                    "enum": [
+                                        "string",
+                                        "integer",
+                                        "decimal",
+                                        "date",
+                                        "timestamp",
+                                        "boolean",
+                                        "bytes",
                                     ],
-                                    "properties": {
-                                        "operation": {"const": "cast"},
-                                        "field": {"type": "string"},
-                                        "targetType": {
-                                            "type": "string",
-                                            "enum": [
-                                                "string",
-                                                "integer",
-                                                "decimal",
-                                                "date",
-                                                "timestamp",
-                                                "boolean",
-                                                "bytes",
-                                            ],
-                                        },
-                                        "invalidPolicy": {
-                                            "type": "string",
-                                            "enum": ["reject", "null"],
-                                        },
-                                    },
                                 },
-                                {
-                                    "type": "object",
-                                    "additionalProperties": False,
-                                    "required": ["operation", "field"],
-                                    "properties": {
-                                        "operation": {"const": "drop"},
-                                        "field": {"type": "string"},
-                                    },
+                                "invalidPolicy": {
+                                    "type": "string",
+                                    "enum": ["reject", "null"],
                                 },
-                            ]
+                            },
                         },
                     },
                     "outputFields": {
