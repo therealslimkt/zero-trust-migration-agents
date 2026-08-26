@@ -539,18 +539,31 @@ def antigravity_model_call_factory(
     *,
     model_name: Optional[str] = None,
     location: Optional[str] = None,
+    project: Optional[str] = None,
 ) -> ModelCall:
     """Create a lazy Vertex/Antigravity call; no client is built at import time."""
 
     selected_model = model_name or os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
     selected_location = location or os.environ.get("VERTEX_LOCATION", "us-central1")
+    selected_project = project or os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get(
+        "GCLOUD_PROJECT"
+    )
 
     async def call(request: Mapping[str, object]) -> str:
         from google.antigravity import Agent, LocalAgentConfig
 
+        vertex_project = selected_project
+        if not vertex_project:
+            import google.auth
+
+            _, vertex_project = google.auth.default()
+        if not vertex_project:
+            raise RuntimeError("Vertex project is unavailable")
+
         config = LocalAgentConfig(
             model=selected_model,
             vertex=True,
+            project=vertex_project,
             location=selected_location,
             tools=[],
             system_instructions=SYSTEM_INSTRUCTIONS,

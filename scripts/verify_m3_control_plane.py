@@ -128,6 +128,7 @@ async def _plan(args: argparse.Namespace) -> dict[str, object]:
         antigravity_model_call_factory(
             model_name=args.model,
             location=args.location,
+            project=args.project,
         ),
         args.model,
         dataset=args.dataset,
@@ -188,6 +189,7 @@ def _parser() -> argparse.ArgumentParser:
     plan.add_argument("--tailscale-binary", default="tailscale")
     plan.add_argument("--model", default="gemini-3.5-flash")
     plan.add_argument("--location", default="us-central1")
+    plan.add_argument("--project")
     plan.add_argument("--dataset", default="legacy_migration")
 
     execute = subparsers.add_parser(
