@@ -35,12 +35,12 @@ This document breaks down the implementation of the Zero-Trust Migration Agents 
     *   Only receives 100% sanitized data. It coordinates the Researcher and Reverse-Engineer subagents to build the translation pipeline.
 
 ## Phase 4: The Google Cloud Runtime (Replacing OpenFlow)
-*Goal: Safely execute the AI's code at enterprise scale and push to BigQuery.*
+*Goal: Safely execute a trusted, pre-registered pipeline from an approved declarative plan and push to BigQuery.*
 
 1.  **Google Cloud Dataflow (Apache Beam):** This is Google's equivalent to OpenFlow. 
     *   The Reverse-Engineer agent writes an **Apache Beam** pipeline script.
     *   This script utilizes open-source JARs to decode the proprietary binary into ASCII.
-2.  **MCP Sandbox Deployment:** Our MCP server deploys the Agent's generated Beam pipeline to Google Cloud Dataflow.
+2.  **Trusted Template Dispatch:** The approved plan supplies typed parameters to a pre-registered Google Cloud Dataflow Flex Template; no generated code is accepted.
 3.  **BigQuery Ingestion:** The Dataflow pipeline streams the decoded, PII-scrubbed JSON directly into Google BigQuery.
 
 ## Post-Hackathon / Access Unlocked

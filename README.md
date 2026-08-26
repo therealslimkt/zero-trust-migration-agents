@@ -6,7 +6,7 @@ A zero-trust, multi-agent system that autonomously reverse-engineers, parses, an
 Enterprise companies want to use AI to migrate legacy data, but they cannot send sensitive PII to the cloud. This project solves "Data Gravity" by utilizing a Zero-Trust architecture:
 1. **Edge AI:** A local Gemma model acts as a privacy firewall, scrubbing PII *before* it leaves the internal network.
 2. **Cloud AI:** Gemini 3.5 Flash acts as the Orchestrator, dynamically spawning specialized subagents (Researcher, Reverse-Engineer, Pipeline).
-3. **Sandboxed Execution:** AI-generated parsing code is never trusted locally. It is executed in a highly isolated Google Cloud Run container via the Model Context Protocol (MCP).
+3. **Trusted Execution:** Agents emit schema-validated declarative TransformPlans. After portfolio approval, a pre-registered Dataflow Flex Template interprets only allowlisted operations; generated code is never executed.
 
 Read the full [ARCHITECTURE.md](ARCHITECTURE.md) for details on the agent fleet.
 
