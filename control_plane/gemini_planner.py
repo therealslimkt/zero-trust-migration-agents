@@ -572,6 +572,9 @@ def antigravity_model_call_factory(
             response = await agent.chat(
                 json.dumps(request, ensure_ascii=False, sort_keys=True)
             )
+            structured = await response.structured_output()
+            if structured is not None:
+                return structured
             return await response.text()
 
     return call
