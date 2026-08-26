@@ -72,6 +72,7 @@ class TailscaleSSHTransport:
                 "1",
                 "--timeout",
                 "5s",
+                "--until-direct=false",
                 spec.hostname,
             ]
         )

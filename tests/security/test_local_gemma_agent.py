@@ -48,12 +48,14 @@ class TailscaleGemmaReviewerTests(unittest.TestCase):
 
         self.assertEqual(review.status, "passed")
         self.assertEqual(review.finding_count, 0)
+        self.assertIn("--until-direct=false", runner.calls[0][0])
         command = runner.calls[1][0]
         prompt = runner.calls[1][1]["input"].decode("utf-8")
         self.assertIn("ohallaatme@sparky-sid-411116", command)
         self.assertNotIn("100.", " ".join(command))
         self.assertNotIn("000-11-2222", prompt)
         self.assertIn("tok_", prompt)
+        self.assertIn("Inspect only values whose protection is sanitized", prompt)
 
     def test_accepts_strict_blocked_verdict_without_values(self):
         verdict = {

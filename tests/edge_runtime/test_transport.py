@@ -28,6 +28,7 @@ class TailscaleSSHTransportTests(unittest.TestCase):
 
         self.assertEqual(payload.data, b"fixture")
         self.assertEqual(runner.calls[0][0][-1], "legacy-jde-db")
+        self.assertIn("--until-direct=false", runner.calls[0][0])
         self.assertEqual(runner.calls[1][0][:3], ["tailscale", "ssh", "kohalloran@legacy-jde-db"])
         self.assertNotIn("100.", " ".join(runner.calls[1][0]))
 

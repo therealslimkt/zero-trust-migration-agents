@@ -50,7 +50,12 @@ class TailscaleGemmaReviewer:
 
     _SYSTEM_INSTRUCTION = (
         "You are a residual PII verifier. The candidate was deterministically "
-        "tokenized. Never repeat any candidate value. Return only compact JSON "
+        "protected. A value whose protection is tokenized and whose value starts "
+        "with tok_ is safe, regardless of its field name. Record IDs, source IDs, "
+        "record-set names, ordinals, and field names are safe metadata. Inspect "
+        "only values whose protection is sanitized; do not infer a finding from "
+        "semantic names such as account_balance. Never repeat any candidate value. "
+        "Return only compact JSON "
         'with exactly {"status":"passed","findings":[]} when no residual PII '
         "is present, or status blocked and findings containing only field and "
         "category. Allowed categories: name, email, phone, address, "
@@ -124,6 +129,7 @@ class TailscaleGemmaReviewer:
                 "1",
                 "--timeout",
                 "5s",
+                "--until-direct=false",
                 self.hostname,
             ]
         )
