@@ -544,7 +544,9 @@ def antigravity_model_call_factory(
     """Create a lazy Vertex/Antigravity call; no client is built at import time."""
 
     selected_model = model_name or os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
-    selected_location = location or os.environ.get("VERTEX_LOCATION", "us-central1")
+    # Gemini 3.5 Flash Standard PayGo is served from global, us, or eu rather
+    # than us-central1. Prefer the US multi-region to keep processing bounded.
+    selected_location = location or os.environ.get("VERTEX_LOCATION", "us")
     selected_project = project or os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get(
         "GCLOUD_PROJECT"
     )

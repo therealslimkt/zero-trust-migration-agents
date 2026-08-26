@@ -188,7 +188,7 @@ def _parser() -> argparse.ArgumentParser:
     plan.add_argument("--snapshot", type=Path, required=True)
     plan.add_argument("--tailscale-binary", default="tailscale")
     plan.add_argument("--model", default="gemini-3.5-flash")
-    plan.add_argument("--location", default="us-central1")
+    plan.add_argument("--location", default="us")
     plan.add_argument("--project")
     plan.add_argument("--dataset", default="legacy_migration")
 
