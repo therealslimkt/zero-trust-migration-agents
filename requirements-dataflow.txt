@@ -1,0 +1,3 @@
+# Kept separate from the local control-plane dependencies. The official
+# Dataflow Flex Template image installs this exact worker/launcher dependency.
+apache-beam[gcp]==2.75.0

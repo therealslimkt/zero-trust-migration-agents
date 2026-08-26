@@ -1,0 +1,15 @@
+{
+  "name": "Zero Trust Migration Trusted Writer",
+  "description": "Verifies one immutable protected bundle and writes lineage-bound rows to a pre-created BigQuery table.",
+  "streaming": false,
+  "parameters": [
+    {"name": "input_uri", "label": "Immutable bundle URI", "regexes": ["^gs://[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]/runs/mig_[A-Za-z0-9]{12,64}/(jde|maxdb|btrieve)/[a-f0-9]{64}\\.json$"]},
+    {"name": "output_table", "label": "Registered BigQuery table", "regexes": ["^[a-z][a-z0-9-]{4,28}[a-z0-9]:[A-Za-z_][A-Za-z0-9_]{0,1023}\\.(jde_f0101|sap_kna1|accpac_arcus)$"]},
+    {"name": "expected_run_id", "label": "Migration run ID", "regexes": ["^mig_[A-Za-z0-9]{12,64}$"]},
+    {"name": "expected_source_id", "label": "Canonical source ID", "regexes": ["^(jde|maxdb|btrieve)$"]},
+    {"name": "expected_portfolio_digest", "label": "Approved portfolio digest", "regexes": ["^sha256:[a-f0-9]{64}$"]},
+    {"name": "expected_plan_digest", "label": "Source plan digest", "regexes": ["^sha256:[a-f0-9]{64}$"]},
+    {"name": "expected_bundle_digest", "label": "Immutable bundle digest", "regexes": ["^sha256:[a-f0-9]{64}$"]},
+    {"name": "output_schema_json", "label": "Bound BigQuery schema", "regexes": ["^.{20,8192}$"]}
+  ]
+}
