@@ -154,6 +154,7 @@ async function testAuthenticatedResumption(): Promise<void> {
   };
   const authorizationHeaders: string[] = [];
   const cursors: Array<string | null> = [];
+  const connectionStates: string[] = [];
   let requestCount = 0;
   const fakeFetch = (async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const headers = new Headers(init?.headers);
@@ -164,7 +165,9 @@ async function testAuthenticatedResumption(): Promise<void> {
   }) as typeof fetch;
 
   const client = new MissionControlClient({ baseUrl: "http://mission-control.test", token: "test-token", fetchImpl: fakeFetch });
-  const stream = client.streamEvents(runId);
+  const stream = client.streamEvents(runId, {
+    onConnectionStateChange: (state) => connectionStates.push(state),
+  });
   const first = await stream.next();
   equal(first.value?.eventId, baseEvent.eventId, "first event id");
   const second = await stream.next();
@@ -175,6 +178,8 @@ async function testAuthenticatedResumption(): Promise<void> {
   equal(authorizationHeaders[1], "Bearer test-token", "authenticated resumed request");
   equal(cursors[0], null, "first cursor");
   equal(cursors[1], baseEvent.eventId, "exact resumed cursor");
+  assert(!connectionStates.includes("reconnecting"), "clean bounded replay must not report reconnecting");
+  assert(!connectionStates.includes("stale"), "clean bounded replay must not report stale");
   client.close();
   assert(client.isClosed, "close should permanently close the client");
 }
@@ -257,7 +262,59 @@ async function testFrozenRestMethods(): Promise<void> {
   assert(calls.every((call) => call.authorization === "Bearer rest-token"), "REST request omitted bearer authentication");
 }
 
+async function testProxyModeOmitsBrowserCredential(): Promise<void> {
+  const run = approvalRun();
+  let authorization: string | null = "not-called";
+  const fakeFetch = (async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    authorization = new Headers(init?.headers).get("Authorization");
+    return new Response(JSON.stringify(run), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+  const client = new MissionControlClient({ baseUrl: "", fetchImpl: fakeFetch });
+
+  await client.getMigration(run.runId);
+  equal(authorization, null, "same-origin proxy mode must omit browser Authorization");
+}
+
+async function testTransportFailureStaysStaleUntilRecovery(): Promise<void> {
+  const runId = "mig_PORTFOLIO0001";
+  const firstEvent = evidenceEvents(runId)[0]!;
+  assert(firstEvent.eventType === "source.plan.ready", "expected a source-scoped fixture event");
+  const recoveredEvent: MigrationSseEvent = {
+    ...firstEvent,
+    eventId: "evt_SOURCEEVENT03",
+    sourceId: "btrieve",
+    summary: "Btrieve transform plan is ready after transport recovery.",
+    evidenceReferences: [{ artifactId: "art_btrieve-plan1", kind: "transform_plan", digest: DIGEST_C }],
+  };
+  const connectionStates: string[] = [];
+  let requestCount = 0;
+  const fakeFetch = (async (): Promise<Response> => {
+    requestCount += 1;
+    if (requestCount === 2) throw new Error("simulated transport failure");
+    return sseResponse(requestCount === 1 ? firstEvent : recoveredEvent);
+  }) as typeof fetch;
+  const client = new MissionControlClient({ baseUrl: "", fetchImpl: fakeFetch });
+  const stream = client.streamEvents(runId, {
+    onConnectionStateChange: (state) => connectionStates.push(state),
+  });
+
+  equal((await stream.next()).value?.eventId, firstEvent.eventId, "pre-failure event id");
+  equal((await stream.next()).value?.eventId, recoveredEvent.eventId, "recovered event id");
+  await stream.return();
+
+  equal(
+    connectionStates.join(","),
+    "connecting,connected,stale,connected,disconnected",
+    "transport health sequence",
+  );
+}
+
 testModelProjection();
 await testAuthenticatedResumption();
 await testErrorsDoNotLeakToken();
 await testFrozenRestMethods();
+await testProxyModeOmitsBrowserCredential();
+await testTransportFailureStaysStaleUntilRecovery();

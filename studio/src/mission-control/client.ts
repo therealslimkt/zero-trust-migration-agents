@@ -81,7 +81,11 @@ const PORTFOLIO_EVENT_TYPES = new Set<PortfolioEventType>([
 
 export interface MissionControlClientOptions {
   baseUrl: string;
-  token: string;
+  /**
+   * Optional for a same-origin browser client whose local server-side proxy
+   * authenticates upstream. Direct API clients must still provide a token.
+   */
+  token?: string;
   fetchImpl?: typeof fetch;
 }
 
@@ -254,13 +258,16 @@ class IncrementalSseParser {
 
 export class MissionControlClient {
   private readonly baseUrl: string;
-  private readonly token: string;
+  private readonly token: string | undefined;
   private readonly fetchImpl: typeof fetch;
   private readonly streamControllers = new Set<AbortController>();
   private closed = false;
 
   constructor(options: MissionControlClientOptions) {
-    if (!isValidToken(options.token) || !isValidBaseUrl(options.baseUrl)) {
+    if (
+      !isValidBaseUrl(options.baseUrl) ||
+      (options.token !== undefined && !isValidToken(options.token))
+    ) {
       throw new MissionControlClientError("invalid_configuration");
     }
     this.baseUrl = normalizeBaseUrl(options.baseUrl);
@@ -345,13 +352,10 @@ export class MissionControlClient {
 
     let lastEventId = options.lastEventId;
     let retryMs = DEFAULT_RETRY_MS;
-    let firstConnection = true;
+    notifyConnection(options, "connecting");
 
     try {
       while (!lifecycle.signal.aborted) {
-        notifyConnection(options, firstConnection ? "connecting" : "reconnecting");
-        firstConnection = false;
-
         let response: Response;
         try {
           response = await this.fetchImpl(this.endpoint(`/api/v1/migrations/${encodeURIComponent(runId)}/events`), {
@@ -365,7 +369,10 @@ export class MissionControlClient {
           });
         } catch {
           if (lifecycle.signal.aborted) return;
-          notifyConnection(options, "reconnecting");
+          // A failed transport means the last snapshot is no longer known to
+          // be current. Keep the stream stale across every retry until a
+          // successful authenticated response proves recovery.
+          notifyConnection(options, "stale");
           if (!(await waitForRetry(retryMs, lifecycle.signal))) return;
           continue;
         }
@@ -374,7 +381,7 @@ export class MissionControlClient {
           const error = httpError(response.status);
           void response.body?.cancel();
           if (!error.retryable) throw error;
-          notifyConnection(options, "reconnecting");
+          notifyConnection(options, "stale");
           if (!(await waitForRetry(retryMs, lifecycle.signal))) return;
           continue;
         }
@@ -387,6 +394,7 @@ export class MissionControlClient {
         const parser = new IncrementalSseParser();
         const decoder = new TextDecoder();
         const reader = response.body.getReader();
+        let transportFailed = false;
         try {
           while (!lifecycle.signal.aborted) {
             let result: ReadableStreamReadResult<Uint8Array>;
@@ -394,6 +402,7 @@ export class MissionControlClient {
               result = await reader.read();
             } catch {
               if (lifecycle.signal.aborted) return;
+              transportFailed = true;
               break;
             }
             if (result.done) {
@@ -431,7 +440,10 @@ export class MissionControlClient {
         }
 
         if (lifecycle.signal.aborted) return;
-        notifyConnection(options, "reconnecting");
+        // Clean EOF is the expected boundary of the Go server's bounded SSE
+        // replay. The connection remains logically healthy while the client
+        // waits to poll again; only an actual read failure makes it stale.
+        if (transportFailed) notifyConnection(options, "stale");
         if (!(await waitForRetry(retryMs, lifecycle.signal))) return;
       }
     } finally {
@@ -483,8 +495,8 @@ export class MissionControlClient {
   private headers(accept: string, lastEventId?: string): Headers {
     const headers = new Headers({
       Accept: accept,
-      Authorization: `Bearer ${this.token}`,
     });
+    if (this.token !== undefined) headers.set("Authorization", `Bearer ${this.token}`);
     if (accept === "application/json") headers.set("Content-Type", "application/json");
     if (lastEventId !== undefined) headers.set("Last-Event-ID", lastEventId);
     return headers;

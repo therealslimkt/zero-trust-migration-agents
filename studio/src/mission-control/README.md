@@ -44,7 +44,7 @@ status.
 aliases:
 
 ```ts
-const client = new MissionControlClient({ baseUrl, token });
+const client = new MissionControlClient({ baseUrl, token }); // direct API client
 const run = await client.getMigration(runId); // alias: get
 
 for await (const event of client.streamEvents(runId, {
@@ -59,11 +59,36 @@ await client.approveMigration(runId, approvalRequest); // alias: approve
 client.close();
 ```
 
-The stream uses authenticated `fetch`, not browser `EventSource`. It parses SSE
-incrementally across chunk boundaries, honors server retry hints within a
-250–10,000 ms bound, and reconnects with the exact last validated SSE ID. An
-abort signal ends one stream; `client.close()` permanently closes the client
-and aborts every active stream.
+For the local browser demo, the client instead uses the same-origin Vite
+proxy and carries no upstream credential:
+
+```ts
+const client = new MissionControlClient({ baseUrl: '' });
+```
+
+`vite.config.ts` binds both development and preview servers to `127.0.0.1`,
+proxies only `/api/v1` to a loopback HTTP origin, removes any browser-supplied
+authorization value, and injects `MISSION_CONTROL_API_TOKEN` from the Vite
+server process. The token must never use a `VITE_` prefix; those variables are
+compiled into the browser bundle. The optional
+`MISSION_CONTROL_PROXY_TARGET` defaults to `http://127.0.0.1:8080` and refuses
+non-loopback targets.
+
+This proxy is deliberately local-demo infrastructure. Do not expose the Vite
+server through `--host`, a tunnel, or a public deployment. A remotely
+accessible deployment needs an authenticated BFF or identity-aware proxy.
+
+The stream uses `fetch`, not browser `EventSource`, so direct clients can set a
+bearer header and proxy-mode browsers can leave authentication to the local
+server. It parses SSE incrementally across chunk boundaries, honors server
+retry hints within a 250–10,000 ms bound, and reconnects with the exact last
+validated SSE ID. An abort signal ends one stream; `client.close()` permanently
+closes the client and aborts every active stream.
+
+A clean EOF is the expected boundary of the backend's bounded replay and stays
+`connected` while the client waits to poll again. A fetch, retryable HTTP, or
+stream read failure changes the connection to `stale` and keeps it stale until
+a successful authenticated SSE response restores `connected`.
 
 All wire responses are checked against the closed vocabularies before they
 reach the UI. `MissionControlClientError` contains only fixed local messages,
