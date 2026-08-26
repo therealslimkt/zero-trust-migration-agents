@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/1.0.0/source-manifest.schema.json",
+  "title": "Legacy Source Inventory Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "manifestId", "runId", "sourceId", "hostname", "inventoryDigest", "recordSets", "observedAt"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "manifestId": {"type": "string", "pattern": "^manifest_[A-Za-z0-9]{12,64}$"},
+    "runId": {"$ref": "common.schema.json#/$defs/runId"},
+    "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+    "hostname": {
+      "type": "string",
+      "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]
+    },
+    "inventoryDigest": {"$ref": "common.schema.json#/$defs/digest"},
+    "recordSets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/recordSet"}
+    },
+    "observedAt": {"type": "string", "format": "date-time"}
+  },
+  "oneOf": [
+    {"properties": {"sourceId": {"const": "jde"}, "hostname": {"const": "legacy-jde-db"}}},
+    {"properties": {"sourceId": {"const": "maxdb"}, "hostname": {"const": "legacy-maxdb"}}},
+    {"properties": {"sourceId": {"const": "btrieve"}, "hostname": {"const": "legacy-btrieve-db"}}}
+  ],
+  "$defs": {
+    "recordSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "recordCount", "byteCount", "schemaDigest"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]{0,127}$"},
+        "recordCount": {"type": "integer", "minimum": 0},
+        "byteCount": {"type": "integer", "minimum": 0},
+        "schemaDigest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    }
+  }
+}

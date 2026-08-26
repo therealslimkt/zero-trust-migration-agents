@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "manifestId": "manifest_JDEMANIFEST01",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "jde",
+  "hostname": "legacy-jde-db",
+  "inventoryDigest": "sha256:1010101010101010101010101010101010101010101010101010101010101010",
+  "recordSets": [{"name": "F0101", "recordCount": 100, "byteCount": 19200, "schemaDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}],
+  "observedAt": "2026-08-26T14:00:10Z"
+}

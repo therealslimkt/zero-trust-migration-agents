@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "reportId": "report_INVALIDUNK01",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "jde",
+  "sourceManifestDigest": "sha256:1010101010101010101010101010101010101010101010101010101010101010",
+  "deterministicCheck": {"engine": "deterministic-pii-rules", "rulesetVersion": "1.0.0", "status": "passed", "findingCount": 0, "categoryCounts": {"name": 0, "email": 0, "phone": 0, "address": 0, "governmentId": 0, "financialAccount": 0, "other": 0}, "evidenceDigest": "sha256:4141414141414141414141414141414141414141414141414141414141414141"},
+  "localGemmaCheck": {"model": "gemma-3-4b-it", "executionLocation": "edge-local", "status": "passed", "findingCount": 0, "categoryCounts": {"name": 0, "email": 0, "phone": 0, "address": 0, "governmentId": 0, "financialAccount": 0, "other": 0}, "evidenceDigest": "sha256:5151515151515151515151515151515151515151515151515151515151515151"},
+  "unresolvedFindingCount": 0,
+  "status": "passed",
+  "failClosed": true,
+  "reportDigest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
+  "completedAt": "2026-08-26T14:01:10Z",
+  "unknownField": true
+}

@@ -17,6 +17,15 @@ OPENAPI = ROOT / "contracts" / "openapi.json"
 POSITIVE_EXAMPLES = {
     "create-migration.json": "migration-request.schema.json",
     "migration-run.json": "migration-run.schema.json",
+    "source-manifest-jde.json": "source-manifest.schema.json",
+    "source-manifest-maxdb.json": "source-manifest.schema.json",
+    "source-manifest-btrieve.json": "source-manifest.schema.json",
+    "record-batch-jde.json": "record-batch.schema.json",
+    "record-batch-maxdb.json": "record-batch.schema.json",
+    "record-batch-btrieve.json": "record-batch.schema.json",
+    "redaction-report-jde.json": "redaction-report.schema.json",
+    "redaction-report-maxdb.json": "redaction-report.schema.json",
+    "redaction-report-btrieve.json": "redaction-report.schema.json",
     "transform-plan-jde.json": "transform-plan.schema.json",
     "transform-plan-maxdb.json": "transform-plan.schema.json",
     "transform-plan-btrieve.json": "transform-plan.schema.json",
@@ -28,7 +37,10 @@ POSITIVE_EXAMPLES = {
 
 NEGATIVE_EXAMPLES = {
     "ip-hostname.migration-request.invalid.json": "migration-request.schema.json",
+    "ip-hostname.source-manifest.invalid.json": "source-manifest.schema.json",
     "raw-pii.migration-request.invalid.json": "migration-request.schema.json",
+    "raw-pii.record-batch.invalid.json": "record-batch.schema.json",
+    "unknown.redaction-report.invalid.json": "redaction-report.schema.json",
     "code.transform-plan.invalid.json": "transform-plan.schema.json",
     "script.transform-plan.invalid.json": "transform-plan.schema.json",
     "command.transform-plan.invalid.json": "transform-plan.schema.json",
@@ -139,6 +151,28 @@ class ExampleValidationTests(unittest.TestCase):
         with self.assertRaises(ContractValidationError):
             validator.validate(portfolio_event)
 
+    def test_record_batches_allow_only_sanitized_or_tokenized_values(self):
+        batch = load_json(EXAMPLES / "record-batch-jde.json")
+        batch["records"][0]["values"][0]["protection"] = "raw"
+        with self.assertRaises(ContractValidationError):
+            ContractValidator(SCHEMAS / "record-batch.schema.json").validate(batch)
+
+    def test_redaction_reports_fail_closed(self):
+        report = load_json(EXAMPLES / "redaction-report-jde.json")
+        report["unresolvedFindingCount"] = 1
+        with self.assertRaises(ContractValidationError):
+            ContractValidator(SCHEMAS / "redaction-report.schema.json").validate(report)
+
+        report = load_json(EXAMPLES / "redaction-report-jde.json")
+        report["failClosed"] = False
+        with self.assertRaises(ContractValidationError):
+            ContractValidator(SCHEMAS / "redaction-report.schema.json").validate(report)
+
+        report = load_json(EXAMPLES / "redaction-report-jde.json")
+        report["localGemmaCheck"]["status"] = "error"
+        with self.assertRaises(ContractValidationError):
+            ContractValidator(SCHEMAS / "redaction-report.schema.json").validate(report)
+
 
 class OpenApiTests(unittest.TestCase):
     def setUp(self):
@@ -180,6 +214,16 @@ class OpenApiTests(unittest.TestCase):
         media = response["content"]["text/event-stream"]
         self.assertEqual(media["schema"], {"type": "string"})
         self.assertEqual(media["x-sse-data-schema"]["$ref"], "./schemas/sse-event.schema.json")
+
+    def test_manifest_lists_standalone_milestone_two_contracts(self):
+        manifest = load_json(ROOT / "contracts" / "manifest.json")
+        self.assertTrue(
+            {
+                "schemas/source-manifest.schema.json",
+                "schemas/record-batch.schema.json",
+                "schemas/redaction-report.schema.json",
+            }.issubset(manifest["schemas"])
+        )
 
 
 if __name__ == "__main__":

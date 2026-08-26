@@ -4,6 +4,9 @@
   "openapi": "openapi.json",
   "schemas": [
     "schemas/common.schema.json",
+    "schemas/source-manifest.schema.json",
+    "schemas/record-batch.schema.json",
+    "schemas/redaction-report.schema.json",
     "schemas/migration-request.schema.json",
     "schemas/migration-run.schema.json",
     "schemas/transform-plan.schema.json",

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "manifestId": "manifest_INVALIDIP001",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "jde",
+  "hostname": "100.106.76.39",
+  "inventoryDigest": "sha256:1010101010101010101010101010101010101010101010101010101010101010",
+  "recordSets": [{"name": "F0101", "recordCount": 1, "byteCount": 192, "schemaDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}],
+  "observedAt": "2026-08-26T14:00:10Z"
+}

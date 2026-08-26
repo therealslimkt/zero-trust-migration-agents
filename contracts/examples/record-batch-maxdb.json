@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "batchId": "batch_MAXBATCH0001",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "maxdb",
+  "sourceManifestDigest": "sha256:2020202020202020202020202020202020202020202020202020202020202020",
+  "recordSet": "KNA1",
+  "schemaDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "recordCount": 1,
+  "records": [{"recordId": "rec_MAX00001", "ordinal": 0, "values": [{"field": "customer_number", "protection": "sanitized", "value": "0000100001"}, {"field": "customer_token", "protection": "tokenized", "value": "tok_MAXCustomer0001"}]}]
+}

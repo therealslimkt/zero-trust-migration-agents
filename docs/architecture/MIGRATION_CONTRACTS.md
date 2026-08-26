@@ -44,6 +44,26 @@ contain stable artifact identifiers, categories, and SHA-256 digests, not
 payloads. Tokenization refers to an edge-held key by opaque `secret://`
 reference; the key value does not cross the boundary.
 
+## Edge handoff contracts
+
+Milestone 2 adapters exchange three standalone artifacts. `SourceManifest`
+binds a source ID to its one canonical MagicDNS hostname and inventories only
+record-set names, counts, byte counts, schema digests, and an overall inventory
+digest. It contains no source credentials or record content.
+
+`RecordBatch` binds sanitized records to the source manifest and schema digest.
+Records use a closed array of protected field values rather than arbitrary JSON
+keys. Every value is explicitly `sanitized` or `tokenized`; token values use a
+recognizable opaque format. Raw values, raw PII properties, and unknown fields
+are rejected at every nested boundary.
+
+`RedactionReport` records both the deterministic rule-engine check and a Gemma
+check executed at `edge-local`. Each check includes its status, total finding
+count, closed category counts, and evidence digest. `failClosed` is always
+`true`, and a report may be `passed` only when its unresolved finding count is
+zero. A blocked or errored check therefore cannot silently authorize cloud
+handoff.
+
 ## SSE wire format
 
 `GET /api/v1/migrations/{run_id}/events` returns `text/event-stream`. Each SSE
@@ -62,7 +82,8 @@ python3 -m unittest discover -s tests/contracts -v
 
 The suite uses only the Python standard library. It parses every schema,
 resolves every local reference, validates positive examples for all three
-sources, validates the OpenAPI surface, and proves that IP hostnames, raw PII,
-and executable-content properties are rejected. Production implementations
+sources and all three edge handoff artifacts, validates the OpenAPI surface,
+and proves that IP hostnames, raw PII, unknown fields, and executable-content
+properties are rejected. Production implementations
 should use a complete draft 2020-12 validator; the pinned development
 dependency is recorded in `requirements-dev.txt`.

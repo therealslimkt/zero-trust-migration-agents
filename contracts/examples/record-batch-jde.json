@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "batchId": "batch_JDEBATCH0001",
+  "runId": "mig_PORTFOLIO0001",
+  "sourceId": "jde",
+  "sourceManifestDigest": "sha256:1010101010101010101010101010101010101010101010101010101010101010",
+  "recordSet": "F0101",
+  "schemaDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "recordCount": 1,
+  "records": [{"recordId": "rec_JDE00001", "ordinal": 0, "values": [{"field": "address_number", "protection": "sanitized", "value": 10001}, {"field": "customer_token", "protection": "tokenized", "value": "tok_JDECustomer0001"}]}]
+}

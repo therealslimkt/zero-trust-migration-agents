@@ -156,7 +156,9 @@ class ContractValidator:
                 self._fail(location, "number is above maximum")
 
     @staticmethod
-    def _is_type(value: Any, expected: str) -> bool:
+    def _is_type(value: Any, expected: str | list[str]) -> bool:
+        if isinstance(expected, list):
+            return any(ContractValidator._is_type(value, candidate) for candidate in expected)
         checks = {
             "object": lambda item: isinstance(item, dict),
             "array": lambda item: isinstance(item, list),

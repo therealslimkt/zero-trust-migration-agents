@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/1.0.0/redaction-report.schema.json",
+  "title": "Edge Redaction Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportId", "runId", "sourceId", "sourceManifestDigest", "deterministicCheck", "localGemmaCheck", "unresolvedFindingCount", "status", "failClosed", "reportDigest", "completedAt"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "reportId": {"type": "string", "pattern": "^report_[A-Za-z0-9]{12,64}$"},
+    "runId": {"$ref": "common.schema.json#/$defs/runId"},
+    "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+    "sourceManifestDigest": {"$ref": "common.schema.json#/$defs/digest"},
+    "deterministicCheck": {"$ref": "#/$defs/deterministicCheck"},
+    "localGemmaCheck": {"$ref": "#/$defs/localGemmaCheck"},
+    "unresolvedFindingCount": {"type": "integer", "minimum": 0},
+    "status": {"type": "string", "enum": ["passed", "blocked"]},
+    "failClosed": {"const": true},
+    "reportDigest": {"$ref": "common.schema.json#/$defs/digest"},
+    "completedAt": {"type": "string", "format": "date-time"}
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "status": {"const": "passed"},
+        "unresolvedFindingCount": {"const": 0},
+        "deterministicCheck": {"properties": {"status": {"const": "passed"}}},
+        "localGemmaCheck": {"properties": {"status": {"const": "passed"}}}
+      }
+    },
+    {"properties": {"status": {"const": "blocked"}}}
+  ],
+  "$defs": {
+    "categoryCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "email", "phone", "address", "governmentId", "financialAccount", "other"],
+      "properties": {
+        "name": {"type": "integer", "minimum": 0},
+        "email": {"type": "integer", "minimum": 0},
+        "phone": {"type": "integer", "minimum": 0},
+        "address": {"type": "integer", "minimum": 0},
+        "governmentId": {"type": "integer", "minimum": 0},
+        "financialAccount": {"type": "integer", "minimum": 0},
+        "other": {"type": "integer", "minimum": 0}
+      }
+    },
+    "deterministicCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "rulesetVersion", "status", "findingCount", "categoryCounts", "evidenceDigest"],
+      "properties": {
+        "engine": {"const": "deterministic-pii-rules"},
+        "rulesetVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "status": {"type": "string", "enum": ["passed", "blocked", "error"]},
+        "findingCount": {"type": "integer", "minimum": 0},
+        "categoryCounts": {"$ref": "#/$defs/categoryCounts"},
+        "evidenceDigest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    },
+    "localGemmaCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "executionLocation", "status", "findingCount", "categoryCounts", "evidenceDigest"],
+      "properties": {
+        "model": {"type": "string", "pattern": "^gemma-[A-Za-z0-9._-]{2,64}$"},
+        "executionLocation": {"const": "edge-local"},
+        "status": {"type": "string", "enum": ["passed", "blocked", "error"]},
+        "findingCount": {"type": "integer", "minimum": 0},
+        "categoryCounts": {"$ref": "#/$defs/categoryCounts"},
+        "evidenceDigest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    }
+  }
+}
