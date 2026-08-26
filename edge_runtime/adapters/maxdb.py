@@ -23,7 +23,7 @@ VERSION = 1
 ZLIB_FLAGS = 1
 MAX_RECORDS = 10_000
 MAX_UNCOMPRESSED_BYTES = 16 * 1024
-MAX_COMPRESSED_BYTES = 64 * 1024
+MAX_COMPRESSED_BYTES = MAX_UNCOMPRESSED_BYTES + 64
 EXPECTED_KEYS = frozenset({"KUNNR", "NAME1", "ORT01", "LAND1"})
 
 
@@ -43,12 +43,12 @@ def _object_without_duplicates(pairs):
 def _decode_record(raw: bytes, ordinal: int) -> DecodedRecord:
     try:
         text = raw.decode("utf-8")
-    except UnicodeDecodeError as exc:
-        raise MaxDBDecodeError("record is not valid UTF-8") from exc
+    except UnicodeDecodeError:
+        raise MaxDBDecodeError("record is not valid UTF-8") from None
     try:
         value = json.loads(text, object_pairs_hook=_object_without_duplicates)
-    except json.JSONDecodeError as exc:
-        raise MaxDBDecodeError("record is not valid JSON") from exc
+    except json.JSONDecodeError:
+        raise MaxDBDecodeError("record is not valid JSON") from None
 
     if not isinstance(value, dict):
         raise MaxDBDecodeError("record JSON must be an object")
@@ -64,7 +64,7 @@ def _decode_record(raw: bytes, ordinal: int) -> DecodedRecord:
         raise MaxDBDecodeError("record JSON has missing or extra fields")
     if any(not isinstance(value[key], str) or not value[key].strip() for key in EXPECTED_KEYS):
         raise MaxDBDecodeError("record fields must be nonblank strings")
-    if re.fullmatch(r"\d{10}", value["KUNNR"]) is None:
+    if re.fullmatch(r"[0-9]{10}", value["KUNNR"]) is None:
         raise MaxDBDecodeError("KUNNR must be exactly 10 decimal digits")
     if re.fullmatch(r"[A-Z]{2}", value["LAND1"]) is None:
         raise MaxDBDecodeError("LAND1 must be exactly two uppercase ASCII letters")
@@ -83,10 +83,10 @@ def _decode_record(raw: bytes, ordinal: int) -> DecodedRecord:
 def _decompress(compressed: bytes, expected_length: int) -> bytes:
     decoder = zlib.decompressobj()
     try:
-        raw = decoder.decompress(compressed, MAX_UNCOMPRESSED_BYTES + 1)
-    except zlib.error as exc:
-        raise MaxDBDecodeError("cluster contains invalid zlib data") from exc
-    if len(raw) > MAX_UNCOMPRESSED_BYTES or decoder.unconsumed_tail:
+        raw = decoder.decompress(compressed, expected_length + 1)
+    except zlib.error:
+        raise MaxDBDecodeError("cluster contains invalid zlib data") from None
+    if len(raw) > expected_length or decoder.unconsumed_tail:
         raise MaxDBDecodeError("cluster exceeds the uncompressed output limit")
     if not decoder.eof:
         raise MaxDBDecodeError("cluster zlib stream is incomplete")

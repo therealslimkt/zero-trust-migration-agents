@@ -157,8 +157,8 @@ class TailscaleGemmaReviewer:
 
         try:
             verdict = json.loads(result.stdout)
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise LocalGemmaError("edge-local Gemma returned an invalid verdict") from exc
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            raise LocalGemmaError("edge-local Gemma returned an invalid verdict") from None
         if not isinstance(verdict, dict) or set(verdict) != {"status", "findings"}:
             raise LocalGemmaError("edge-local Gemma returned an invalid verdict")
         if verdict["status"] not in {"passed", "blocked"} or not isinstance(

@@ -68,11 +68,20 @@ class MaxDBAdapterTests(unittest.TestCase):
         altered = SourceSpec(
             "maxdb",
             "legacy-maxdb",
-            "/home/kohalloran/not-the-export.bin",
+            "/tmp/not-the-export.bin",
             SOURCE_SPECS["maxdb"].source_format,
         )
         with self.assertRaisesRegex(maxdb.MaxDBDecodeError, "canonical"):
             maxdb.decode(SourcePayload(altered, build_maxdb_export()))
+
+    def test_rejects_input_types_and_record_count_above_limit(self):
+        with self.assertRaisesRegex(maxdb.MaxDBDecodeError, "SourcePayload"):
+            maxdb.decode(build_maxdb_export())
+        with self.assertRaisesRegex(maxdb.MaxDBDecodeError, "must be bytes"):
+            maxdb.decode(SourcePayload(SOURCE_SPECS["maxdb"], "not-bytes"))
+        too_many = maxdb.HEADER.pack(maxdb.MAGIC, 1, 1, maxdb.MAX_RECORDS + 1)
+        with self.assertRaisesRegex(maxdb.MaxDBDecodeError, "record count"):
+            maxdb.decode(payload(too_many))
 
     def test_rejects_header_violations(self):
         valid = bytearray(build_maxdb_export())
@@ -108,9 +117,19 @@ class MaxDBAdapterTests(unittest.TestCase):
         header = maxdb.HEADER.pack(maxdb.MAGIC, 1, 1, 1)
         cases = (
             header + maxdb.ENTRY.pack(0, len(compressed), 0) + compressed,
+            header
+            + maxdb.ENTRY.pack(
+                maxdb.MAX_UNCOMPRESSED_BYTES + 1, len(compressed), 0
+            )
+            + compressed,
             header + maxdb.ENTRY.pack(len(raw), 0, 0),
+            header
+            + maxdb.ENTRY.pack(len(raw), maxdb.MAX_COMPRESSED_BYTES + 1, 0),
             header + maxdb.ENTRY.pack(len(raw), 8, 0) + b"not-zlib",
             header + maxdb.ENTRY.pack(len(raw), len(compressed), 0) + compressed,
+            header
+            + maxdb.ENTRY.pack(1, len(compressed), zlib.crc32(raw))
+            + compressed,
         )
         for data in cases:
             with self.subTest(size=len(data)):
@@ -137,30 +156,46 @@ class MaxDBAdapterTests(unittest.TestCase):
                 with self.assertRaises(maxdb.MaxDBDecodeError):
                     maxdb.decode(payload(data))
 
-    def test_rejects_noncanonical_or_invalid_record_json(self):
+    def test_rejects_noncanonical_or_invalid_record_json_without_value_causes(self):
         noncanonical = json.dumps(SAFE_RECORD, indent=2).encode("utf-8")
         missing = dict(SAFE_RECORD)
         del missing["ORT01"]
         extra = dict(SAFE_RECORD, EXTRA="x")
         bad_number = dict(SAFE_RECORD, KUNNR="000000000X")
+        unicode_number = dict(SAFE_RECORD, KUNNR="١٢٣٤٥٦٧٨٩٠")
         bad_country = dict(SAFE_RECORD, LAND1="u1")
         blank_name = dict(SAFE_RECORD, NAME1="   ")
-        invalid_records = (
-            noncanonical,
-            record_bytes(missing),
-            record_bytes(extra),
-            record_bytes(bad_number),
-            record_bytes(bad_country),
-            record_bytes(blank_name),
-            b"[]",
-            b"not-json",
-            b"\xff",
+        duplicate = (
+            b'{"KUNNR":"0000000001","KUNNR":"0000000002",'
+            b'"LAND1":"US","NAME1":"Synthetic Company","ORT01":"Chicago"}'
         )
-        for raw in invalid_records:
+        invalid_records = (
+            (noncanonical, None),
+            (record_bytes(missing), None),
+            (record_bytes(extra), None),
+            (record_bytes(bad_number), "000000000X"),
+            (record_bytes(unicode_number), "١٢٣٤٥٦٧٨٩٠"),
+            (record_bytes(bad_country), "u1"),
+            (record_bytes(blank_name), None),
+            (duplicate, "0000000002"),
+            (b"[]", None),
+            (b"not-json", "not-json"),
+            (b"\xff", None),
+        )
+        for raw, marker in invalid_records:
             with self.subTest(size=len(raw)):
                 with self.assertRaises(maxdb.MaxDBDecodeError) as caught:
                     maxdb.decode(payload(file_with_raw(raw)))
-                self.assertNotIn("000000000X", str(caught.exception))
+                if marker is not None:
+                    self.assertNotIn(marker, str(caught.exception))
+                self.assertIsNone(caught.exception.__cause__)
+
+    def test_malformed_second_record_never_returns_partial_results(self):
+        first = cluster(record_bytes())
+        second = cluster(b"not-json")
+        data = maxdb.HEADER.pack(maxdb.MAGIC, 1, 1, 2) + first + second
+        with self.assertRaises(maxdb.MaxDBDecodeError):
+            maxdb.decode(payload(data))
 
 
 if __name__ == "__main__":

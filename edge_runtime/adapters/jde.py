@@ -36,8 +36,8 @@ def _decode_comp3(raw: bytes) -> int:
 def _decode_required_text(raw: bytes) -> str:
     try:
         value = raw.decode("cp037").rstrip(" ")
-    except UnicodeError as exc:
-        raise ValueError("JDE record contains malformed text") from exc
+    except UnicodeError:
+        raise ValueError("JDE record contains malformed text") from None
     if not value.strip():
         raise ValueError("JDE record contains blank required text")
     return value

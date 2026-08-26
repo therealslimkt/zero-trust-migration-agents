@@ -85,8 +85,9 @@ class TailscaleGemmaReviewerTests(unittest.TestCase):
         for output in invalid_outputs:
             with self.subTest(output=output):
                 runner = FakeRunner([completed(), completed(stdout=output)])
-                with self.assertRaises(LocalGemmaError):
+                with self.assertRaises(LocalGemmaError) as caught:
                     TailscaleGemmaReviewer(runner=runner).review(self.sanitized())
+                self.assertIsNone(caught.exception.__cause__)
 
 
 if __name__ == "__main__":
