@@ -24,7 +24,10 @@ from control_plane.canonical import (
     require_digest,
     require_run_id,
 )
-from control_plane.gemini_planner import GeminiPlanCompiler
+from control_plane.gemini_planner import (
+    GeminiPlanCompiler,
+    PlanCompilationError,
+)
 from ztm_security.approval import ApprovalRecord, authorize_run
 
 
@@ -310,6 +313,14 @@ async def prepare_portfolio(
         return PreparedPortfolio(canonical_json_bytes(document))
     except PortfolioWorkflowError:
         raise
+    except PlanCompilationError as exc:
+        # Only the exact repository-owned compiler is permitted to surface its
+        # fixed diagnostic vocabulary. Injected test compilers remain opaque.
+        if type(compiler) is GeminiPlanCompiler:
+            raise PortfolioWorkflowError(
+                f"portfolio planning failed: {exc}"
+            ) from None
+        raise PortfolioWorkflowError("portfolio preparation failed") from None
     except Exception:
         raise PortfolioWorkflowError("portfolio preparation failed") from None
 

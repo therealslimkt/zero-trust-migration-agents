@@ -14,7 +14,7 @@ from control_plane.canonical import (
     document_digest,
     portfolio_plan_digest,
 )
-from control_plane.gemini_planner import PortfolioPlan
+from control_plane.gemini_planner import GeminiPlanCompiler, PortfolioPlan
 from control_plane.workflow import (
     PortfolioWorkflowError,
     PreparedPortfolio,
@@ -408,6 +408,21 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
         compiler = FakeCompiler(failure=RuntimeError(SENTINEL))
         with self.assertRaisesRegex(
             PortfolioWorkflowError, "^portfolio preparation failed$"
+        ) as caught:
+            await prepare_portfolio(
+                artifacts_by_source=_artifacts(), compiler=compiler
+            )
+        self.assertNotIn(SENTINEL, repr(caught.exception))
+        self.assertIsNone(caught.exception.__cause__)
+
+    async def test_repository_compiler_surfaces_only_its_safe_failure_reason(self):
+        async def invalid_model(_request):
+            return {"plans": []}
+
+        compiler = GeminiPlanCompiler(invalid_model, "gemini-test")
+        with self.assertRaisesRegex(
+            PortfolioWorkflowError,
+            "^portfolio planning failed: Gemini must return exactly three plans$",
         ) as caught:
             await prepare_portfolio(
                 artifacts_by_source=_artifacts(), compiler=compiler
