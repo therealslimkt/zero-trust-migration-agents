@@ -1,0 +1,49 @@
+# Reproducible M4 image/spec build. Running this file creates cloud resources
+# and therefore remains behind the separate deployment approval gate.
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: zero-trust-migration
+  _IMAGE: trusted-writer
+  _TEMPLATE_BUCKET: ${PROJECT_ID}-ztm-templates
+
+steps:
+  - id: build-pinned-worker
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --file=dataflow/Dockerfile
+      - --tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${COMMIT_SHA}
+      - .
+
+  - id: push-pinned-worker
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${COMMIT_SHA}
+
+  - id: build-flex-spec-from-digest
+    name: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        image="${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${COMMIT_SHA}"
+        digest="$$(gcloud artifacts docker images describe "$${image}" --format='value(image_summary.digest)')"
+        test -n "$${digest}"
+        pinned="$${image%:*}@$${digest}"
+        gcloud dataflow flex-template build "gs://${_TEMPLATE_BUCKET}/templates/trusted-writer-${COMMIT_SHA}.json" \
+          --image="$${pinned}" \
+          --sdk-language=PYTHON \
+          --metadata-file=dataflow/metadata.json
+        printf '%s\n' "$${pinned}" > /workspace/digest-pinned-worker-image.txt
+
+artifacts:
+  objects:
+    location: gs://${_TEMPLATE_BUCKET}/build-evidence/${BUILD_ID}/
+    paths:
+      - digest-pinned-worker-image.txt
+
+options:
+  logging: CLOUD_LOGGING_ONLY

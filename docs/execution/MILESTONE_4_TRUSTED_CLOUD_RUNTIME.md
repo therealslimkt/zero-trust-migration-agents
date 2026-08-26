@@ -1,6 +1,6 @@
 # Milestone 4: Trusted Dataflow and BigQuery Runtime
 
-Status: **implemented locally; cloud deployment and live proof pending approval**
+Status: **implemented and locally verified; cloud deployment and live proof pending approval**
 
 ## What this runtime does
 
@@ -19,10 +19,15 @@ runtime:
 4. launches one fixed Dataflow Flex Template per source with typed parameters,
    a dedicated worker service account, private worker IPs, blocked project SSH
    keys, bounded autoscaling, and no generated code;
-5. waits for the canonical terminal state `JOB_STATE_DONE`; and
-6. queries BigQuery by immutable lineage columns and returns success only when
-   counts, ordinals, plan digests, output digests, and bundle digests reconcile
-   exactly for all three sources.
+5. recovers a prior job by its deterministic name before launching, and refuses
+   any partial or conflicting warehouse lineage so a lost response cannot
+   cause a duplicate append;
+6. waits for the canonical terminal state `JOB_STATE_DONE`;
+7. queries BigQuery by immutable lineage columns and returns success only when
+   the exact ordinal range, job name, approval, policy, plan, output, and bundle
+   digests reconcile for all three sources; and
+8. idempotently commits and rereads exactly three immutable rows in
+   `migration_audit` before returning the portfolio audit digest.
 
 Any error returns a stable repository-owned code. Provider responses and row
 values are not reflected into errors.
@@ -39,6 +44,10 @@ values are not reflected into errors.
 - `dataflow/Dockerfile`: custom pinned Beam 2.75.0 Flex Template image.
 - `dataflow/metadata.json`: strict launch-parameter metadata.
 - `requirements-dataflow.txt`: isolated worker dependency.
+- `requirements-cloud-control.txt`: pinned launch-side Google SDK clients.
+- `cloudbuild.dataflow.yaml`: digest-resolved worker image and Flex spec build.
+- `scripts/render_m4_bigquery_schemas.py`: local, approval-bound target and
+  audit schema renderer; it emits no records or cell values.
 
 ## Deployment gate
 
@@ -55,7 +64,21 @@ claimed:
 When approved, deployment must use dedicated identities and resource-scoped
 roles. The default Compute Engine service account and project-wide Editor are
 not acceptable. Target tables must be pre-created with the bound output schema
-plus the six `_ztm_*` lineage columns; the template uses `CREATE_NEVER`.
+plus the nine `_ztm_*` lineage columns; the template uses `CREATE_NEVER`. The
+dedicated subnetwork must have Private Google Access, and the runtime must use
+a digest-pinned Artifact Registry SDK image. Render schemas locally with:
+
+```text
+python scripts/render_m4_bigquery_schemas.py \
+  --snapshot /owner-only/prepared.json \
+  --digest sha256:<approved-portfolio-digest> \
+  --dataset legacy_migration \
+  --output-dir /owner-only/rendered-schemas
+```
+
+Running `gcloud builds submit --config cloudbuild.dataflow.yaml` is deliberately
+outside the local gate because it pushes an image, writes a Flex spec, and
+incurs cloud-side mutations.
 
 ## Official implementation references
 
@@ -74,7 +97,7 @@ The cloud boundary and adapters are covered by dependency-free fakes; the
 tests make no network calls and need no credentials:
 
 ```text
-python -m pytest -q tests/cloud_runtime
+venv/bin/python -m pytest -q tests/cloud_runtime
 ```
 
 The complete local suite must pass before a template build. A live canary must

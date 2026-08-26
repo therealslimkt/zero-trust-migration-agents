@@ -1,0 +1,16 @@
+[
+  {"name": "run_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "source_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "portfolio_digest", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "audit_digest", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "job_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "job_name", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "terminal_state", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "table_spec", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "record_count", "type": "INTEGER", "mode": "REQUIRED"},
+  {"name": "plan_digest", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "output_digest", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "bundle_digest", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "approval_digest", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "policy_digest", "type": "STRING", "mode": "REQUIRED"}
+]
