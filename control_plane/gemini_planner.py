@@ -46,6 +46,7 @@ FORBIDDEN_INPUT_KEYS = frozenset(
 EXECUTABLE_OUTPUT_KEYS = frozenset(
     {"code", "command", "script", "expression", "eval", "exec"}
 )
+CLOUD_OPERATIONS = frozenset({"rename", "cast", "drop"})
 
 SYSTEM_INSTRUCTIONS = """You compile three already decoded and tokenized legacy
 record batches into declarative TransformPlan drafts. Return JSON only with
@@ -148,6 +149,100 @@ def _manifest_digest(manifest: Mapping[str, object]) -> str:
     return document_digest(manifest)
 
 
+def _batch_field_names(batch: Mapping[str, object]) -> set[str]:
+    records = batch.get("records")
+    if not isinstance(records, list) or not records:
+        raise PlanCompilationError("record batch structure is invalid")
+
+    expected: set[str] | None = None
+    record_ids: set[str] = set()
+    for expected_ordinal, record in enumerate(records):
+        if not isinstance(record, Mapping):
+            raise PlanCompilationError("record batch structure is invalid")
+        record_id = record.get("recordId")
+        if (
+            record.get("ordinal") != expected_ordinal
+            or not isinstance(record_id, str)
+            or record_id in record_ids
+        ):
+            raise PlanCompilationError("record batch identity is invalid")
+        record_ids.add(record_id)
+
+        values = record.get("values")
+        if not isinstance(values, list) or not values:
+            raise PlanCompilationError("record batch structure is invalid")
+        names: set[str] = set()
+        for value in values:
+            if not isinstance(value, Mapping):
+                raise PlanCompilationError("record batch structure is invalid")
+            name = value.get("field")
+            if not isinstance(name, str) or name in names:
+                raise PlanCompilationError("record batch fields are invalid")
+            names.add(name)
+        if expected is None:
+            expected = names
+        elif names != expected:
+            raise PlanCompilationError("record batch fields are inconsistent")
+
+    if batch.get("recordCount") != len(records) or expected is None:
+        raise PlanCompilationError("record batch count is invalid")
+    return expected
+
+
+def _validate_cloud_draft(
+    draft: Mapping[str, object], batch: Mapping[str, object]
+) -> None:
+    """Reject plans that the closed cloud interpreter cannot apply."""
+
+    fields = _batch_field_names(batch)
+    operations = draft.get("operations")
+    output_fields = draft.get("outputFields")
+    if not isinstance(operations, list) or not operations:
+        raise PlanCompilationError("Gemini plan operations are invalid")
+    if not isinstance(output_fields, list) or not output_fields:
+        raise PlanCompilationError("Gemini output fields are invalid")
+
+    for operation in operations:
+        if not isinstance(operation, Mapping):
+            raise PlanCompilationError("Gemini plan operation is invalid")
+        operation_name = operation.get("operation")
+        if operation_name not in CLOUD_OPERATIONS:
+            raise PlanCompilationError("Gemini plan uses a non-cloud operation")
+        if operation_name == "rename":
+            old_name = operation.get("from")
+            new_name = operation.get("to")
+            if (
+                not isinstance(old_name, str)
+                or not isinstance(new_name, str)
+                or old_name == new_name
+                or old_name not in fields
+                or new_name in fields
+            ):
+                raise PlanCompilationError("Gemini rename operation is invalid")
+            fields.remove(old_name)
+            fields.add(new_name)
+        elif operation_name == "cast":
+            field = operation.get("field")
+            if not isinstance(field, str) or field not in fields:
+                raise PlanCompilationError("Gemini cast operation is invalid")
+        else:
+            field = operation.get("field")
+            if not isinstance(field, str) or field not in fields:
+                raise PlanCompilationError("Gemini drop operation is invalid")
+            fields.remove(field)
+
+    declared: set[str] = set()
+    for output_field in output_fields:
+        if not isinstance(output_field, Mapping):
+            raise PlanCompilationError("Gemini output fields are invalid")
+        name = output_field.get("name")
+        if not isinstance(name, str) or name in declared:
+            raise PlanCompilationError("Gemini output fields are invalid")
+        declared.add(name)
+    if declared != fields:
+        raise PlanCompilationError("Gemini output fields do not match operations")
+
+
 def _preflight_artifacts(
     run_id: str,
     artifacts_by_source: Mapping[str, Mapping[str, object]],
@@ -198,6 +293,7 @@ def _preflight_artifacts(
             or record_set.get("recordCount") != batch.get("recordCount")
         ):
             raise PlanCompilationError("artifact record counts do not match")
+        _batch_field_names(batch)
 
         deterministic = report.get("deterministicCheck")
         local_gemma = report.get("localGemmaCheck")
@@ -302,6 +398,9 @@ class GeminiPlanCompiler:
                 item,
                 EXECUTABLE_OUTPUT_KEYS,
                 "Gemini plan contains executable content",
+            )
+            _validate_cloud_draft(
+                item, artifacts_by_source[str(source_id)]["record_batch"]
             )
             by_source[source_id] = item
         if set(by_source) != set(SOURCE_ORDER):

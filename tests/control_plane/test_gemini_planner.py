@@ -241,6 +241,53 @@ class GeminiPlanCompilerTests(unittest.IsolatedAsyncioTestCase):
                     ).compile(RUN_ID, artifacts())
                 self.assertNotIn("DO_NOT_ECHO", str(caught.exception))
 
+    async def test_rejects_edge_only_and_field_inconsistent_plans(self):
+        edge_only = valid_draft()
+        edge_only["plans"][0]["operations"] = [
+            {
+                "operation": "tokenize",
+                "field": "customer_token",
+                "outputField": "customer_id",
+                "algorithm": "hmac-sha256",
+                "keyReference": "secret://migration/key",
+                "tokenFormat": "base64url",
+            }
+        ]
+        missing = valid_draft()
+        missing["plans"][0]["operations"][0]["from"] = "absent"
+        overwrite = valid_draft()
+        overwrite["plans"][0]["operations"][0]["to"] = "customer_token"
+        wrong_output = valid_draft()
+        wrong_output["plans"][0]["outputFields"][0]["name"] = "not_produced"
+
+        for response in (edge_only, missing, overwrite, wrong_output):
+            with self.subTest(operation=response["plans"][0]["operations"][0]):
+                with self.assertRaises(PlanCompilationError):
+                    await GeminiPlanCompiler(
+                        RecordingModel(response), "gemini-3.5-flash"
+                    ).compile(RUN_ID, artifacts())
+
+    async def test_rejects_duplicate_and_noncontiguous_batch_identity(self):
+        variants = []
+        duplicate_field = artifacts()
+        duplicate_field["jde"]["record_batch"]["records"][0]["values"].append(
+            copy.deepcopy(
+                duplicate_field["jde"]["record_batch"]["records"][0]["values"][0]
+            )
+        )
+        variants.append(duplicate_field)
+        wrong_ordinal = artifacts()
+        wrong_ordinal["maxdb"]["record_batch"]["records"][0]["ordinal"] = 4
+        variants.append(wrong_ordinal)
+
+        for value in variants:
+            model = RecordingModel(valid_draft())
+            with self.assertRaises(PlanCompilationError):
+                await GeminiPlanCompiler(model, "gemini-3.5-flash").compile(
+                    RUN_ID, value
+                )
+            self.assertEqual(model.calls, [])
+
     async def test_model_exception_is_suppressed(self):
         with self.assertRaises(PlanCompilationError) as caught:
             await GeminiPlanCompiler(
