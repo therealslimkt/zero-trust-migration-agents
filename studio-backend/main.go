@@ -105,9 +105,16 @@ func configuredControlPlane() (http.Handler, error) {
 }
 
 func newServerMux(controlPlane http.Handler) *http.ServeMux {
+	return newServerMuxWithOrchestrator(controlPlane, nil)
+}
+
+func newServerMuxWithOrchestrator(controlPlane, orchestrator http.Handler) *http.ServeMux {
 	mux := http.NewServeMux()
 	if controlPlane != nil {
 		mux.Handle("/api/v1/", controlPlane)
+	}
+	if orchestrator != nil {
+		mux.Handle("/internal/v1/", orchestrator)
 	}
 	return mux
 }
@@ -117,7 +124,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Mission Control control-plane configuration is invalid")
 	}
-	mux := newServerMux(controlPlane)
+	orchestrator, err := configuredOrchestratorBridge(controlPlane)
+	if err != nil {
+		log.Fatal("Mission Control orchestrator bridge configuration is invalid")
+	}
+	mux := newServerMuxWithOrchestrator(controlPlane, orchestrator)
 
 	log.Println("Mission Control Backend started on :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
