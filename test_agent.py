@@ -10,4 +10,6 @@ async def main():
         res = await a.chat('say hi')
         print(await res.text())
 
-asyncio.run(main())
+
+if __name__ == "__main__":
+    asyncio.run(main())

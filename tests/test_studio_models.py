@@ -1,10 +1,17 @@
-from google import genai
-import os
+"""Manual Gemini model-list probe; never runs during test collection."""
 
-client = genai.Client(http_options={'api_version': 'v1alpha'})
-try:
-    for m in client.models.list():
-        if "3.5" in m.name or "3." in m.name:
-            print(m.name)
-except Exception as e:
-    print(f"Error: {e}")
+from google import genai
+
+
+def main() -> None:
+    client = genai.Client(http_options={"api_version": "v1alpha"})
+    try:
+        for model in client.models.list():
+            if "3.5" in model.name or "3." in model.name:
+                print(model.name)
+    except Exception as exc:
+        print(f"Error: {exc}")
+
+
+if __name__ == "__main__":
+    main()
