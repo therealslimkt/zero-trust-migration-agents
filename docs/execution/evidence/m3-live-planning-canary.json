@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "capturedAt": "2026-08-26T22:44:46Z",
-  "status": "awaiting_approval",
+  "status": "passed",
   "runId": "mig_b858c16c2f614722b844",
   "model": "gemini-3.5-flash",
   "vertexLocation": "us",
@@ -15,6 +15,41 @@
   "negativeApprovalCanary": {
     "wrongDigestRejected": true,
     "executionStarted": false
+  },
+  "approval": {
+    "approvedBy": "kohalloran",
+    "approvedAt": "2026-08-26T22:48:09.147Z",
+    "planDigest": "sha256:1af7f87c6651cdfd2b2a955b7c733ba10ae74b65cfa4960df8f33de775f9b4d4",
+    "runId": "mig_b858c16c2f614722b844"
+  },
+  "trustedExecution": {
+    "operationAllowlist": [
+      "rename",
+      "cast",
+      "drop"
+    ],
+    "sourceCount": 3,
+    "partialResultReturned": false,
+    "sources": [
+      {
+        "sourceId": "jde",
+        "target": "legacy_migration.jde_f0101",
+        "recordCount": 4,
+        "outputDigest": "sha256:1b2c320c58094e95cb87aa0cafcda49a15334a24049768969c8a14208b45e838"
+      },
+      {
+        "sourceId": "maxdb",
+        "target": "legacy_migration.sap_kna1",
+        "recordCount": 4,
+        "outputDigest": "sha256:7692361c89169382f99b64e8ec54d322f6b613d25e1ee25196882273a78e8162"
+      },
+      {
+        "sourceId": "btrieve",
+        "target": "legacy_migration.accpac_arcus",
+        "recordCount": 1,
+        "outputDigest": "sha256:9e377a7705e9885cc9ff301ccb1d6b62bd3885636700dbf44a9232b6407a3d9d"
+      }
+    ]
   },
   "sources": [
     {
