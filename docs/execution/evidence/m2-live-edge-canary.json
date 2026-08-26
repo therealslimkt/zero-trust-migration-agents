@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0.0",
+  "observedAt": "2026-08-26T21:37:50Z",
+  "integrationCommit": "9afad497a28d025b68f176534e269608b0aa0566",
+  "status": "passed",
+  "sourceCount": 3,
+  "sources": [
+    {
+      "sourceId": "jde",
+      "hostname": "legacy-jde-db",
+      "byteCount": 260,
+      "recordCount": 4,
+      "sourceDigest": "sha256:a78d8b260f56934a0897511bb13991cefe8993fb6daa24c8f083f5713fa041d3",
+      "deterministicFindingCount": 8,
+      "deterministicEvidenceDigest": "sha256:adf9250d52030e0de1aee05c1f92c83e5361343f581c2ae051990fd00866fd5e",
+      "localGemmaModel": "gemma-2-2b",
+      "localGemmaExecutionLocation": "edge-local",
+      "localGemmaStatus": "passed",
+      "localGemmaFindingCount": 0,
+      "localGemmaEvidenceDigest": "sha256:1cce8cd454f8a3f56e6a2cfb4845d892be58f422212039ec34efcb64a1dbfde5"
+    },
+    {
+      "sourceId": "maxdb",
+      "hostname": "legacy-maxdb",
+      "byteCount": 386,
+      "recordCount": 4,
+      "sourceDigest": "sha256:6698000415f25413fd88032ae4775ebbdcda7b9b5f4c010e0566fe0a2c49bc45",
+      "deterministicFindingCount": 12,
+      "deterministicEvidenceDigest": "sha256:a7eafc338ba57498a1fc8d86595ea9a91dc9bdb7c51d03ed5b912b489cf85fe6",
+      "localGemmaModel": "gemma-2-2b",
+      "localGemmaExecutionLocation": "edge-local",
+      "localGemmaStatus": "passed",
+      "localGemmaFindingCount": 0,
+      "localGemmaEvidenceDigest": "sha256:1cce8cd454f8a3f56e6a2cfb4845d892be58f422212039ec34efcb64a1dbfde5"
+    },
+    {
+      "sourceId": "btrieve",
+      "hostname": "legacy-btrieve-db",
+      "byteCount": 8192,
+      "recordCount": 1,
+      "sourceDigest": "sha256:1245d7a3e522ec7eca1051b607c003e5cd5d09202381a35de8cd8a776db02fdd",
+      "deterministicFindingCount": 2,
+      "deterministicEvidenceDigest": "sha256:50e1d26e2501c188b4fe74dc8b73e0cfc915c7c37e9e3161700674e951e3bef3",
+      "localGemmaModel": "gemma-2-2b",
+      "localGemmaExecutionLocation": "edge-local",
+      "localGemmaStatus": "passed",
+      "localGemmaFindingCount": 0,
+      "localGemmaEvidenceDigest": "sha256:1cce8cd454f8a3f56e6a2cfb4845d892be58f422212039ec34efcb64a1dbfde5"
+    }
+  ]
+}
