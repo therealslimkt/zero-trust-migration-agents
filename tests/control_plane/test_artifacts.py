@@ -181,6 +181,39 @@ class EdgeArtifactTests(unittest.TestCase):
         )
         self.assertEqual(first, second)
 
+    def test_returned_documents_are_detached_from_the_digest_anchor(self):
+        artifacts = self.build("jde")
+        original_manifest = artifacts.source_manifest
+        original_digest = document_digest(original_manifest)
+
+        original_manifest["hostname"] = "changed-after-build"
+
+        self.assertNotEqual(original_manifest, artifacts.source_manifest)
+        self.assertEqual(original_digest, document_digest(artifacts.source_manifest))
+        self.assertEqual(
+            artifacts.record_batch["sourceManifestDigest"], original_digest
+        )
+
+    def test_record_ordinals_must_be_contiguous_and_ordered(self):
+        payload, decoded, _, gemma = self.make_inputs("jde")
+        for ordinals in ((0, 2), (1, 0), (0, 0)):
+            records = tuple(
+                dataclasses.replace(record, ordinal=ordinal)
+                for record, ordinal in zip(decoded.records, ordinals)
+            )
+            changed = dataclasses.replace(decoded, records=records)
+            deterministic = DeterministicRedactor(b"k" * 32).sanitize(changed)
+            with self.subTest(ordinals=ordinals):
+                with self.assertRaisesRegex(ArtifactBuildError, "contiguous"):
+                    build_edge_artifacts(
+                        run_id=RUN_ID,
+                        observed_at=OBSERVED_AT,
+                        payload=payload,
+                        decoded=changed,
+                        deterministic=deterministic,
+                        gemma_review=gemma,
+                    )
+
     def test_schema_digest_never_depends_on_field_values(self):
         first = self.make_inputs("jde", public_prefix="FIRST", payload_data=b"same")
         second = self.make_inputs("jde", public_prefix="SECOND", payload_data=b"same")

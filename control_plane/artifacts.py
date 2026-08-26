@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 import math
 import re
 from datetime import datetime
@@ -38,13 +39,50 @@ class ArtifactBuildError(ValueError):
     """Fail-closed artifact error whose message never contains record values."""
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, init=False)
 class EdgeArtifacts:
     """The three public handoff documents produced inside the edge boundary."""
 
-    source_manifest: dict[str, object] = dataclasses.field(repr=False)
-    record_batch: dict[str, object] = dataclasses.field(repr=False)
-    redaction_report: dict[str, object] = dataclasses.field(repr=False)
+    _source_manifest_json: bytes = dataclasses.field(repr=False)
+    _record_batch_json: bytes = dataclasses.field(repr=False)
+    _redaction_report_json: bytes = dataclasses.field(repr=False)
+
+    def __init__(
+        self,
+        source_manifest: dict[str, object],
+        record_batch: dict[str, object],
+        redaction_report: dict[str, object],
+    ) -> None:
+        object.__setattr__(
+            self, "_source_manifest_json", canonical_json_bytes(source_manifest)
+        )
+        object.__setattr__(self, "_record_batch_json", canonical_json_bytes(record_batch))
+        object.__setattr__(
+            self, "_redaction_report_json", canonical_json_bytes(redaction_report)
+        )
+
+    @staticmethod
+    def _document(encoded: bytes) -> dict[str, object]:
+        return json.loads(encoded)
+
+    @property
+    def source_manifest(self) -> dict[str, object]:
+        return self._document(self._source_manifest_json)
+
+    @property
+    def record_batch(self) -> dict[str, object]:
+        return self._document(self._record_batch_json)
+
+    @property
+    def redaction_report(self) -> dict[str, object]:
+        return self._document(self._redaction_report_json)
+
+    def as_mapping(self) -> dict[str, dict[str, object]]:
+        return {
+            "source_manifest": self.source_manifest,
+            "record_batch": self.record_batch,
+            "redaction_report": self.redaction_report,
+        }
 
 
 def _fail(reason: str) -> ArtifactBuildError:
@@ -81,11 +119,9 @@ def _scalar_type(value: object) -> str:
 
 def _schema_descriptor(decoded: DecodedSource) -> list[dict[str, str]]:
     expected: list[dict[str, str]] | None = None
-    ordinals: set[int] = set()
-    for record in decoded.records:
-        if record.ordinal in ordinals:
-            raise _fail("duplicate record ordinal")
-        ordinals.add(record.ordinal)
+    for expected_ordinal, record in enumerate(decoded.records):
+        if record.ordinal != expected_ordinal:
+            raise _fail("record ordinals must be contiguous")
         descriptor = []
         for field in record.fields:
             if _FIELD_NAME.fullmatch(field.name) is None:
