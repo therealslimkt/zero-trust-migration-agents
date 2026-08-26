@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -168,5 +170,51 @@ func TestHandleStatusPost_DeniesUnlistedOriginRegardlessOfRemoteAddr(t *testing.
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("expected unlisted Origin to be denied even from loopback, got status %d", rec.Code)
+	}
+}
+
+func TestConfiguredControlPlaneIsDisabledOrFailsClosed(t *testing.T) {
+	t.Setenv("MISSION_CONTROL_STATE_PATH", "")
+	t.Setenv("MISSION_CONTROL_API_TOKEN", "")
+	handler, err := configuredControlPlane()
+	if err != nil || handler != nil {
+		t.Fatalf("empty configuration = (%v, %v), want disabled", handler, err)
+	}
+
+	t.Setenv("MISSION_CONTROL_STATE_PATH", filepath.Join(t.TempDir(), "state.json"))
+	if _, err := configuredControlPlane(); !errors.Is(err, errControlPlaneConfiguration) {
+		t.Fatalf("partial state-only configuration error = %v", err)
+	}
+
+	t.Setenv("MISSION_CONTROL_STATE_PATH", "")
+	t.Setenv("MISSION_CONTROL_API_TOKEN", "token")
+	if _, err := configuredControlPlane(); !errors.Is(err, errControlPlaneConfiguration) {
+		t.Fatalf("partial token-only configuration error = %v", err)
+	}
+}
+
+func TestServerMuxMountsAuthenticatedControlPlaneOnlyWhenConfigured(t *testing.T) {
+	disabled := httptest.NewRecorder()
+	newServerMux(nil).ServeHTTP(
+		disabled,
+		httptest.NewRequest(http.MethodGet, "/api/v1/migrations/mig_123456789012", nil),
+	)
+	if disabled.Code != http.StatusNotFound {
+		t.Fatalf("disabled API status = %d, want 404", disabled.Code)
+	}
+
+	t.Setenv("MISSION_CONTROL_STATE_PATH", filepath.Join(t.TempDir(), "state.json"))
+	t.Setenv("MISSION_CONTROL_API_TOKEN", "test-token")
+	controlPlane, err := configuredControlPlane()
+	if err != nil {
+		t.Fatalf("configuredControlPlane: %v", err)
+	}
+	unauthorized := httptest.NewRecorder()
+	newServerMux(controlPlane).ServeHTTP(
+		unauthorized,
+		httptest.NewRequest(http.MethodGet, "/api/v1/migrations/mig_123456789012", nil),
+	)
+	if unauthorized.Code != http.StatusUnauthorized {
+		t.Fatalf("configured API status = %d, want 401", unauthorized.Code)
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net"
 	"net/http"
@@ -89,15 +90,42 @@ var (
 	broadcast = make(chan Message)
 )
 
+var errControlPlaneConfiguration = errors.New("control plane configuration is incomplete")
+
+func configuredControlPlane() (http.Handler, error) {
+	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_STATE_PATH"))
+	bearerToken := os.Getenv("MISSION_CONTROL_API_TOKEN")
+	if statePath == "" && bearerToken == "" {
+		return nil, nil
+	}
+	if statePath == "" || bearerToken == "" {
+		return nil, errControlPlaneConfiguration
+	}
+	return NewControlPlaneHandler(statePath, bearerToken)
+}
+
+func newServerMux(controlPlane http.Handler) *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/status", handleStatusPost)
+	mux.HandleFunc("/ws", handleConnections)
+	if controlPlane != nil {
+		mux.Handle("/api/v1/", controlPlane)
+	}
+	return mux
+}
+
 func main() {
 	// Start the broadcaster in a goroutine
 	go handleMessages()
 
-	http.HandleFunc("/api/status", handleStatusPost)
-	http.HandleFunc("/ws", handleConnections)
+	controlPlane, err := configuredControlPlane()
+	if err != nil {
+		log.Fatal("Mission Control control-plane configuration is invalid")
+	}
+	mux := newServerMux(controlPlane)
 
 	log.Println("Mission Control Backend started on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
