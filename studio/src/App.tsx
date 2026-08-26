@@ -1,229 +1,391 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import './App.css';
 
-// --- Types & Data Models ---
-type ErpType = 'JDE_AS400' | 'SAP_MAXDB' | 'SAGE_ACCPAC' | 'NONE';
+import { SOURCE_ORDER, buildMissionControlView, canApprove } from './mission-control/model';
+import { MissionControlClient } from './mission-control/client';
+import { ApprovalGate } from './mission-control/components/ApprovalGate';
+import { EvidencePanel } from './mission-control/components/EvidencePanel';
+import { MissionHeader } from './mission-control/components/MissionHeader';
+import { SourceLane } from './mission-control/components/SourceLane';
+import { TrustRail } from './mission-control/components/TrustRail';
+import {
+  CONNECTION_LABEL,
+  RUN_STATE_LABEL,
+  laneEvidence,
+  presentationFor,
+  selectConnectionStatus,
+  selectEvents,
+  selectLanes,
+  selectPortfolioDigest,
+} from './mission-control/components/presentation';
+import type { DecisionSubmission } from './mission-control/components/ApprovalGate';
+import type { EvidenceFilter } from './mission-control/components/EvidencePanel';
+import type {
+  ConnectionStatus,
+  LaneSummary,
+  MissionControlClientLike,
+  MissionControlSnapshot,
+  MissionControlView,
+  PortfolioDecisionInput,
+} from './mission-control/components/types';
+import type { SourceId } from './mission-control/model';
 
-interface Cartridge {
-  id: ErpType;
-  name: string;
-  dbType: string;
-  encoding: string;
-  description: string;
+const EVIDENCE_PANEL_ID = 'mc-evidence-panel';
+
+interface AppConfig {
+  baseUrl: string;
+  runId: string;
+  credentialConfigured: boolean;
+  approver: string;
+  missing: string[];
 }
 
-const CARTRIDGES: Record<ErpType, Cartridge> = {
-  NONE: { id: 'NONE', name: 'Select ERP...', dbType: 'Unknown', encoding: 'Unknown', description: 'Mount a legacy VM cartridge to begin.' },
-  JDE_AS400: {
-    id: 'JDE_AS400',
-    name: 'JD Edwards (World)',
-    dbType: 'IBM Db2 AS/400',
-    encoding: 'EBCDIC (COMP-3)',
-    description: 'Proprietary EBCDIC format with packed decimal logic. High PII risk.'
-  },
-  SAP_MAXDB: {
-    id: 'SAP_MAXDB',
-    name: 'SAP ERP (Legacy)',
-    dbType: 'SAP MaxDB 7.9',
-    encoding: 'ASCII / Binary',
-    description: 'Complex proprietary clustering. Bypassing ABAP layer required.'
-  },
-  SAGE_ACCPAC: {
-    id: 'SAGE_ACCPAC',
-    name: 'Sage Accpac 200',
-    dbType: 'Pervasive PSQL v11',
-    encoding: 'Btrieve Binary Pages',
-    description: 'Btrieve transactional page format. Requires deep reversing.'
-  }
-};
+function env(): Record<string, string | undefined> {
+  return import.meta.env as unknown as Record<string, string | undefined>;
+}
 
-const App: React.FC = () => {
-  const [mountedCartridge, setMountedCartridge] = useState<ErpType>('NONE');
-  const [isRunning, setIsRunning] = useState(false);
-  
-  // Terminal logs state
-  const [rawDbLogs, setRawDbLogs] = useState<string[]>([]);
-  const [agentLogs, setAgentLogs] = useState<string[]>([]);
-  const [bqLogs, setBqLogs] = useState<string[]>([]);
+/**
+ * The bearer token is read at the moment the client is constructed and is never
+ * stored in component state, rendered, or written to the console.
+ */
+function readToken(): string {
+  return (env().VITE_MISSION_API_TOKEN ?? '').trim();
+}
 
-  // Auto-scroll refs
-  const rawRef = useRef<HTMLDivElement>(null);
-  const agentRef = useRef<HTMLDivElement>(null);
-  const bqRef = useRef<HTMLDivElement>(null);
+function readConfig(): AppConfig {
+  const source = env();
+  const baseUrl = (source.VITE_MISSION_API_BASE_URL ?? '').trim();
+  const runId = (source.VITE_MISSION_RUN_ID ?? '').trim();
+  const credentialConfigured = readToken().length > 0;
+  const missing: string[] = [];
+  if (!baseUrl) missing.push('VITE_MISSION_API_BASE_URL');
+  if (!runId) missing.push('VITE_MISSION_RUN_ID');
+  if (!credentialConfigured) missing.push('VITE_MISSION_API_TOKEN');
+  return {
+    baseUrl,
+    runId,
+    credentialConfigured,
+    approver: (source.VITE_MISSION_APPROVER ?? '').trim(),
+    missing,
+  };
+}
 
-  // Auto-scroll effect
+function describeError(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error) return error;
+  return 'Unknown error';
+}
+
+export default function App() {
+  const config = useMemo(readConfig, []);
+  const configured = config.missing.length === 0;
+
+  const [snapshot, setSnapshot] = useState<MissionControlSnapshot | null>(null);
+  const [clientError, setClientError] = useState<string | null>(null);
+  const [submission, setSubmission] = useState<DecisionSubmission>({ status: 'idle' });
+  const [evidenceOpen, setEvidenceOpen] = useState(true);
+  const [evidenceFilter, setEvidenceFilter] = useState<EvidenceFilter>('all');
+  const clientRef = useRef<MissionControlClientLike | null>(null);
+
   useEffect(() => {
-    if (rawRef.current) rawRef.current.scrollTop = rawRef.current.scrollHeight;
-    if (agentRef.current) agentRef.current.scrollTop = agentRef.current.scrollHeight;
-    if (bqRef.current) bqRef.current.scrollTop = bqRef.current.scrollHeight;
-  }, [rawDbLogs, agentLogs, bqLogs]);
+    if (!configured) return;
 
-  // Simulation Logic
-  useEffect(() => {
-    if (!isRunning || mountedCartridge === 'NONE') return;
-
-    const encoding = CARTRIDGES[mountedCartridge].encoding;
-    
-    // 1. Raw DB Stream (Left Column) - Fires rapidly
-    const rawInterval = setInterval(() => {
-      const hex = Math.random().toString(16).substr(2, 12).toUpperCase();
-      const newLog = `[${new Date().toISOString().split('T')[1].slice(0, -1)}] READ 0x${hex} [${encoding} STREAM]`;
-      setRawDbLogs(prev => [...prev.slice(-30), newLog]);
-    }, 400);
-
-    // 2. Agent Fleet (Middle Column) - Fires periodically to simulate agent thought
-    let agentStep = 0;
-    const agentInterval = setInterval(() => {
-      const steps = [
-        `> [NANO_FIREWALL] Intercepting binary packet...`,
-        `> [NANO_FIREWALL] NER Regex triggered. Stripping standard PII...`,
-        `> [SPARKY_GEMMA] Contextual Edge Analysis started...`,
-        `> [SPARKY_GEMMA] Redacting complex entities (Mr. Wayne, Gotham Branch)...`,
-        `> [CLOUD_ORCHESTRATOR] Scrubbed payload received. Invoking Researcher Agent...`,
-        `> [RESEARCHER] Identified ${CARTRIDGES[mountedCartridge].name} format. Open-source JTOpen JAR matched.`,
-        `> [REVERSE-ENG] Generating Apache Beam pipeline translation...`,
-        `> [CLOUD_ORCHESTRATOR] Dataflow pipeline active. Pushing to BigQuery.`
-      ];
-      
-      const newLog = steps[agentStep % steps.length];
-      setAgentLogs(prev => [...prev.slice(-40), newLog]);
-      agentStep++;
-    }, 1500);
-
-    // 3. BigQuery Output (Right Column) - Fires after agent pipeline
-    const bqInterval = setInterval(() => {
-      const mockJson = `{
-  "tx_id": "TXN-${Math.floor(Math.random() * 90000) + 10000}",
-  "erp_source": "${CARTRIDGES[mountedCartridge].name}",
-  "status": "SECURE_INGEST",
-  "client_name": "[REDACTED_BY_GEMMA]",
-  "tax_id": "[REDACTED_BY_NANO]"
-}`;
-      setBqLogs(prev => [...prev.slice(-10), mockJson, '-----------------------------------']);
-    }, 3000);
-
-    return () => {
-      clearInterval(rawInterval);
-      clearInterval(agentInterval);
-      clearInterval(bqInterval);
-    };
-  }, [isRunning, mountedCartridge]);
-
-  const handleMount = () => {
-    if (mountedCartridge === 'NONE') {
-      alert("Please select a legacy ERP cartridge first!");
+    // Single integration seam with the domain client; see components/types.ts.
+    let client: MissionControlClientLike;
+    try {
+      client = new MissionControlClient({
+        baseUrl: config.baseUrl,
+        runId: config.runId,
+        token: readToken(),
+      } as never) as unknown as MissionControlClientLike;
+    } catch (error) {
+      setClientError(describeError(error));
       return;
     }
-    setIsRunning(true);
-    setAgentLogs([`SYSTEM: Connecting to ${CARTRIDGES[mountedCartridge].dbType} via Antigravity SDK...`]);
-  };
 
-  const handleEject = () => {
-    setIsRunning(false);
-    setMountedCartridge('NONE');
-    setRawDbLogs([]);
-    setAgentLogs([]);
-    setBqLogs([]);
-  };
+    clientRef.current = client;
+    let unsubscribe: (() => void) | void;
+    try {
+      unsubscribe = client.subscribe((next) => {
+        setClientError(null);
+        setSnapshot(next);
+      });
+      client.start?.();
+    } catch (error) {
+      setClientError(describeError(error));
+    }
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+      client.stop?.();
+      clientRef.current = null;
+    };
+  }, [configured, config.baseUrl, config.runId]);
+
+  const composed = useMemo(() => {
+    if (!snapshot) return { view: null, error: null as string | null };
+    try {
+      const view = buildMissionControlView(
+        snapshot.run as never,
+        snapshot.events as never,
+        snapshot.connectionState as never,
+      );
+      return { view, error: null as string | null };
+    } catch (error) {
+      return { view: null, error: describeError(error) };
+    }
+  }, [snapshot]);
+
+  const domainView = composed.view;
+  const view = domainView as unknown as MissionControlView | null;
+
+  // Approval eligibility is the domain layer's decision. A throwing predicate
+  // fails closed rather than opening the gate.
+  const approvalAllowed = useMemo(() => {
+    if (!domainView) return false;
+    try {
+      return Boolean(canApprove(domainView));
+    } catch {
+      return false;
+    }
+  }, [domainView]);
+
+  const lanes = useMemo(() => selectLanes(view), [view]);
+  const events = useMemo(() => selectEvents(view), [view]);
+  const summaries = useMemo<LaneSummary[]>(
+    () =>
+      SOURCE_ORDER.map((sourceId: SourceId) => {
+        const lane = lanes.get(sourceId);
+        return {
+          sourceId,
+          presentation: presentationFor(sourceId),
+          lane,
+          evidence: laneEvidence(lane, events),
+        };
+      }),
+    [lanes, events],
+  );
+
+  const digest = selectPortfolioDigest(view);
+  const loading = configured && !snapshot && !clientError;
+  const fallbackConnection: ConnectionStatus = !configured
+    ? 'unconfigured'
+    : clientError
+      ? 'failed'
+      : snapshot
+        ? 'live'
+        : 'connecting';
+  const connection = selectConnectionStatus(view, fallbackConnection);
+  const streamDegraded = connection === 'stale' || connection === 'disconnected' || connection === 'failed';
+  const noRunData = Boolean(snapshot) && !view?.runId && lanes.size === 0;
+
+  // A new digest invalidates any decision recorded against the previous one.
+  useEffect(() => {
+    setSubmission({ status: 'idle' });
+  }, [digest]);
+
+  const blockedReasons = useMemo(() => {
+    if (approvalAllowed) return [];
+    const reasons: string[] = [];
+    if (!configured) {
+      reasons.push('Mission Control is not configured, so no decision can be sent.');
+    } else if (!snapshot) {
+      reasons.push('No portfolio snapshot has been received yet.');
+    }
+    if (streamDegraded) {
+      reasons.push(`Event stream is ${CONNECTION_LABEL[connection].toLowerCase()}; the shown digest may be stale.`);
+    }
+    if (!digest) {
+      reasons.push('The portfolio plan digest has not been published.');
+    }
+    for (const summary of summaries) {
+      const label = summary.presentation.shortLabel;
+      const lane = summary.lane;
+      if (!lane) {
+        reasons.push(`${label}: no lane data reported.`);
+      } else if (lane.state === 'failed' || lane.state === 'cancelled') {
+        reasons.push(
+          `${label}: ${RUN_STATE_LABEL[lane.state].toLowerCase()}${lane.failureCode ? ` (${lane.failureCode})` : ''}.`,
+        );
+      } else if (!lane.planDigest) {
+        reasons.push(`${label}: no validated plan digest.`);
+      }
+    }
+    if (reasons.length === 0 && view?.state && view.state !== 'awaiting_approval') {
+      reasons.push(`Portfolio is ${RUN_STATE_LABEL[view.state].toLowerCase()}, not awaiting approval.`);
+    }
+    if (reasons.length === 0) {
+      reasons.push('The control plane has not opened the approval gate for this digest.');
+    }
+    return reasons;
+  }, [approvalAllowed, configured, snapshot, streamDegraded, connection, digest, summaries, view?.state]);
+
+  const handleDecision = useCallback(
+    (input: Omit<PortfolioDecisionInput, 'planDigest'>) => {
+      const client = clientRef.current;
+      if (!client || !digest) {
+        setSubmission({
+          status: 'error',
+          decision: input.decision,
+          message: 'No connected control plane or published digest.',
+        });
+        return;
+      }
+      setSubmission({ status: 'submitting', decision: input.decision, digest });
+      void Promise.resolve(client.submitDecision({ planDigest: digest, ...input }))
+        .then(() => setSubmission({ status: 'submitted', decision: input.decision, digest }))
+        .catch((error: unknown) =>
+          setSubmission({
+            status: 'error',
+            decision: input.decision,
+            digest,
+            message: describeError(error),
+          }),
+        );
+    },
+    [digest],
+  );
+
+  const handleOpenEvidence = useCallback((sourceId: SourceId) => {
+    setEvidenceFilter(sourceId);
+    setEvidenceOpen(true);
+    requestAnimationFrame(() => document.getElementById(EVIDENCE_PANEL_ID)?.focus());
+  }, []);
+
+  const announcement = `Portfolio ${view?.state ? RUN_STATE_LABEL[view.state] : 'state unavailable'}. Event stream ${CONNECTION_LABEL[connection]}. ${events.length} events received.`;
 
   return (
-    <div className="h-screen w-full bg-[#0a0a0a] font-mono flex flex-col p-4 overflow-hidden text-gray-300">
-      
-      {/* Header / Cartridge Bay */}
-      <div className="bg-[#121212] border border-gray-700 rounded-lg p-6 mb-6 flex flex-col md:flex-row items-center justify-between shadow-2xl">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-bold tracking-widest text-white mb-2">
-            🚀 ZERO-TRUST AGENTIC FLEET
-          </h1>
-          <p className="text-sm text-gray-500">Universal Legacy AI-Middleware Simulator</p>
-        </div>
+    <div className="mc-app">
+      <a className="mc-skip" href="#mc-lanes">
+        Skip to migration lanes
+      </a>
 
-        <div className="flex items-center space-x-4 mt-4 md:mt-0">
-          <select 
-            className="bg-black border border-gray-600 text-white p-2 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            value={mountedCartridge}
-            onChange={(e) => setMountedCartridge(e.target.value as ErpType)}
-            disabled={isRunning}
-          >
-            {Object.values(CARTRIDGES).map(cart => (
-              <option key={cart.id} value={cart.id}>{cart.name} ({cart.dbType})</option>
+      <MissionHeader
+        portfolioName={view?.portfolioName}
+        runId={view?.runId || config.runId}
+        runState={view?.state}
+        connection={connection}
+        updatedAt={view?.updatedAt}
+        credentialConfigured={config.credentialConfigured}
+      />
+
+      {!configured ? (
+        <div className="mc-notice mc-notice--critical" role="alert">
+          <h2 className="mc-notice__title">Configuration required</h2>
+          <p>
+            Mission Control is read-only until the control-plane connection is configured. Set the following Vite
+            environment variables and reload:
+          </p>
+          <ul className="mc-notice__list">
+            {config.missing.map((name) => (
+              <li className="mc-mono" key={name}>
+                {name}
+              </li>
             ))}
-          </select>
-
-          {!isRunning ? (
-            <button 
-              onClick={handleMount}
-              className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded transition-colors"
-            >
-              MOUNT CARTRIDGE
-            </button>
-          ) : (
-            <button 
-              onClick={handleEject}
-              className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded transition-colors animate-pulse"
-            >
-              EJECT (STOP)
-            </button>
-          )}
+          </ul>
+          <p className="mc-notice__foot">
+            The bearer token is read from the environment at startup and is never displayed, copied into the page,
+            or logged. No request is attempted while configuration is incomplete.
+          </p>
         </div>
-      </div>
+      ) : null}
 
-      {/* Cartridge Metadata Bar */}
-      {mountedCartridge !== 'NONE' && (
-        <div className="mb-4 text-xs flex space-x-8 text-gray-400">
-          <span><strong className="text-gray-200">DB Type:</strong> {CARTRIDGES[mountedCartridge].dbType}</span>
-          <span><strong className="text-gray-200">Encoding:</strong> {CARTRIDGES[mountedCartridge].encoding}</span>
-          <span><strong className="text-gray-200">Analysis:</strong> {CARTRIDGES[mountedCartridge].description}</span>
+      {clientError ? (
+        <div className="mc-notice mc-notice--critical" role="alert">
+          <h2 className="mc-notice__title">Control-plane connection failed</h2>
+          <p>{clientError}</p>
         </div>
-      )}
+      ) : null}
 
-      {/* The 3-Column Matrix */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 min-h-0">
-        
-        {/* Column 1: Raw VM / Database */}
-        <div className="bg-[#050505] border border-red-900 rounded-lg flex flex-col shadow-[0_0_20px_rgba(220,38,38,0.1)] relative">
-          <div className="bg-red-950/40 p-3 border-b border-red-900/50 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-red-500">1. LEGACY VM STREAM</h2>
-            <div className={`h-2 w-2 rounded-full ${isRunning ? 'bg-red-500 animate-pulse' : 'bg-gray-700'}`}></div>
-          </div>
-          <div ref={rawRef} className="flex-1 p-4 overflow-y-auto text-red-700 text-xs leading-relaxed">
-            {rawDbLogs.map((log, i) => <div key={i}>{log}</div>)}
-          </div>
+      {composed.error ? (
+        <div className="mc-notice mc-notice--critical" role="alert">
+          <h2 className="mc-notice__title">Portfolio data could not be read</h2>
+          <p>{composed.error}</p>
         </div>
+      ) : null}
 
-        {/* Column 2: Agent Fleet */}
-        <div className="bg-[#050505] border border-blue-900 rounded-lg flex flex-col shadow-[0_0_20px_rgba(59,130,246,0.1)] relative">
-          <div className="bg-blue-950/40 p-3 border-b border-blue-900/50 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-blue-500">2. ZERO-TRUST AGENT FLEET</h2>
-            <div className={`h-2 w-2 rounded-full ${isRunning ? 'bg-blue-500 animate-ping' : 'bg-gray-700'}`}></div>
-          </div>
-          <div ref={agentRef} className="flex-1 p-4 overflow-y-auto text-blue-400 text-xs leading-relaxed font-semibold">
-            {agentLogs.map((log, i) => {
-              // Color code the different agents
-              if (log.includes('NANO_FIREWALL')) return <div key={i} className="text-pink-400 mt-2">{log}</div>;
-              if (log.includes('SPARKY_GEMMA')) return <div key={i} className="text-emerald-400 mt-2">{log}</div>;
-              if (log.includes('CLOUD_ORCHESTRATOR')) return <div key={i} className="text-blue-300 mt-2">{log}</div>;
-              if (log.includes('RESEARCHER') || log.includes('REVERSE-ENG')) return <div key={i} className="text-purple-400 ml-4">{log}</div>;
-              return <div key={i}>{log}</div>;
-            })}
-          </div>
+      {loading ? (
+        <div className="mc-notice" role="status">
+          <h2 className="mc-notice__title">Connecting to the control plane</h2>
+          <p>
+            Waiting for the first portfolio snapshot on run <span className="mc-mono">{config.runId}</span>. Lanes
+            stay empty until real events arrive.
+          </p>
         </div>
+      ) : null}
 
-        {/* Column 3: BigQuery Destination */}
-        <div className="bg-[#050505] border border-green-900 rounded-lg flex flex-col shadow-[0_0_20px_rgba(34,197,94,0.1)] relative">
-          <div className="bg-green-950/40 p-3 border-b border-green-900/50 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-green-500">3. GOOGLE BIGQUERY</h2>
-            <div className={`h-2 w-2 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-gray-700'}`}></div>
+      {streamDegraded && !clientError ? (
+        <div className="mc-notice mc-notice--attention" role="status">
+          <h2 className="mc-notice__title">{CONNECTION_LABEL[connection]}</h2>
+          <p>
+            Lane values below are the last state received from the control plane and may be out of date. Approval
+            stays closed while the stream is not healthy.
+          </p>
+        </div>
+      ) : null}
+
+      {noRunData && !composed.error ? (
+        <div className="mc-notice" role="status">
+          <h2 className="mc-notice__title">No portfolio run data</h2>
+          <p>
+            The control plane returned no run for <span className="mc-mono">{config.runId}</span>. Nothing is
+            inferred while the run is empty.
+          </p>
+        </div>
+      ) : null}
+
+      <TrustRail summaries={summaries} runState={view?.state} connection={connection} />
+
+      <main className="mc-main">
+        <section className="mc-lanes-section" aria-labelledby="mc-lanes-heading">
+          <div className="mc-section-head">
+            <h2 className="mc-section-heading" id="mc-lanes-heading">
+              Migration lanes
+            </h2>
+            <p className="mc-section-note">
+              All three estates migrate together under one gate. Every value below comes from a control-plane
+              event.
+            </p>
           </div>
-          <div ref={bqRef} className="flex-1 p-4 overflow-y-auto text-green-400 text-xs">
-            {bqLogs.map((log, i) => (
-              <pre key={i} className="mb-2 whitespace-pre-wrap">{log}</pre>
+          <ol className="mc-lanes" id="mc-lanes" tabIndex={-1}>
+            {summaries.map((summary) => (
+              <SourceLane
+                evidencePanelId={EVIDENCE_PANEL_ID}
+                key={summary.sourceId}
+                loading={loading}
+                onOpenEvidence={handleOpenEvidence}
+                summary={summary}
+              />
             ))}
-          </div>
-        </div>
+          </ol>
+        </section>
 
-      </div>
+        <aside className="mc-aside" aria-label="Approval and evidence">
+          <ApprovalGate
+            approvalAllowed={approvalAllowed}
+            blockedReasons={blockedReasons}
+            defaultApprover={config.approver}
+            digest={digest}
+            onSubmit={handleDecision}
+            runState={view?.state}
+            submission={submission}
+          />
+          <EvidencePanel
+            events={events}
+            filter={evidenceFilter}
+            loading={loading}
+            onFilterChange={setEvidenceFilter}
+            onToggle={() => setEvidenceOpen((open) => !open)}
+            open={evidenceOpen}
+            panelId={EVIDENCE_PANEL_ID}
+            summaries={summaries}
+          />
+        </aside>
+      </main>
+
+      <p aria-live="polite" className="mc-sr-only">
+        {announcement}
+      </p>
     </div>
   );
-};
-
-export default App;
+}
