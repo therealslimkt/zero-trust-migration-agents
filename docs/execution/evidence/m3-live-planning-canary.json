@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.0.0",
+  "capturedAt": "2026-08-26T22:44:46Z",
+  "status": "awaiting_approval",
+  "runId": "mig_b858c16c2f614722b844",
+  "model": "gemini-3.5-flash",
+  "vertexLocation": "us",
+  "portfolioPlanDigest": "sha256:1af7f87c6651cdfd2b2a955b7c733ba10ae74b65cfa4960df8f33de775f9b4d4",
+  "preparedSnapshot": {
+    "mode": "0600",
+    "byteCount": 11297,
+    "containsRawSourceBytes": false,
+    "containsPreRedactionValues": false
+  },
+  "negativeApprovalCanary": {
+    "wrongDigestRejected": true,
+    "executionStarted": false
+  },
+  "sources": [
+    {
+      "sourceId": "jde",
+      "hostname": "legacy-jde-db",
+      "byteCount": 260,
+      "recordCount": 4,
+      "protectedFindingCount": 8,
+      "unresolvedFindingCount": 0,
+      "localGemmaModel": "gemma-2-2b",
+      "sourceDigest": "sha256:a78d8b260f56934a0897511bb13991cefe8993fb6daa24c8f083f5713fa041d3",
+      "sourceManifestDigest": "sha256:0589a02c75bfa0aca995cb63caede431eab33881f1d7d7422fceed11740cb94b",
+      "redactionReportDigest": "sha256:a4b1661a8db9fd0b9b38f64c47e99bf879fde9a2a2e0529e94fd9bd11add30d2"
+    },
+    {
+      "sourceId": "maxdb",
+      "hostname": "legacy-maxdb",
+      "byteCount": 386,
+      "recordCount": 4,
+      "protectedFindingCount": 12,
+      "unresolvedFindingCount": 0,
+      "localGemmaModel": "gemma-2-2b",
+      "sourceDigest": "sha256:6698000415f25413fd88032ae4775ebbdcda7b9b5f4c010e0566fe0a2c49bc45",
+      "sourceManifestDigest": "sha256:57d63fdeb1f71bac4d64f81831bbcdffba225e4354e91a755534ec8bc908c954",
+      "redactionReportDigest": "sha256:680babf3143c5bb6cc3f6a374b1d2d63d217acb1bb42df8ed71f9b7350b9cf1d"
+    },
+    {
+      "sourceId": "btrieve",
+      "hostname": "legacy-btrieve-db",
+      "byteCount": 8192,
+      "recordCount": 1,
+      "protectedFindingCount": 2,
+      "unresolvedFindingCount": 0,
+      "localGemmaModel": "gemma-2-2b",
+      "sourceDigest": "sha256:1245d7a3e522ec7eca1051b607c003e5cd5d09202381a35de8cd8a776db02fdd",
+      "sourceManifestDigest": "sha256:b7b1cd0fe07520949fa35e5106d3e3420d1ca4ac22f75bdd5d42f6726f67d0e8",
+      "redactionReportDigest": "sha256:a09b796e23ea03bd1aa1ceb4c1d6437545d9447fa167ade06d5df92dd5ae91e1"
+    }
+  ]
+}
