@@ -211,7 +211,7 @@ type WebDriverResearcher interface {
 // Implementations must only hash bytes; they must never execute, load, or
 // unpack the artifact.
 type WebDriverArtifactRegistry interface {
-	FingerprintArtifactRegistryRemote(ctx context.Context, projectID string, candidate WebDriverCandidate) (string, error)
+	FingerprintArtifactRegistryRemote(ctx context.Context, setup WebCloudSetupRecord, candidate WebDriverCandidate) (string, error)
 }
 
 // WebLiveSourceDetailReader resolves the exact private replay detail captured
@@ -241,7 +241,7 @@ type WebBFFConfig struct {
 
 	CloudProber WebCloudCapabilityProber
 	// CloudVerifierPrincipal is the deployment-owned service account granted
-	// read-only verification access by each reviewed setup command. It must
+	// metadata verification and Vertex research access by each reviewed setup command. It must
 	// match CloudProber.VerifierPrincipal exactly when a prober is configured.
 	CloudVerifierPrincipal string
 	DriverResearcher       WebDriverResearcher

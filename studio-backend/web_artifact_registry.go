@@ -33,13 +33,10 @@ var (
 	errWebArtifactResponse      = errors.New("artifact registry: unexpected artifact response")
 )
 
-// WebArtifactRegistryRemoteConfig names one Maven repository owned by this
-// deployment. OwnerProjectID is deliberately independent from browser input:
-// a request project must equal it before a remote request can be issued.
+// WebArtifactRegistryRemoteConfig supplies only deployment-controlled
+// transport limits. The exact customer project/repository comes from a
+// server-owned, verified WebCloudSetupRecord on every request.
 type WebArtifactRegistryRemoteConfig struct {
-	OwnerProjectID   string
-	Region           string
-	Repository       string
 	MaxArtifactBytes int64
 
 	// TokenSource is injectable for tests. Nil obtains ADC with the Cloud
@@ -52,12 +49,9 @@ type WebArtifactRegistryRemoteConfig struct {
 // Artifact Registry remote repository. It never executes, loads, or unpacks an
 // artifact; its only output is a content digest.
 type WebArtifactRegistryRemote struct {
-	ownerProjectID string
-	host           string
-	repository     string
-	maxBytes       int64
-	tokens         oauth2.TokenSource
-	client         *http.Client
+	maxBytes int64
+	tokens   oauth2.TokenSource
+	client   *http.Client
 }
 
 var _ WebDriverArtifactRegistry = (*WebArtifactRegistryRemote)(nil)
@@ -65,9 +59,6 @@ var _ WebDriverArtifactRegistry = (*WebArtifactRegistryRemote)(nil)
 // NewWebArtifactRegistryRemote builds a provider that obtains bearer tokens
 // from Application Default Credentials when a test token source is not given.
 func NewWebArtifactRegistryRemote(ctx context.Context, cfg WebArtifactRegistryRemoteConfig) (*WebArtifactRegistryRemote, error) {
-	if !webProjectIDPattern.MatchString(cfg.OwnerProjectID) || !webRegionPattern.MatchString(cfg.Region) || !webArtifactRepoPattern.MatchString(cfg.Repository) {
-		return nil, errWebArtifactConfiguration
-	}
 	maxBytes := cfg.MaxArtifactBytes
 	if maxBytes == 0 {
 		maxBytes = webDefaultArtifactMaxBytes
@@ -98,12 +89,9 @@ func NewWebArtifactRegistryRemote(ctx context.Context, cfg WebArtifactRegistryRe
 	}
 
 	return &WebArtifactRegistryRemote{
-		ownerProjectID: cfg.OwnerProjectID,
-		host:           cfg.Region + "-maven.pkg.dev",
-		repository:     cfg.Repository,
-		maxBytes:       maxBytes,
-		tokens:         tokens,
-		client:         &cloned,
+		maxBytes: maxBytes,
+		tokens:   tokens,
+		client:   &cloned,
 	}, nil
 }
 
@@ -111,11 +99,11 @@ func NewWebArtifactRegistryRemote(ctx context.Context, cfg WebArtifactRegistryRe
 // Candidate.OfficialSource is intentionally not used as a request URL: the
 // configured repository, validated Maven coordinates, and version solely
 // determine the network destination and object path.
-func (registry *WebArtifactRegistryRemote) FingerprintArtifactRegistryRemote(ctx context.Context, projectID string, candidate WebDriverCandidate) (string, error) {
-	if registry == nil || projectID != registry.ownerProjectID {
+func (registry *WebArtifactRegistryRemote) FingerprintArtifactRegistryRemote(ctx context.Context, setup WebCloudSetupRecord, candidate WebDriverCandidate) (string, error) {
+	if registry == nil || setup.Status != webCloudSetupVerified || !webArtifactSetupBindingValid(setup) {
 		return "", errWebArtifactCandidate
 	}
-	artifactURL, err := registry.artifactURL(candidate.Coordinates, candidate.Version)
+	artifactURL, err := registry.artifactURL(setup, candidate.Coordinates, candidate.Version)
 	if err != nil {
 		return "", err
 	}
@@ -137,7 +125,8 @@ func (registry *WebArtifactRegistryRemote) FingerprintArtifactRegistryRemote(ctx
 		return "", fmt.Errorf("artifact registry: request failed: %w", err)
 	}
 	defer response.Body.Close()
-	if response.Request != nil && (response.Request.URL.Scheme != "https" || !strings.EqualFold(response.Request.URL.Host, registry.host)) {
+	expectedHost := setup.Region + "-maven.pkg.dev"
+	if response.Request != nil && (response.Request.URL.Scheme != "https" || !strings.EqualFold(response.Request.URL.Host, expectedHost)) {
 		return "", errWebArtifactResponse
 	}
 	if response.StatusCode != http.StatusOK || !webJarContentType(response.Header.Get("Content-Type")) || response.ContentLength > registry.maxBytes {
@@ -159,7 +148,7 @@ func (registry *WebArtifactRegistryRemote) FingerprintArtifactRegistryRemote(ctx
 	return "sha256:" + hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (registry *WebArtifactRegistryRemote) artifactURL(coordinates, version string) (*url.URL, error) {
+func (registry *WebArtifactRegistryRemote) artifactURL(setup WebCloudSetupRecord, coordinates, version string) (*url.URL, error) {
 	match := webMavenCoordinatePattern.FindStringSubmatch(coordinates)
 	if len(match) != 3 || !webMavenVersionPattern.MatchString(version) || version == "." || strings.Contains(version, "..") {
 		return nil, errWebArtifactCandidate
@@ -171,9 +160,23 @@ func (registry *WebArtifactRegistryRemote) artifactURL(coordinates, version stri
 	groupPath := strings.ReplaceAll(groupID, ".", "/")
 	return &url.URL{
 		Scheme: "https",
-		Host:   registry.host,
-		Path:   "/" + registry.ownerProjectID + "/" + registry.repository + "/" + groupPath + "/" + artifactID + "/" + version + "/" + artifactID + "-" + version + ".jar",
+		Host:   setup.Region + "-maven.pkg.dev",
+		Path:   "/" + setup.ProjectID + "/" + setup.RepositoryName + "/" + groupPath + "/" + artifactID + "/" + version + "/" + artifactID + "-" + version + ".jar",
 	}, nil
+}
+
+func webArtifactSetupBindingValid(setup WebCloudSetupRecord) bool {
+	if !webSetupIDPattern.MatchString(setup.SetupID) || !webProjectIDPattern.MatchString(setup.ProjectID) ||
+		!webRegionPattern.MatchString(setup.Region) || !webArtifactRepoPattern.MatchString(setup.RepositoryName) {
+		return false
+	}
+	suffix := strings.TrimPrefix(setup.SetupID, "setup_")
+	if len(suffix) < 12 {
+		return false
+	}
+	prefix := "ztm-" + suffix[:12]
+	return setup.ResourcePrefix == prefix && setup.ServiceAccountName == prefix &&
+		setup.RepositoryName == prefix+"-drivers" && setup.BucketName == setup.ProjectID+"-"+prefix
 }
 
 func webJarContentType(value string) bool {

@@ -27,14 +27,14 @@ func (h *webBFFHandler) handleDriverResearchCreate(w http.ResponseWriter, r *htt
 		webWriteProblem(w, cpErrInvalidRequest)
 		return
 	}
-	verifiedCloud := false
+	var verifiedSetup *WebCloudSetupRecord
 	for _, setup := range h.store.CloudSetupsForOwner(identity.Subject) {
 		if setup.Status == webCloudSetupVerified && setup.ProjectID == req.ProjectID {
-			verifiedCloud = true
-			break
+			candidate := setup
+			verifiedSetup = &candidate
 		}
 	}
-	if !verifiedCloud {
+	if verifiedSetup == nil {
 		webWriteProblem(w, webErrCloudSetupNotVerified)
 		return
 	}
@@ -158,7 +158,18 @@ func (h *webBFFHandler) handleDriverApproval(w http.ResponseWriter, r *http.Requ
 			webWriteProblem(w, webErrResearchUnavailable)
 			return
 		}
-		fingerprint, err := h.driverRegistry.FingerprintArtifactRegistryRemote(r.Context(), record.Request.ProjectID, *candidate)
+		var verifiedSetup *WebCloudSetupRecord
+		for _, setup := range h.store.CloudSetupsForOwner(identity.Subject) {
+			if setup.Status == webCloudSetupVerified && setup.ProjectID == record.Request.ProjectID {
+				candidateSetup := setup
+				verifiedSetup = &candidateSetup
+			}
+		}
+		if verifiedSetup == nil {
+			webWriteProblem(w, webErrCloudSetupNotVerified)
+			return
+		}
+		fingerprint, err := h.driverRegistry.FingerprintArtifactRegistryRemote(r.Context(), *verifiedSetup, *candidate)
 		if err != nil || !validWebDigest(fingerprint) {
 			webWriteProblem(w, cpErrInternal)
 			return

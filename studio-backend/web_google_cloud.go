@@ -26,8 +26,8 @@ import (
 const (
 	webGoogleCloudReadOnlyScope = "https://www.googleapis.com/auth/cloud-platform.read-only"
 	// IAM v1 exposes no read-only OAuth scope. This scope is used only by the
-	// dedicated IAM client; the verifier's read-only IAM roles remain the
-	// effective authorization boundary and the adapter exposes only Get.
+	// dedicated IAM client; the verifier's narrowly scoped roles remain the
+	// effective authorization boundary and the IAM adapter exposes only Get.
 	webGoogleCloudIAMScope = "https://www.googleapis.com/auth/cloud-platform"
 )
 
@@ -45,6 +45,7 @@ const (
 	webMissingVerifierBigQueryMetadata   = "VERIFIER_ROLE_BIGQUERY_METADATA_VIEWER_MISSING"
 	webMissingVerifierArtifactReader     = "VERIFIER_ROLE_ARTIFACT_READER_MISSING"
 	webMissingVerifierStorageViewer      = "VERIFIER_ROLE_STORAGE_VIEWER_MISSING"
+	webMissingVerifierVertexUser         = "VERIFIER_ROLE_VERTEX_AI_USER_MISSING"
 
 	webMissingWorkerAccount            = "WORKER_SERVICE_ACCOUNT_MISSING"
 	webMissingWorkerDataflowWorker     = "WORKER_ROLE_DATAFLOW_WORKER_MISSING"
@@ -94,6 +95,7 @@ var webGoogleVerifierRoles = []struct {
 	{"roles/iam.securityReviewer", webMissingVerifierSecurityReviewer},
 	{"roles/serviceusage.serviceUsageViewer", webMissingVerifierServiceUsageViewer},
 	{"roles/storage.viewer", webMissingVerifierStorageViewer},
+	{"roles/aiplatform.user", webMissingVerifierVertexUser},
 }
 
 var webGoogleWorkerRoles = []struct {
@@ -231,7 +233,8 @@ func (p *WebGoogleCloudCapabilityProber) requestContext(parent context.Context) 
 }
 
 // VerifierPrincipal exposes only the deployment-owned, non-secret IAM member
-// that the reviewed setup command must grant read-only verification access.
+// that the reviewed setup command grants metadata verification and Vertex
+// research access.
 func (p *WebGoogleCloudCapabilityProber) VerifierPrincipal() string {
 	if p == nil {
 		return ""
@@ -239,7 +242,7 @@ func (p *WebGoogleCloudCapabilityProber) VerifierPrincipal() string {
 	return p.config.AppVerifierPrincipal
 }
 
-// ProbeCloudCapabilities verifies services, the app verifier's read-only IAM
+// ProbeCloudCapabilities verifies services, the app verifier's scoped IAM
 // roles, the dedicated worker and its roles, and the exact dataset, bucket and
 // Maven Central remote repository. Upstream errors are collapsed to one closed
 // error; only closed capability identifiers are returned.

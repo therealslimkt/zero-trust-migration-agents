@@ -191,9 +191,42 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 			syntheticRunIDs = append(syntheticRunIDs, strings.TrimSpace(runID))
 		}
 	}
+	var cloudProber WebCloudCapabilityProber
+	var driverResearcher WebDriverResearcher
+	var driverRegistry WebDriverArtifactRegistry
+	cloudVerifierPrincipal := strings.TrimSpace(os.Getenv("MISSION_CONTROL_CLOUD_VERIFIER_SERVICE_ACCOUNT"))
+	if cloudVerifierPrincipal != "" {
+		cloudProber, err = NewWebGoogleCloudCapabilityProber(ctx, WebGoogleCloudProbeConfig{
+			AppVerifierPrincipal: cloudVerifierPrincipal, WorkerServiceAccountPrefix: "ztm-",
+			DriverRepositorySuffix: "-drivers", DatasetSuffix: "_migration",
+		})
+		if err != nil {
+			return nil, errWebBFFConfiguration
+		}
+		location := strings.TrimSpace(os.Getenv("MISSION_CONTROL_VERTEX_RESEARCH_LOCATION"))
+		if location == "" {
+			location = "global"
+		}
+		model := strings.TrimSpace(os.Getenv("MISSION_CONTROL_VERTEX_RESEARCH_MODEL"))
+		if model == "" {
+			model = "gemini-3.7-flash"
+		}
+		driverResearcher, err = NewWebVertexDriverResearcher(WebVertexDriverResearchConfig{Location: location, Model: model})
+		if err != nil {
+			return nil, errWebBFFConfiguration
+		}
+		driverRegistry, err = NewWebArtifactRegistryRemote(ctx, WebArtifactRegistryRemoteConfig{})
+		if err != nil {
+			return nil, errWebBFFConfiguration
+		}
+	} else if strings.TrimSpace(os.Getenv("MISSION_CONTROL_VERTEX_RESEARCH_LOCATION")) != "" || strings.TrimSpace(os.Getenv("MISSION_CONTROL_VERTEX_RESEARCH_MODEL")) != "" {
+		return nil, errWebBFFConfiguration
+	}
 	return NewWebBFFHandler(WebBFFConfig{
 		Verifier: verifier, Runs: runs, Store: store,
 		Artifacts: artifactStore, LiveDetails: artifactStore,
+		CloudProber: cloudProber, CloudVerifierPrincipal: cloudVerifierPrincipal,
+		DriverResearcher: driverResearcher, DriverRegistry: driverRegistry,
 		SyntheticDemoRunIDs: syntheticRunIDs,
 	})
 }
