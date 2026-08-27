@@ -26,6 +26,11 @@ beforeEach(() => {
     value: vi.fn(createMediaQueryList),
     writable: true,
   })
+  Object.defineProperty(window, 'scrollTo', {
+    configurable: true,
+    value: vi.fn(),
+    writable: true,
+  })
 })
 
 class ResizeObserverStub implements ResizeObserver {
