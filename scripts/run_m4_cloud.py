@@ -43,13 +43,14 @@ from control_plane.canonical import (
     require_digest,
     require_run_id,
 )
+from control_plane.mission_control_client import MissionControlLocalClient
 from control_plane.workflow import PreparedPortfolio, execute_portfolio
 from ztm_security.approval import ApprovalRecord
 
 
 _MAX_SNAPSHOT_BYTES = 16 << 20
-_RFC3339_UTC_SECONDS = re.compile(
-    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+_RFC3339_UTC = re.compile(
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{3})?Z$"
 )
 _JOB_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
 _JOB_NAME = re.compile(r"^ztm-(?:jde|maxdb|btrieve)-[a-z0-9-]{1,55}$")
@@ -152,7 +153,11 @@ def _load_prepared(path: Path) -> PreparedPortfolio:
 
 
 def _approval(
-    *, prepared: PreparedPortfolio, digest: str, approver: str, approved_at: str
+    *,
+    prepared: PreparedPortfolio,
+    digest: str,
+    approver: str | None,
+    approved_at: str | None,
 ) -> ApprovalRecord:
     try:
         require_digest(digest)
@@ -161,19 +166,20 @@ def _approval(
     if not hmac.compare_digest(digest, prepared.portfolio_digest):
         _reject("approval_digest")
     if (
-        not approver
+        not isinstance(approver, str)
+        or not approver
         or approver != approver.strip()
         or len(approver) > 128
         or not all(character.isprintable() for character in approver)
     ):
         _reject("approval_identity")
-    if _RFC3339_UTC_SECONDS.fullmatch(approved_at) is None:
+    if not isinstance(approved_at, str) or _RFC3339_UTC.fullmatch(approved_at) is None:
         _reject("approval_timestamp")
     try:
-        parsed = dt.datetime.strptime(approved_at, "%Y-%m-%dT%H:%M:%SZ")
+        parsed = dt.datetime.fromisoformat(approved_at[:-1] + "+00:00")
     except ValueError:
         _reject("approval_timestamp")
-    if parsed.strftime("%Y-%m-%dT%H:%M:%SZ") != approved_at:
+    if parsed.utcoffset() != dt.timedelta(0):
         _reject("approval_timestamp")
     try:
         return ApprovalRecord(
@@ -329,12 +335,25 @@ def run(
     """Compose the approved local and cloud executions and persist safe proof."""
 
     prepared = _load_prepared(args.snapshot)
-    approval = _approval(
-        prepared=prepared,
-        digest=args.digest,
-        approver=args.approver,
-        approved_at=args.approved_at,
-    )
+    mission_control: MissionControlLocalClient | None = None
+    if args.mission_control_url:
+        mission_control = MissionControlLocalClient(
+            base_url=args.mission_control_url,
+            public_token=os.environ.get("MISSION_CONTROL_API_TOKEN"),
+            orchestration_token=os.environ.get(
+                "MISSION_CONTROL_ORCHESTRATOR_TOKEN"
+            ),
+        )
+        approval = mission_control.approval(prepared.run_id)
+        if not hmac.compare_digest(approval.plan_digest, args.digest):
+            _reject("approval_digest")
+    else:
+        approval = _approval(
+            prepared=prepared,
+            digest=args.digest,
+            approver=args.approver,
+            approved_at=args.approved_at,
+        )
     config = _runtime_config(args)
     execution = execute_portfolio(
         prepared=prepared,
@@ -370,6 +389,8 @@ def run(
             expected_run_id=prepared.run_id,
             expected_portfolio_digest=prepared.portfolio_digest,
         )
+        if mission_control is not None:
+            _sync_cloud_evidence(mission_control, cloud_result)
         _commit_output(descriptor, canonical_json_bytes(proof))
         committed = True
         return proof
@@ -379,17 +400,78 @@ def run(
         os.close(descriptor)
 
 
+_STATE_RANK = {
+    "approved": 5,
+    "executing": 6,
+    "verifying": 7,
+    "completed": 8,
+}
+
+
+def _sync_cloud_evidence(
+    client: MissionControlLocalClient, result: CloudPortfolioResult
+) -> None:
+    run = client.get_run(result.run_id)
+    source_states = {
+        str(source["sourceId"]): str(source["state"])
+        for source in run["sources"]  # type: ignore[index,union-attr]
+        if type(source) is dict
+    }
+    for source in result.sources:
+        state = source_states.get(source.source_id)
+        if state not in _STATE_RANK:
+            _reject("mission_control_state")
+        if _STATE_RANK[state] < _STATE_RANK["executing"]:
+            client.advance_source(
+                run_id=result.run_id,
+                source_id=source.source_id,
+                state="executing",
+            )
+            state = "executing"
+        if _STATE_RANK[state] < _STATE_RANK["verifying"]:
+            client.advance_source(
+                run_id=result.run_id,
+                source_id=source.source_id,
+                state="verifying",
+                artifact_id=(
+                    f"art_{source.source_id}-dataflow-{source.bundle_digest[7:19]}"
+                ),
+                digest=source.bundle_digest,
+                secondary_artifact_id=(
+                    f"art_{source.source_id}-bigquery-{source.output_digest[7:19]}"
+                ),
+                secondary_digest=source.output_digest,
+                records_written=source.record_count,
+                records_rejected=0,
+            )
+            state = "verifying"
+        if _STATE_RANK[state] < _STATE_RANK["completed"]:
+            client.advance_source(
+                run_id=result.run_id,
+                source_id=source.source_id,
+                state="completed",
+                artifact_id=(
+                    f"art_{source.source_id}-reconcile-{source.output_digest[7:19]}"
+                ),
+                digest=source.output_digest,
+                secondary_artifact_id=(
+                    f"art_{source.source_id}-audit-{result.audit_digest[7:19]}"
+                ),
+                secondary_digest=result.audit_digest,
+            )
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run an approved three-source portfolio on the trusted cloud runtime"
     )
     parser.add_argument("--snapshot", type=Path, required=True)
     parser.add_argument("--digest", required=True)
-    parser.add_argument("--approver", required=True)
+    parser.add_argument("--approver")
     parser.add_argument(
         "--approved-at",
-        required=True,
-        help="explicit UTC RFC3339 timestamp, exactly YYYY-MM-DDTHH:MM:SSZ",
+        required=False,
+        help="explicit UTC RFC3339 timestamp with seconds or milliseconds",
     )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--project", required=True)
@@ -401,6 +483,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--worker-subnetwork", required=True)
     parser.add_argument("--sdk-container-image", required=True)
     parser.add_argument("--temp-location", required=True)
+    parser.add_argument("--mission-control-url")
     return parser
 
 

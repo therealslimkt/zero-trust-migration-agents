@@ -1242,6 +1242,22 @@ func (s *cpStore) GetRun(runID string) (*ControlPlaneRun, error) {
 	return run.clone(), nil
 }
 
+// Approval returns a defensive copy of the durable decision for one run.
+func (s *cpStore) Approval(runID string) (*ControlPlaneApproval, error) {
+	if !cpRunIDRe.MatchString(runID) {
+		return nil, cpErrNotFound
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, approval := range s.snap.Approvals {
+		if approval.RunID == runID {
+			out := *approval
+			return &out, nil
+		}
+	}
+	return nil, cpErrNotFound
+}
+
 // EventsAfter returns up to limit stored events for a run, in stored order,
 // strictly after the event named by cursor. An unrecognised cursor is an
 // error: the stream never silently skips events a client has not seen.
@@ -1290,11 +1306,13 @@ func (s *cpStore) EventsAfter(runID, cursor string, limit int) ([]*ControlPlaneE
 // ControlPlaneSourceUpdate carries the evidence and counters attached to one
 // source transition. Counters are optional and may only move forwards.
 type ControlPlaneSourceUpdate struct {
-	ArtifactID      string
-	Digest          string
-	RecordsRead     *int64
-	RecordsWritten  *int64
-	RecordsRejected *int64
+	ArtifactID          string
+	Digest              string
+	SecondaryArtifactID string
+	SecondaryDigest     string
+	RecordsRead         *int64
+	RecordsWritten      *int64
+	RecordsRejected     *int64
 }
 
 // cpAdvanceSteps is the frozen per-source sequence reachable through
@@ -1302,17 +1320,18 @@ type ControlPlaneSourceUpdate struct {
 // approved, cancelled and failed are deliberately absent: they are reached
 // only through the approval gate, the approval decision, or FailSource.
 var cpAdvanceSteps = map[ControlPlaneState]struct {
-	From         ControlPlaneState
-	EventType    string
-	EvidenceKind string
-	Summary      string
+	From                  ControlPlaneState
+	EventType             string
+	EvidenceKind          string
+	SecondaryEvidenceKind string
+	Summary               string
 }{
-	ControlPlaneStateInventorying: {ControlPlaneStateCreated, "source.inventory.started", "", "inventory started."},
-	ControlPlaneStateRedacting:    {ControlPlaneStateInventorying, "source.inventory.completed", "source_manifest", "inventory completed and source manifest recorded."},
-	ControlPlaneStatePlanning:     {ControlPlaneStateRedacting, "source.redaction.completed", "redaction_report", "redaction report recorded."},
-	ControlPlaneStateExecuting:    {ControlPlaneStateApproved, "source.execution.started", "", "execution started."},
-	ControlPlaneStateVerifying:    {ControlPlaneStateExecuting, "source.execution.completed", "dataflow_job", "execution completed."},
-	ControlPlaneStateCompleted:    {ControlPlaneStateVerifying, "source.verification.completed", "reconciliation", "verification completed."},
+	ControlPlaneStateInventorying: {ControlPlaneStateCreated, "source.inventory.started", "", "", "inventory started."},
+	ControlPlaneStateRedacting:    {ControlPlaneStateInventorying, "source.inventory.completed", "source_manifest", "", "inventory completed and source manifest recorded."},
+	ControlPlaneStatePlanning:     {ControlPlaneStateRedacting, "source.redaction.completed", "redaction_report", "", "redaction report recorded."},
+	ControlPlaneStateExecuting:    {ControlPlaneStateApproved, "source.execution.started", "", "", "execution started."},
+	ControlPlaneStateVerifying:    {ControlPlaneStateExecuting, "source.execution.completed", "dataflow_job", "bigquery_table", "execution completed."},
+	ControlPlaneStateCompleted:    {ControlPlaneStateVerifying, "source.verification.completed", "reconciliation", "audit_log", "verification completed."},
 }
 
 // AdvanceSource moves one source to the next state in the frozen sequence,
@@ -1327,11 +1346,15 @@ func (s *cpStore) AdvanceSource(runID, sourceID string, to ControlPlaneState, up
 		return nil, cpErrNotFound
 	}
 	if step.EvidenceKind == "" {
-		if upd.ArtifactID != "" || upd.Digest != "" {
+		if upd.ArtifactID != "" || upd.Digest != "" || upd.SecondaryArtifactID != "" || upd.SecondaryDigest != "" {
 			return nil, cpErrInvalidRequest
 		}
 	} else {
 		if !cpArtifactIDRe.MatchString(upd.ArtifactID) || !cpDigestRe.MatchString(upd.Digest) {
+			return nil, cpErrInvalidRequest
+		}
+		hasSecondary := upd.SecondaryArtifactID != "" || upd.SecondaryDigest != ""
+		if hasSecondary && (step.SecondaryEvidenceKind == "" || !cpArtifactIDRe.MatchString(upd.SecondaryArtifactID) || !cpDigestRe.MatchString(upd.SecondaryDigest)) {
 			return nil, cpErrInvalidRequest
 		}
 	}
@@ -1366,6 +1389,9 @@ func (s *cpStore) AdvanceSource(runID, sourceID string, to ControlPlaneState, up
 	var refs []ControlPlaneEvidence
 	if step.EvidenceKind != "" {
 		refs = []ControlPlaneEvidence{{ArtifactID: upd.ArtifactID, Kind: step.EvidenceKind, Digest: upd.Digest}}
+		if upd.SecondaryArtifactID != "" {
+			refs = append(refs, ControlPlaneEvidence{ArtifactID: upd.SecondaryArtifactID, Kind: step.SecondaryEvidenceKind, Digest: upd.SecondaryDigest})
+		}
 	}
 	summary := cpSourceLabel(sourceID) + " " + step.Summary
 	if err := s.appendEvent(next, run, sourceID, step.EventType, stamp, summary, refs); err != nil {
@@ -2024,6 +2050,11 @@ func (h *ControlPlaneHandler) FailSource(runID, sourceID, failureCode string) (*
 // Run returns a copy of one portfolio.
 func (h *ControlPlaneHandler) Run(runID string) (*ControlPlaneRun, error) {
 	return h.store.GetRun(runID)
+}
+
+// Approval returns the immutable recorded portfolio decision.
+func (h *ControlPlaneHandler) Approval(runID string) (*ControlPlaneApproval, error) {
+	return h.store.Approval(runID)
 }
 
 // Events returns a copy of one portfolio's stored events, in order.

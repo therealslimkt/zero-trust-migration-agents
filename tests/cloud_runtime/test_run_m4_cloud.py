@@ -24,7 +24,7 @@ from tests.control_plane.test_workflow import FakeCompiler, SENTINEL, _artifacts
 PROJECT = "ztm-agent-9049c3"
 REGION = "us-central1"
 DATASET = "legacy_migration"
-APPROVED_AT = "2026-08-26T22:00:00Z"
+APPROVED_AT = "2026-08-26T22:00:00.000Z"
 
 
 def _prepared():
@@ -173,7 +173,7 @@ def test_run_executes_local_portfolio_before_constructing_clients_and_writes_saf
     [
         ("digest", "sha256:" + "0" * 64, "approval_digest"),
         ("approved_at", "2026-08-26T17:00:00-05:00", "approval_timestamp"),
-        ("approved_at", "2026-08-26T22:00:00.000Z", "approval_timestamp"),
+        ("approved_at", "2026-08-26T22:00:00.00Z", "approval_timestamp"),
         ("approver", " reviewer", "approval_identity"),
     ],
 )
@@ -286,7 +286,60 @@ def test_provider_failure_removes_only_the_reserved_empty_output(tmp_path):
     assert not output.exists()
 
 
-def test_script_has_no_orchestration_token_or_environment_dependency():
+def test_script_never_reads_browser_prefixed_or_cloud_credential_environment():
     source = Path(cli.__file__).read_text(encoding="utf-8")
-    assert "MISSION_CONTROL_ORCHESTRATOR_TOKEN" not in source
-    assert "os.environ" not in source
+    assert "VITE_MISSION" not in source
+    assert "GOOGLE_APPLICATION_CREDENTIALS" not in source
+    assert source.count("os.environ.get") == 2
+
+
+class _MissionControlRecorder:
+    def __init__(self, state):
+        self.state = state
+        self.calls = []
+
+    def get_run(self, run_id):
+        return {
+            "runId": run_id,
+            "sources": [
+                {"sourceId": source_id, "state": self.state}
+                for source_id in SOURCE_ORDER
+            ],
+        }
+
+    def advance_source(self, **kwargs):
+        self.calls.append(kwargs)
+
+
+def test_mission_control_sync_is_retry_aware_and_carries_all_cloud_evidence():
+    prepared = _prepared()
+    approval = cli._approval(
+        prepared=prepared,
+        digest=prepared.portfolio_digest,
+        approver="portfolio-reviewer",
+        approved_at=APPROVED_AT,
+    )
+    execution = cli.execute_portfolio(
+        prepared=prepared,
+        approval=approval,
+        policy_categories=frozenset(),
+    )
+    result = _cloud_result(prepared, execution)
+    recorder = _MissionControlRecorder("approved")
+
+    cli._sync_cloud_evidence(recorder, result)
+
+    assert len(recorder.calls) == 9
+    for index in range(0, len(recorder.calls), 3):
+        executing, verifying, completed = recorder.calls[index : index + 3]
+        assert executing["state"] == "executing"
+        assert verifying["state"] == "verifying"
+        assert "dataflow" in verifying["artifact_id"]
+        assert "bigquery" in verifying["secondary_artifact_id"]
+        assert completed["state"] == "completed"
+        assert "reconcile" in completed["artifact_id"]
+        assert "audit" in completed["secondary_artifact_id"]
+
+    already_complete = _MissionControlRecorder("completed")
+    cli._sync_cloud_evidence(already_complete, result)
+    assert already_complete.calls == []

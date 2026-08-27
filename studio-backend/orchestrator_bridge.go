@@ -8,11 +8,13 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 const (
 	orchestratorTokenEnv      = "MISSION_CONTROL_ORCHESTRATOR_TOKEN"
 	orchestratorPath          = "/internal/v1/orchestration"
+	orchestratorApprovalPath  = "/internal/v1/approvals/"
 	orchestratorMaxBody       = 8 << 10
 	orchestratorMaxTokenBytes = 512
 )
@@ -32,6 +34,7 @@ type orchestratorTarget interface {
 	AttachSourcePlan(string, string, string, string) (*ControlPlaneRun, error)
 	EnterAwaitingApproval(string) (*ControlPlaneRun, error)
 	FailSource(string, string, string) (*ControlPlaneRun, error)
+	Approval(string) (*ControlPlaneApproval, error)
 }
 
 // orchestratorBridgeHandler is a separately authenticated, loopback-only
@@ -44,31 +47,35 @@ type orchestratorBridgeHandler struct {
 }
 
 type orchestratorRequest struct {
-	SchemaVersion   string             `json:"schemaVersion"`
-	Action          string             `json:"action"`
-	RunID           string             `json:"runId"`
-	SourceID        *string            `json:"sourceId,omitempty"`
-	State           *ControlPlaneState `json:"state,omitempty"`
-	ArtifactID      *string            `json:"artifactId,omitempty"`
-	Digest          *string            `json:"digest,omitempty"`
-	FailureCode     *string            `json:"failureCode,omitempty"`
-	RecordsRead     *int64             `json:"recordsRead,omitempty"`
-	RecordsWritten  *int64             `json:"recordsWritten,omitempty"`
-	RecordsRejected *int64             `json:"recordsRejected,omitempty"`
+	SchemaVersion       string             `json:"schemaVersion"`
+	Action              string             `json:"action"`
+	RunID               string             `json:"runId"`
+	SourceID            *string            `json:"sourceId,omitempty"`
+	State               *ControlPlaneState `json:"state,omitempty"`
+	ArtifactID          *string            `json:"artifactId,omitempty"`
+	Digest              *string            `json:"digest,omitempty"`
+	SecondaryArtifactID *string            `json:"secondaryArtifactId,omitempty"`
+	SecondaryDigest     *string            `json:"secondaryDigest,omitempty"`
+	FailureCode         *string            `json:"failureCode,omitempty"`
+	RecordsRead         *int64             `json:"recordsRead,omitempty"`
+	RecordsWritten      *int64             `json:"recordsWritten,omitempty"`
+	RecordsRejected     *int64             `json:"recordsRejected,omitempty"`
 }
 
 var orchestratorFields = map[string]bool{
-	"schemaVersion":   true,
-	"action":          true,
-	"runId":           true,
-	"sourceId":        true,
-	"state":           true,
-	"artifactId":      true,
-	"digest":          true,
-	"failureCode":     true,
-	"recordsRead":     true,
-	"recordsWritten":  true,
-	"recordsRejected": true,
+	"schemaVersion":       true,
+	"action":              true,
+	"runId":               true,
+	"sourceId":            true,
+	"state":               true,
+	"artifactId":          true,
+	"digest":              true,
+	"secondaryArtifactId": true,
+	"secondaryDigest":     true,
+	"failureCode":         true,
+	"recordsRead":         true,
+	"recordsWritten":      true,
+	"recordsRejected":     true,
 }
 
 func validOrchestratorToken(token string) bool {
@@ -139,6 +146,10 @@ func (h *orchestratorBridgeHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 		cpWriteProblem(w, orchestratorErrLoopback)
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, orchestratorApprovalPath) {
+		h.handleApprovalRead(w, r)
+		return
+	}
 	if r.URL.Path != orchestratorPath {
 		cpWriteProblem(w, cpErrNotFound)
 		return
@@ -163,6 +174,32 @@ func (h *orchestratorBridgeHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 		return
 	}
 	cpWriteJSON(w, http.StatusOK, cpRunToBody(run))
+}
+
+func (h *orchestratorBridgeHandler) handleApprovalRead(w http.ResponseWriter, r *http.Request) {
+	if !cpRequireMethod(w, r, http.MethodGet) {
+		return
+	}
+	runID := strings.TrimPrefix(r.URL.Path, orchestratorApprovalPath)
+	if !cpRunIDRe.MatchString(runID) || strings.Contains(runID, "/") {
+		cpWriteProblem(w, cpErrNotFound)
+		return
+	}
+	approval, err := h.target.Approval(runID)
+	if err != nil {
+		cpWriteProblem(w, err)
+		return
+	}
+	cpWriteJSON(w, http.StatusOK, cpApprovalBody{
+		SchemaVersion:  cpSchemaVersion,
+		ApprovalID:     approval.ApprovalID,
+		RunID:          approval.RunID,
+		PlanDigest:     approval.PlanDigest,
+		Decision:       approval.Decision,
+		ResultingState: approval.ResultingState,
+		DecidedBy:      approval.DecidedBy,
+		DecidedAt:      approval.DecidedAt,
+	})
 }
 
 // decodeOrchestratorRequest accepts exactly one bounded JSON object, rejects
@@ -239,6 +276,12 @@ func validateOrchestratorRequest(req *orchestratorRequest, fields map[string]boo
 			(req.ArtifactID != nil) != needsEvidence || (req.Digest != nil) != needsEvidence {
 			return cpErrInvalidRequest
 		}
+		hasSecondary := fields["secondaryArtifactId"] || fields["secondaryDigest"] ||
+			req.SecondaryArtifactID != nil || req.SecondaryDigest != nil
+		if hasSecondary && (step.SecondaryEvidenceKind == "" || !fields["secondaryArtifactId"] || !fields["secondaryDigest"] ||
+			req.SecondaryArtifactID == nil || req.SecondaryDigest == nil) {
+			return cpErrInvalidRequest
+		}
 		for _, counter := range []struct {
 			name  string
 			value *int64
@@ -282,6 +325,10 @@ func (h *orchestratorBridgeHandler) apply(req *orchestratorRequest) (*ControlPla
 		if req.ArtifactID != nil {
 			upd.ArtifactID = *req.ArtifactID
 			upd.Digest = *req.Digest
+		}
+		if req.SecondaryArtifactID != nil {
+			upd.SecondaryArtifactID = *req.SecondaryArtifactID
+			upd.SecondaryDigest = *req.SecondaryDigest
 		}
 		return h.target.AdvanceSource(req.RunID, *req.SourceID, *req.State, upd)
 	case "attach_source_plan":

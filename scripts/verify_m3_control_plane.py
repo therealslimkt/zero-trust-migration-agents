@@ -20,11 +20,13 @@ from pathlib import Path
 
 from control_plane.artifacts import EdgeArtifacts, build_edge_artifacts
 from control_plane.canonical import SOURCE_ORDER, canonical_json_bytes
+from control_plane.canonical import document_digest
 from control_plane.gemini_planner import (
     GeminiPlanCompiler,
     antigravity_model_call_factory,
 )
 from control_plane.workflow import PreparedPortfolio, execute_portfolio, prepare_portfolio
+from control_plane.mission_control_client import MissionControlLocalClient
 from edge_runtime.adapters import btrieve, jde, maxdb
 from edge_runtime.transport import TailscaleSSHTransport
 from edge_runtime.types import SOURCE_SPECS
@@ -117,7 +119,21 @@ def _collect_edge(
 
 
 async def _plan(args: argparse.Namespace) -> dict[str, object]:
-    run_id = _new_run_id()
+    mission_control: MissionControlLocalClient | None = None
+    if args.mission_control_url:
+        mission_control = MissionControlLocalClient(
+            base_url=args.mission_control_url,
+            public_token=os.environ.get("MISSION_CONTROL_API_TOKEN"),
+            orchestration_token=os.environ.get(
+                "MISSION_CONTROL_ORCHESTRATOR_TOKEN"
+            ),
+        )
+        run_id = mission_control.create_portfolio(
+            portfolio_name=args.portfolio_name,
+            requested_by=args.requested_by,
+        )
+    else:
+        run_id = _new_run_id()
     observed_at = _now()
     artifacts, summaries = _collect_edge(
         run_id=run_id,
@@ -138,6 +154,43 @@ async def _plan(args: argparse.Namespace) -> dict[str, object]:
         compiler=compiler,
     )
     _write_exclusive(args.snapshot, canonical_json_bytes(prepared.as_document()))
+    if mission_control is not None:
+        plans = {str(plan["sourceId"]): plan for plan in prepared.plans}
+        for source_id in SOURCE_ORDER:
+            edge = artifacts[source_id]
+            manifest = edge.source_manifest
+            report = edge.redaction_report
+            plan = plans[source_id]
+            record_count = int(edge.record_batch["recordCount"])
+            manifest_digest = document_digest(manifest)
+            report_digest = str(report["reportDigest"])
+            plan_digest = str(plan["planDigest"])
+            mission_control.advance_source(
+                run_id=run_id, source_id=source_id, state="inventorying"
+            )
+            mission_control.advance_source(
+                run_id=run_id,
+                source_id=source_id,
+                state="redacting",
+                artifact_id=f"art_{source_id}-manifest-{manifest_digest[7:19]}",
+                digest=manifest_digest,
+                records_read=record_count,
+            )
+            mission_control.advance_source(
+                run_id=run_id,
+                source_id=source_id,
+                state="planning",
+                artifact_id=f"art_{source_id}-redaction-{report_digest[7:19]}",
+                digest=report_digest,
+                records_rejected=0,
+            )
+            mission_control.attach_plan(
+                run_id=run_id,
+                source_id=source_id,
+                artifact_id=f"art_{source_id}-plan-{plan_digest[7:19]}",
+                digest=plan_digest,
+            )
+        mission_control.enter_awaiting_approval(run_id)
     return {
         "status": "awaiting_approval",
         "runId": prepared.run_id,
@@ -145,6 +198,11 @@ async def _plan(args: argparse.Namespace) -> dict[str, object]:
         "model": prepared.model,
         "snapshot": str(args.snapshot),
         "sources": summaries,
+        "missionControl": (
+            {"state": "awaiting_approval", "runId": run_id}
+            if mission_control is not None
+            else None
+        ),
     }
 
 
@@ -198,6 +256,11 @@ def _parser() -> argparse.ArgumentParser:
     plan.add_argument("--location", default="us")
     plan.add_argument("--project")
     plan.add_argument("--dataset", default="legacy_migration")
+    plan.add_argument("--mission-control-url")
+    plan.add_argument(
+        "--portfolio-name", default="Legacy ERP Three-Source Migration"
+    )
+    plan.add_argument("--requested-by", default="migration-operator")
 
     execute = subparsers.add_parser(
         "execute", help="execute an exact prepared snapshot after approval"

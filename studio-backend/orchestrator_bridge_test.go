@@ -322,6 +322,82 @@ func TestOrchestratorBridgeDrivesValidPortfolioToApprovalGate(t *testing.T) {
 	if events[len(events)-1].EventType != "portfolio.awaiting_approval" {
 		t.Fatalf("last event = %q", events[len(events)-1].EventType)
 	}
+
+	approvalRequest := fmt.Sprintf(
+		`{"schemaVersion":"%s","planDigest":"%s","decision":"approve","decidedBy":"portfolio-reviewer","reason":"approved cloud migration"}`,
+		cpSchemaVersion,
+		response.PortfolioPlanDigest,
+	)
+	decision := cpTestDo(
+		t,
+		controlPlane,
+		http.MethodPost,
+		"/api/v1/migrations/"+run.RunID+"/approval",
+		approvalRequest,
+	)
+	if decision.Code != http.StatusOK {
+		t.Fatalf("approve status = %d (%s)", decision.Code, decision.Body.String())
+	}
+	approvalRead := httptest.NewRequest(
+		http.MethodGet,
+		orchestratorApprovalPath+run.RunID,
+		nil,
+	)
+	approvalRead.RemoteAddr = "127.0.0.1:41000"
+	approvalRead.Header.Set("Authorization", "Bearer "+orchestratorTestToken)
+	approvalRecord := httptest.NewRecorder()
+	h.ServeHTTP(approvalRecord, approvalRead)
+	if approvalRecord.Code != http.StatusOK {
+		t.Fatalf("approval read status = %d (%s)", approvalRecord.Code, approvalRecord.Body.String())
+	}
+	var approval cpApprovalBody
+	if err := json.Unmarshal(approvalRecord.Body.Bytes(), &approval); err != nil {
+		t.Fatalf("decode approval: %v", err)
+	}
+	if approval.RunID != run.RunID || approval.PlanDigest != response.PortfolioPlanDigest ||
+		approval.Decision != "approve" || approval.ResultingState != ControlPlaneStateApproved ||
+		approval.DecidedBy != "portfolio-reviewer" || approval.DecidedAt == "" {
+		t.Fatalf("approval read returned wrong binding: %+v", approval)
+	}
+
+	executing := orchestratorBase("advance_source", run.RunID)
+	executing["sourceId"] = "jde"
+	executing["state"] = "executing"
+	if rec := orchestratorTestDo(t, h, orchestratorTestJSON(t, executing)); rec.Code != http.StatusOK {
+		t.Fatalf("execute JDE = %d (%s)", rec.Code, rec.Body.String())
+	}
+	verifying := orchestratorBase("advance_source", run.RunID)
+	verifying["sourceId"] = "jde"
+	verifying["state"] = "verifying"
+	verifying["artifactId"] = "art_jde-dataflow-proof"
+	verifying["digest"] = cpTestPlanDigests["jde"]
+	verifying["secondaryArtifactId"] = "art_jde-bigquery-proof"
+	verifying["secondaryDigest"] = cpTestPlanDigests["maxdb"]
+	if rec := orchestratorTestDo(t, h, orchestratorTestJSON(t, verifying)); rec.Code != http.StatusOK {
+		t.Fatalf("verify JDE = %d (%s)", rec.Code, rec.Body.String())
+	}
+	completed := orchestratorBase("advance_source", run.RunID)
+	completed["sourceId"] = "jde"
+	completed["state"] = "completed"
+	completed["artifactId"] = "art_jde-reconciliation-proof"
+	completed["digest"] = cpTestPlanDigests["jde"]
+	completed["secondaryArtifactId"] = "art_jde-audit-proof"
+	completed["secondaryDigest"] = cpTestPlanDigests["btrieve"]
+	if rec := orchestratorTestDo(t, h, orchestratorTestJSON(t, completed)); rec.Code != http.StatusOK {
+		t.Fatalf("complete JDE = %d (%s)", rec.Code, rec.Body.String())
+	}
+	events, err = controlPlane.Events(run.RunID)
+	if err != nil {
+		t.Fatalf("Events after cloud evidence: %v", err)
+	}
+	if got := events[len(events)-2].EvidenceReferences; len(got) != 2 ||
+		got[0].Kind != "dataflow_job" || got[1].Kind != "bigquery_table" {
+		t.Fatalf("verifying evidence = %+v", got)
+	}
+	if got := events[len(events)-1].EvidenceReferences; len(got) != 2 ||
+		got[0].Kind != "reconciliation" || got[1].Kind != "audit_log" {
+		t.Fatalf("completion evidence = %+v", got)
+	}
 }
 
 func TestOrchestratorBridgeCanRecordOnlyClosedFailureCode(t *testing.T) {
