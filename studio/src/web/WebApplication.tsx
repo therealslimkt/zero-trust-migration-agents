@@ -1,15 +1,23 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, lazy, Suspense, useContext, useEffect, useState, type ReactNode } from "react";
 import { createBrowserRouter, Navigate, RouterProvider, useLocation, useNavigate, useParams } from "react-router";
 
-import MissionControl from "../App";
 import { RecordedDemoClient } from "./client";
 import { AuthProvider, ProtectedRoute, readSafeReturnTo, useAuth } from "./features/auth";
-import { AboutPage, LandingPage, LoginPage, NotFoundPage } from "./pages/public";
-import { RecordedDemoRoute } from "./pages/replay/RecordedDemoRoute";
 import type { ThemeMode } from "./shared/ui";
 import type { PublishedDemoDescriptor } from "./widgets/site";
 import "./shared/styles/index.css";
+
+const MissionControl = lazy(() => import('../App'))
+const LandingPage = lazy(() => import('./pages/public/LandingPage').then((module) => ({ default: module.LandingPage })))
+const LoginPage = lazy(() => import('./pages/public/LoginPage').then((module) => ({ default: module.LoginPage })))
+const AboutPage = lazy(() => import('./pages/public/AboutPage').then((module) => ({ default: module.AboutPage })))
+const NotFoundPage = lazy(() => import('./pages/public/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
+const RecordedDemoRoute = lazy(() => import('./pages/replay/RecordedDemoRoute').then((module) => ({ default: module.RecordedDemoRoute })))
+const DashboardRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.DashboardRoute })))
+const SourceDetailRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.SourceDetailRoute })))
+const SourceOnboardingRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.SourceOnboardingRoute })))
+const CloudSettingsRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.CloudSettingsRoute })))
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } });
 const publicClient = new RecordedDemoClient();
@@ -108,10 +116,6 @@ function Protected({ children }: { readonly children: ReactNode }) {
   return <ProtectedRoute initializingFallback={<RouteNotice title="Preparing your identity" detail="Waiting for the configured Firebase session." />} unconfiguredFallback={<RouteNotice title="Authentication is not configured" detail="Supply the Firebase public configuration before opening private run data." />} errorFallback={<RouteNotice title="Identity verification failed" detail="Private run data remains unavailable." />}>{children}</ProtectedRoute>;
 }
 
-function DashboardRoute() {
-  return <RouteNotice title="Owned migration runs" detail="The authenticated run index is connected in the next integration slice; no placeholder runs are displayed." />;
-}
-
 function RouteNotice({ title, detail }: { readonly title: string; readonly detail: string }) {
   return <main className="web-route-notice mission-control-root"><section><span>MISSION CONTROL</span><h1>{title}</h1><p>{detail}</p></section></main>;
 }
@@ -128,12 +132,12 @@ const router = createBrowserRouter([
   { path: "/demo/:demoId", element: <RecordedDemoRoute /> },
   { path: "/dashboard", element: <Protected><DashboardRoute /></Protected> },
   { path: "/runs/:runId", element: <Protected><LiveRunRoute /></Protected> },
-  { path: "/runs/:runId/sources/:sourceId", element: <Protected><RouteNotice title="Source inspection" detail="Loading the authenticated source inspection surface." /></Protected> },
-  { path: "/sources/new", element: <Protected><RouteNotice title="Add legacy sources" detail="Loading the authenticated source onboarding surface." /></Protected> },
-  { path: "/settings/cloud", element: <Protected><RouteNotice title="Cloud connection" detail="Loading the authenticated cloud verification surface." /></Protected> },
+  { path: "/runs/:runId/sources/:sourceId", element: <Protected><SourceDetailRoute /></Protected> },
+  { path: "/sources/new", element: <Protected><SourceOnboardingRoute /></Protected> },
+  { path: "/settings/cloud", element: <Protected><CloudSettingsRoute /></Protected> },
   { path: "*", element: <NotFoundRoute /> },
 ]);
 
 export function WebApplication() {
-  return <QueryClientProvider client={queryClient}><AuthProvider><AppearanceProvider><RouterProvider router={router} /></AppearanceProvider></AuthProvider></QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}><AuthProvider><AppearanceProvider><Suspense fallback={<RouteNotice title="Loading control surface" detail="Preparing the requested application view." />}><RouterProvider router={router} /></Suspense></AppearanceProvider></AuthProvider></QueryClientProvider>;
 }
