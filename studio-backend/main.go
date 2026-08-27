@@ -178,6 +178,13 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 	if err != nil {
 		return nil, errWebBFFConfiguration
 	}
+	var artifactStore *WebRunArtifactStore
+	if artifactDirectory := strings.TrimSpace(os.Getenv("MISSION_CONTROL_RUN_ARTIFACT_DIR")); artifactDirectory != "" {
+		artifactStore, err = OpenWebRunArtifactStore(artifactDirectory)
+		if err != nil {
+			return nil, errWebBFFConfiguration
+		}
+	}
 	var syntheticRunIDs []string
 	if raw := strings.TrimSpace(os.Getenv("MISSION_CONTROL_SYNTHETIC_DEMO_RUN_IDS")); raw != "" {
 		for _, runID := range strings.Split(raw, ",") {
@@ -186,6 +193,7 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 	}
 	return NewWebBFFHandler(WebBFFConfig{
 		Verifier: verifier, Runs: runs, Store: store,
+		Artifacts: artifactStore, LiveDetails: artifactStore,
 		SyntheticDemoRunIDs: syntheticRunIDs,
 	})
 }

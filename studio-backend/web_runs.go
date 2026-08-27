@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 // WebRunBackend is the in-process surface the BFF needs from the frozen
@@ -357,9 +358,7 @@ func (h *webBFFHandler) handleRunSource(w http.ResponseWriter, r *http.Request) 
 		webWriteProblem(w, cpErrNotFound)
 		return
 	}
-	// The replay detail is intentionally absent: this slice has no recorded
-	// replay for a live source, and the response never fabricates one.
-	webWriteJSON(w, http.StatusOK, WebLiveSourceResponse{
+	response := WebLiveSourceResponse{
 		SchemaVersion:   WebSchemaVersion,
 		ExperienceMode:  ExperienceModeLive,
 		DataClass:       DataClassPrivate,
@@ -370,7 +369,53 @@ func (h *webBFFHandler) handleRunSource(w http.ResponseWriter, r *http.Request) 
 		SnapshotVersion: int64(len(events)),
 		UpdatedAt:       run.UpdatedAt,
 		Progress:        webSourceProgress(*src, events),
-	})
+	}
+	if h.liveDetails != nil {
+		detail, err := h.liveDetails.ReadLiveSourceDetail(r.Context(), run.RunID, sourceID)
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			webWriteProblem(w, cpErrInternal)
+			return
+		}
+		if detail != nil {
+			if !webLiveDetailMatchesControlPlane(*detail, *src, events) {
+				webWriteProblem(w, cpErrInternal)
+				return
+			}
+			response.Detail = detail
+		}
+	}
+	webWriteJSON(w, http.StatusOK, response)
+}
+
+func webLiveDetailMatchesControlPlane(detail WebSourceReplay, source ControlPlaneSource, events []*ControlPlaneEvent) bool {
+	if string(detail.SourceID) != source.SourceID || detail.Hostname != source.Hostname {
+		return false
+	}
+	available := make(map[ControlPlaneEvidence]struct{})
+	for _, event := range events {
+		if event.SourceID != source.SourceID {
+			continue
+		}
+		for _, reference := range event.EvidenceReferences {
+			available[reference] = struct{}{}
+		}
+	}
+	references := []WebEvidenceReference{
+		detail.Compiler.LocalGemmaEvidence,
+		detail.Compiler.GeminiVertexEvidence,
+		detail.Destination.Reconciliation.Evidence,
+		detail.Destination.DataflowEvidence,
+		detail.Destination.BigQueryEvidence,
+	}
+	for _, action := range detail.Compiler.Actions {
+		references = append(references, action.EvidenceReferences...)
+	}
+	for _, reference := range references {
+		if _, ok := available[ControlPlaneEvidence{ArtifactID: reference.ArtifactID, Kind: string(reference.Kind), Digest: reference.Digest}]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // handleRunEvents replays the owner's stored events as SSE with per-run

@@ -213,6 +213,13 @@ type WebDriverArtifactRegistry interface {
 	FingerprintArtifactRegistryRemote(ctx context.Context, projectID string, candidate WebDriverCandidate) (string, error)
 }
 
+// WebLiveSourceDetailReader resolves the exact private replay detail captured
+// for one owned run/source. Missing detail is represented by os.ErrNotExist;
+// implementations must never synthesize a replacement.
+type WebLiveSourceDetailReader interface {
+	ReadLiveSourceDetail(ctx context.Context, runID, sourceID string) (*WebSourceReplay, error)
+}
+
 // ---------------------------------------------------------------------------
 // Configuration and constructor
 // ---------------------------------------------------------------------------
@@ -228,6 +235,8 @@ type WebBFFConfig struct {
 
 	// Artifacts resolves trusted evidence bodies for demo publication.
 	Artifacts WebPublicationArtifactReader
+	// LiveDetails resolves captured source/compiler/destination detail.
+	LiveDetails WebLiveSourceDetailReader
 
 	CloudProber      WebCloudCapabilityProber
 	DriverResearcher WebDriverResearcher
@@ -253,6 +262,7 @@ type webBFFHandler struct {
 	runs           WebRunBackend
 	store          *WebStateStore
 	artifacts      WebPublicationArtifactReader
+	liveDetails    WebLiveSourceDetailReader
 	cloudProber    WebCloudCapabilityProber
 	researcher     WebDriverResearcher
 	driverRegistry WebDriverArtifactRegistry
@@ -290,6 +300,7 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 		runs:           cfg.Runs,
 		store:          cfg.Store,
 		artifacts:      cfg.Artifacts,
+		liveDetails:    cfg.LiveDetails,
 		cloudProber:    cfg.CloudProber,
 		researcher:     cfg.DriverResearcher,
 		driverRegistry: cfg.DriverRegistry,
