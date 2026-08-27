@@ -43,14 +43,18 @@ interface AppConfig {
   missing: string[];
 }
 
+interface MissionControlAppProps {
+  runId?: string;
+}
+
 function env(): Record<string, string | undefined> {
   return import.meta.env as unknown as Record<string, string | undefined>;
 }
 
-function readConfig(): AppConfig {
+function readConfig(routeRunId?: string): AppConfig {
   const source = env();
   const queryRunId = new URLSearchParams(globalThis.location.search).get('runId')?.trim() ?? '';
-  const runId = queryRunId || (source.VITE_MISSION_RUN_ID ?? '').trim();
+  const runId = routeRunId?.trim() || queryRunId || (source.VITE_MISSION_RUN_ID ?? '').trim();
   const missing: string[] = [];
   if (!runId) missing.push('VITE_MISSION_RUN_ID');
   return {
@@ -70,8 +74,8 @@ function describeError(error: unknown): string {
   return 'Mission Control could not complete the operation.';
 }
 
-export default function App() {
-  const config = useMemo(() => readConfig(), []);
+export default function App({ runId }: MissionControlAppProps) {
+  const config = useMemo(() => readConfig(runId), [runId]);
   const configured = config.missing.length === 0;
 
   const [snapshot, setSnapshot] = useState<MissionControlSnapshot | null>(null);
