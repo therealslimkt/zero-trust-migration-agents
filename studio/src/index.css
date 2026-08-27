@@ -1,0 +1,23 @@
+.web-route-notice {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.web-route-notice > section {
+  width: min(620px, 100%);
+  padding: 36px;
+  border: 1px solid var(--pixel-border-bold);
+  background: var(--pixel-surface-glass);
+  box-shadow: var(--elevation-deep);
+}
+
+.web-route-notice span {
+  color: var(--google-blue);
+  font: 700 10px var(--font-mono-tactical);
+  letter-spacing: .14em;
+}
+
+.web-route-notice h1 { margin: 10px 0; }
+.web-route-notice p { margin: 0; color: var(--pixel-text-secondary); }
