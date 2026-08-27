@@ -1,0 +1,23 @@
+/**
+ * Mission-Control Visual System - Main Stylesheet Export
+ * 
+ * Aggregates design tokens, dark/light themes, pixel utilities,
+ * and component styles for the web visual foundation.
+ */
+
+@import "./tokens.css";
+@import "./theme.css";
+@import "./pixel.css";
+@import "./components.css";
+
+/* Base Body Application Surface */
+.mission-control-root {
+  background-color: var(--pixel-bg-app);
+  background-image: var(--pixel-bg-viewport);
+  color: var(--pixel-text-primary);
+  font-family: var(--font-sans-mission);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

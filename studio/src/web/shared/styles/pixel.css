@@ -1,0 +1,149 @@
+/**
+ * Mission-Control Visual System - Pixel & Tactical HUD Utilities
+ * 
+ * Crisp pixel-art motifs, CRT scanline overlays, tactical brackets,
+ * HUD telemetry grid lines, and stepped pixel border patterns.
+ */
+
+/* ==========================================================================
+   1. Pixel Crisp Rendering & Scaling
+   ========================================================================== */
+.pixel-crisp {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  shape-rendering: crispEdges;
+}
+
+/* ==========================================================================
+   2. Pixel Stepped Borders & Notches
+   ========================================================================== */
+.pixel-frame {
+  position: relative;
+  border: var(--pixel-border-width) solid var(--pixel-border-muted);
+  box-shadow: var(--pixel-shadow-sm);
+  background-color: var(--pixel-surface-panel);
+}
+
+.pixel-frame--chamfer {
+  clip-path: polygon(
+    0 4px,
+    4px 0,
+    calc(100% - 4px) 0,
+    100% 4px,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    4px 100%,
+    0 calc(100% - 4px)
+  );
+}
+
+.pixel-frame--corner-brackets::before,
+.pixel-frame--corner-brackets::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pixel-frame--corner-brackets::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--pixel-accent-primary);
+  border-left: 2px solid var(--pixel-accent-primary);
+}
+
+.pixel-frame--corner-brackets::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--pixel-accent-primary);
+  border-right: 2px solid var(--pixel-accent-primary);
+}
+
+/* ==========================================================================
+   3. CRT Scanline & Radar Grid Overlays
+   ========================================================================== */
+.pixel-scanlines {
+  position: relative;
+}
+
+.pixel-scanlines::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    var(--pixel-scanline-color) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.pixel-grid-bg {
+  background-image: radial-gradient(
+    var(--pixel-grid-dot-color) 1px,
+    transparent 1px
+  );
+  background-size: 16px 16px;
+}
+
+/* ==========================================================================
+   4. High Information Density Telemetry
+   ========================================================================== */
+.telemetry-mono {
+  font-family: var(--font-mono-tactical);
+  font-feature-settings: var(--tnum);
+  letter-spacing: var(--tracking-tight);
+}
+
+.telemetry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono-tactical);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  border: 1px solid var(--pixel-border-muted);
+  border-radius: var(--pixel-radius-badge);
+  background-color: var(--pixel-surface-sunken);
+  color: var(--pixel-text-secondary);
+}
+
+/* ==========================================================================
+   5. Accessible Focus-Visible Styling
+   ========================================================================== */
+:is(button, a, input, select, textarea, [tabindex="0"]):focus-visible {
+  outline: 2px solid var(--pixel-focus-ring) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--pixel-accent-primary-tint) !important;
+}
+
+/* ==========================================================================
+   6. Custom Tactical Scrollbars
+   ========================================================================== */
+.pixel-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.pixel-scrollbar::-webkit-scrollbar-track {
+  background: var(--pixel-surface-sunken);
+}
+
+.pixel-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--pixel-border-bold);
+  border-radius: 0px;
+}
+
+.pixel-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--pixel-accent-primary);
+}

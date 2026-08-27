@@ -1,0 +1,532 @@
+/**
+ * Mission-Control Visual System - Component Styles
+ * 
+ * Production styles for PixelIcon, TerminalWindow, ThemeToggle,
+ * StatusBeacon, and ReplayBadge.
+ */
+
+/* ==========================================================================
+   1. PixelIcon Styles
+   ========================================================================== */
+.pixel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+  line-height: 1;
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+  user-select: none;
+}
+
+.pixel-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  shape-rendering: crispEdges;
+}
+
+/* Color Variants */
+.pixel-icon--google-blue { color: var(--google-blue); }
+.pixel-icon--google-red { color: var(--google-red); }
+.pixel-icon--google-yellow { color: var(--google-yellow); }
+.pixel-icon--google-green { color: var(--google-green); }
+.pixel-icon--current { color: currentColor; }
+.pixel-icon--muted { color: var(--pixel-text-muted); }
+.pixel-icon--secondary { color: var(--pixel-text-secondary); }
+.pixel-icon--white { color: #ffffff; }
+
+/* Glow Effects */
+.pixel-icon--glow.pixel-icon--google-blue { filter: drop-shadow(0 0 4px var(--google-blue)); }
+.pixel-icon--glow.pixel-icon--google-red { filter: drop-shadow(0 0 4px var(--google-red)); }
+.pixel-icon--glow.pixel-icon--google-yellow { filter: drop-shadow(0 0 4px var(--google-yellow)); }
+.pixel-icon--glow.pixel-icon--google-green { filter: drop-shadow(0 0 4px var(--google-green)); }
+.pixel-icon--glow.pixel-icon--current { filter: drop-shadow(0 0 4px currentColor); }
+
+/* Sizes */
+.pixel-icon--xs { width: 12px; height: 12px; }
+.pixel-icon--sm { width: 16px; height: 16px; }
+.pixel-icon--md { width: 20px; height: 20px; }
+.pixel-icon--lg { width: 24px; height: 24px; }
+.pixel-icon--xl { width: 32px; height: 32px; }
+
+/* ==========================================================================
+   2. TerminalWindow Styles
+   ========================================================================== */
+.terminal-window {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--pixel-terminal-body);
+  border: 1px solid var(--pixel-border-muted);
+  border-radius: var(--pixel-radius-md);
+  box-shadow: var(--elevation-raised);
+  overflow: hidden;
+  position: relative;
+  transition: border-color var(--duration-fast) var(--ease-tactical);
+}
+
+.terminal-window:hover {
+  border-color: var(--pixel-border-bold);
+}
+
+.terminal-window--elevated {
+  box-shadow: var(--elevation-deep), 0 0 0 1px var(--pixel-border-subtle);
+}
+
+.terminal-window--glass {
+  background-color: var(--pixel-surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.terminal-window--bordered {
+  border-width: 2px;
+  border-color: var(--pixel-border-bold);
+  box-shadow: var(--pixel-shadow-md);
+}
+
+/* Header & Chrome */
+.terminal-window__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  background-color: var(--pixel-terminal-header);
+  border-bottom: 1px solid var(--pixel-border-subtle);
+  user-select: none;
+  min-height: 38px;
+}
+
+.terminal-window__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.terminal-window__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.terminal-window__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--duration-fast) var(--ease-tactical), opacity var(--duration-fast);
+}
+
+.terminal-window__dot:disabled {
+  cursor: default;
+}
+
+.terminal-window__dot--red {
+  background-color: var(--google-red);
+  box-shadow: 0 0 4px rgba(234, 67, 53, 0.4);
+}
+.terminal-window__dot--yellow {
+  background-color: var(--google-yellow);
+  box-shadow: 0 0 4px rgba(251, 188, 5, 0.4);
+}
+.terminal-window__dot--green {
+  background-color: var(--google-green);
+  box-shadow: 0 0 4px rgba(52, 168, 83, 0.4);
+}
+
+.terminal-window__dot:hover:not(:disabled) {
+  transform: scale(1.18);
+}
+
+.terminal-window__title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.terminal-window__title {
+  font-family: var(--font-mono-tactical);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--pixel-text-primary);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.terminal-window__breadcrumb {
+  font-family: var(--font-mono-tactical);
+  font-size: var(--text-2xs);
+  color: var(--pixel-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.terminal-window__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Body & Content */
+.terminal-window__body {
+  position: relative;
+  overflow: auto;
+  color: var(--pixel-text-primary);
+  font-family: var(--font-mono-tactical);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.terminal-window__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  background-color: var(--pixel-terminal-header);
+  border-top: 1px solid var(--pixel-border-subtle);
+  font-family: var(--font-mono-tactical);
+  font-size: var(--text-2xs);
+  color: var(--pixel-text-muted);
+  font-feature-settings: var(--tnum);
+}
+
+/* ==========================================================================
+   3. ThemeToggle Styles
+   ========================================================================== */
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--pixel-surface-raised);
+  border: 1px solid var(--pixel-border-muted);
+  color: var(--pixel-text-primary);
+  cursor: pointer;
+  font-family: var(--font-mono-tactical);
+  user-select: none;
+  transition: all var(--duration-fast) var(--ease-tactical);
+}
+
+.theme-toggle:hover {
+  border-color: var(--pixel-border-bold);
+  box-shadow: 0 0 8px var(--pixel-accent-primary-tint);
+}
+
+/* Button Variant */
+.theme-toggle--button {
+  border-radius: var(--pixel-radius-md);
+  padding: 6px;
+}
+.theme-toggle--button.theme-toggle--sm { width: 28px; height: 28px; padding: 4px; }
+.theme-toggle--button.theme-toggle--md { width: 34px; height: 34px; padding: 6px; }
+.theme-toggle--button.theme-toggle--lg { width: 42px; height: 42px; padding: 8px; }
+
+/* Switch Pill Variant */
+.theme-toggle--switch {
+  border-radius: 9999px;
+  padding: 3px;
+  background-color: var(--pixel-surface-sunken);
+  border: 1px solid var(--pixel-border-bold);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+.theme-toggle--switch.theme-toggle--sm { width: 48px; height: 26px; }
+.theme-toggle--switch.theme-toggle--md { width: 56px; height: 30px; }
+.theme-toggle--switch.theme-toggle--lg { width: 68px; height: 36px; }
+
+.theme-toggle__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--pixel-surface-raised);
+  border: 1px solid var(--pixel-border-muted);
+  box-shadow: var(--pixel-shadow-sm);
+  color: var(--google-yellow);
+  height: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+[data-theme="dark"] .theme-toggle__thumb {
+  color: var(--google-blue);
+}
+
+/* Segmented Variant */
+.theme-toggle--segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--pixel-radius-sm);
+  background-color: var(--pixel-surface-sunken);
+  border: 1px solid var(--pixel-border-muted);
+}
+
+.theme-toggle__segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--pixel-radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--pixel-text-muted);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono-tactical);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.theme-toggle__segment--active {
+  background-color: var(--pixel-surface-raised);
+  color: var(--pixel-text-primary);
+  border: 1px solid var(--pixel-border-bold);
+  box-shadow: var(--pixel-shadow-sm);
+}
+
+/* Rainbow Glow Modifier */
+.theme-toggle--rainbow:hover {
+  border-image: var(--google-gradient-quad) 1;
+  box-shadow: 0 0 12px rgba(66, 133, 244, 0.25);
+}
+
+/* ==========================================================================
+   4. StatusBeacon Styles
+   ========================================================================== */
+.status-beacon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono-tactical);
+  user-select: none;
+  vertical-align: middle;
+}
+
+.status-beacon__signal-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-beacon__core {
+  position: relative;
+  z-index: 2;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-beacon__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Shapes */
+.status-beacon--diamond .status-beacon__core,
+.status-beacon--diamond .status-beacon__ring {
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+.status-beacon--square .status-beacon__core,
+.status-beacon--square .status-beacon__ring {
+  border-radius: var(--pixel-radius-none);
+}
+
+/* Sizes */
+.status-beacon--xs .status-beacon__core { width: 6px; height: 6px; }
+.status-beacon--sm .status-beacon__core { width: 8px; height: 8px; }
+.status-beacon--md .status-beacon__core { width: 10px; height: 10px; }
+.status-beacon--lg .status-beacon__core { width: 14px; height: 14px; }
+
+/* Status Colors (Google Accent Mapped) */
+.status-beacon--active .status-beacon__core {
+  background-color: var(--google-green);
+  box-shadow: 0 0 8px var(--google-green);
+}
+.status-beacon--active .status-beacon__ring {
+  border: 1.5px solid var(--google-green);
+}
+
+.status-beacon--standby .status-beacon__core {
+  background-color: var(--google-blue);
+  box-shadow: 0 0 8px var(--google-blue);
+}
+.status-beacon--standby .status-beacon__ring {
+  border: 1.5px solid var(--google-blue);
+}
+
+.status-beacon--warning .status-beacon__core {
+  background-color: var(--google-yellow);
+  box-shadow: 0 0 8px var(--google-yellow);
+}
+.status-beacon--warning .status-beacon__ring {
+  border: 1.5px solid var(--google-yellow);
+}
+
+.status-beacon--critical .status-beacon__core {
+  background-color: var(--google-red);
+  box-shadow: 0 0 8px var(--google-red);
+}
+.status-beacon--critical .status-beacon__ring {
+  border: 1.5px solid var(--google-red);
+}
+
+.status-beacon--neutral .status-beacon__core {
+  background-color: var(--slate-400);
+}
+.status-beacon--neutral .status-beacon__ring {
+  border: 1.5px solid var(--slate-400);
+}
+
+.status-beacon--offline .status-beacon__core {
+  background-color: var(--slate-600);
+  opacity: 0.5;
+}
+
+/* Label & Details */
+.status-beacon__text-group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1;
+}
+
+.status-beacon__label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--pixel-text-primary);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.status-beacon__detail {
+  font-size: var(--text-2xs);
+  color: var(--pixel-text-muted);
+  font-feature-settings: var(--tnum);
+}
+
+/* ==========================================================================
+   5. ReplayBadge Styles
+   ========================================================================== */
+.replay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  background-color: var(--pixel-surface-sunken);
+  border: 1px solid var(--pixel-border-muted);
+  border-radius: var(--pixel-radius-sm);
+  color: var(--pixel-text-primary);
+  font-family: var(--font-mono-tactical);
+  font-size: var(--text-2xs);
+  user-select: none;
+  transition: all var(--duration-fast) var(--ease-tactical);
+  box-shadow: var(--pixel-shadow-sm);
+}
+
+.replay-badge--interactive {
+  cursor: pointer;
+}
+
+.replay-badge--interactive:hover {
+  border-color: var(--pixel-border-bold);
+  background-color: var(--pixel-surface-raised);
+  transform: translateY(-1px);
+}
+
+.replay-badge--interactive:active {
+  transform: translateY(0px);
+}
+
+/* Mode Variations */
+.replay-badge--live {
+  border-color: rgba(52, 168, 83, 0.4);
+  background-color: rgba(52, 168, 83, 0.08);
+}
+.replay-badge--live .replay-badge__indicator {
+  background-color: var(--google-green);
+  box-shadow: 0 0 6px var(--google-green);
+}
+
+.replay-badge--recording {
+  border-color: rgba(234, 67, 53, 0.4);
+  background-color: rgba(234, 67, 53, 0.08);
+}
+.replay-badge--recording .replay-badge__indicator {
+  background-color: var(--google-red);
+  box-shadow: 0 0 6px var(--google-red);
+}
+
+.replay-badge--replay {
+  border-color: rgba(251, 188, 5, 0.4);
+  background-color: rgba(251, 188, 5, 0.08);
+}
+.replay-badge--replay .replay-badge__mode-tag {
+  color: var(--google-yellow);
+}
+
+.replay-badge--checkpoint {
+  border-color: rgba(66, 133, 244, 0.4);
+  background-color: rgba(66, 133, 244, 0.08);
+}
+.replay-badge--checkpoint .replay-badge__mode-tag {
+  color: var(--google-blue);
+}
+
+/* Badge Sub-elements */
+.replay-badge__indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.replay-badge__mode-tag {
+  font-weight: 700;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+}
+
+.replay-badge__timestamp {
+  color: var(--pixel-text-secondary);
+  font-feature-settings: var(--tnum);
+}
+
+.replay-badge__step-counter {
+  padding: 1px 4px;
+  border-radius: var(--pixel-radius-sm);
+  background-color: var(--pixel-surface-panel);
+  border: 1px solid var(--pixel-border-subtle);
+  color: var(--pixel-text-primary);
+  font-feature-settings: var(--tnum);
+}
+
+.replay-badge__speed {
+  color: var(--google-yellow);
+  font-weight: 600;
+}
+
+/* Sizes */
+.replay-badge--sm { padding: 2px 6px; font-size: var(--text-2xs); }
+.replay-badge--md { padding: 4px 10px; font-size: var(--text-xs); }
+.replay-badge--lg { padding: 6px 14px; font-size: var(--text-sm); }

@@ -1,0 +1,150 @@
+/**
+ * Mission-Control Visual System - Theme System
+ * 
+ * Supports Dark-First Default, Explicit Dark/Light Data Attributes,
+ * High-Contrast Borders, Google Accent Mappings, and Glassmorphism Overlays.
+ */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces & Backgrounds */
+  --pixel-bg-app: var(--slate-950);
+  --pixel-bg-viewport: radial-gradient(130% 80% at 50% -10%, #111a28 0%, var(--slate-950) 65%);
+  --pixel-surface-base: var(--slate-900);
+  --pixel-surface-panel: #0d1420;
+  --pixel-surface-raised: #131c2c;
+  --pixel-surface-overlay: rgba(13, 20, 32, 0.88);
+  --pixel-surface-glass: rgba(15, 22, 35, 0.72);
+  --pixel-surface-sunken: #080c14;
+
+  /* Borders & Dividers */
+  --pixel-border-subtle: #1c2738;
+  --pixel-border-muted: #243247;
+  --pixel-border-bold: #33445e;
+  --pixel-border-bright: #475e82;
+  --pixel-border-glow: rgba(66, 133, 244, 0.4);
+
+  /* Typography & Ink */
+  --pixel-text-primary: #edf2f9;
+  --pixel-text-secondary: #9db2cd;
+  --pixel-text-muted: #6b82a3;
+  --pixel-text-faint: #445672;
+  --pixel-text-inverse: #080d14;
+
+  /* Semantic Google Role Mappings */
+  --pixel-accent-primary: var(--google-blue);
+  --pixel-accent-primary-hover: var(--google-blue-hover);
+  --pixel-accent-primary-active: var(--google-blue-active);
+  --pixel-accent-primary-tint: var(--google-blue-tint);
+  --pixel-accent-primary-glow: var(--google-blue-glow);
+
+  --pixel-status-critical: var(--google-red);
+  --pixel-status-critical-dim: var(--google-red-dim);
+  --pixel-status-critical-tint: var(--google-red-tint);
+  --pixel-status-critical-glow: var(--google-red-glow);
+
+  --pixel-status-warning: var(--google-yellow);
+  --pixel-status-warning-dim: var(--google-yellow-dim);
+  --pixel-status-warning-tint: var(--google-yellow-tint);
+  --pixel-status-warning-glow: var(--google-yellow-glow);
+
+  --pixel-status-success: var(--google-green);
+  --pixel-status-success-dim: var(--google-green-dim);
+  --pixel-status-success-tint: var(--google-green-tint);
+  --pixel-status-success-glow: var(--google-green-glow);
+
+  --pixel-status-neutral: var(--slate-400);
+  --pixel-status-neutral-dim: var(--slate-700);
+  --pixel-status-neutral-tint: rgba(123, 147, 188, 0.12);
+
+  /* Interactive Elements */
+  --pixel-focus-ring: var(--google-blue);
+  --pixel-focus-ring-offset: var(--slate-950);
+  --pixel-selection-bg: rgba(66, 133, 244, 0.35);
+  --pixel-selection-text: #ffffff;
+
+  /* Terminal & HUD Specifics */
+  --pixel-terminal-header: #101826;
+  --pixel-terminal-body: #090e17;
+  --pixel-terminal-prompt: var(--google-green);
+  --pixel-terminal-cursor: var(--google-green);
+  --pixel-terminal-line-active: rgba(66, 133, 244, 0.08);
+
+  /* Scanline & Grid Overlays */
+  --pixel-scanline-color: rgba(0, 0, 0, 0.28);
+  --pixel-grid-dot-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Light Theme (Tactical Mission-Ops Paper) */
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces & Backgrounds */
+  --pixel-bg-app: #f4f6fa;
+  --pixel-bg-viewport: radial-gradient(130% 80% at 50% -10%, #ffffff 0%, #e9eef5 100%);
+  --pixel-surface-base: #ffffff;
+  --pixel-surface-panel: #ffffff;
+  --pixel-surface-raised: #f8fafc;
+  --pixel-surface-overlay: rgba(255, 255, 255, 0.92);
+  --pixel-surface-glass: rgba(255, 255, 255, 0.8);
+  --pixel-surface-sunken: #edf1f7;
+
+  /* Borders & Dividers */
+  --pixel-border-subtle: #e2e8f0;
+  --pixel-border-muted: #cbd5e1;
+  --pixel-border-bold: #94a3b8;
+  --pixel-border-bright: #64748b;
+  --pixel-border-glow: rgba(26, 115, 232, 0.25);
+
+  /* Typography & Ink */
+  --pixel-text-primary: #0f172a;
+  --pixel-text-secondary: #334155;
+  --pixel-text-muted: #64748b;
+  --pixel-text-faint: #94a3b8;
+  --pixel-text-inverse: #ffffff;
+
+  /* Semantic Google Role Mappings */
+  --pixel-accent-primary: #1a73e8;
+  --pixel-accent-primary-hover: #174ea6;
+  --pixel-accent-primary-active: #185abc;
+  --pixel-accent-primary-tint: rgba(26, 115, 232, 0.08);
+  --pixel-accent-primary-glow: 0 0 12px rgba(26, 115, 232, 0.3);
+
+  --pixel-status-critical: #d93025;
+  --pixel-status-critical-dim: #fce8e6;
+  --pixel-status-critical-tint: rgba(217, 48, 37, 0.08);
+  --pixel-status-critical-glow: 0 0 12px rgba(217, 48, 37, 0.3);
+
+  --pixel-status-warning: #b06000;
+  --pixel-status-warning-dim: #fef7e0;
+  --pixel-status-warning-tint: rgba(176, 96, 0, 0.08);
+  --pixel-status-warning-glow: 0 0 12px rgba(251, 188, 5, 0.3);
+
+  --pixel-status-success: #188038;
+  --pixel-status-success-dim: #e6f4ea;
+  --pixel-status-success-tint: rgba(24, 128, 56, 0.08);
+  --pixel-status-success-glow: 0 0 12px rgba(24, 128, 56, 0.3);
+
+  --pixel-status-neutral: #475569;
+  --pixel-status-neutral-dim: #f1f5f9;
+  --pixel-status-neutral-tint: rgba(71, 85, 105, 0.08);
+
+  /* Interactive Elements */
+  --pixel-focus-ring: #1a73e8;
+  --pixel-focus-ring-offset: #ffffff;
+  --pixel-selection-bg: rgba(26, 115, 232, 0.2);
+  --pixel-selection-text: #0f172a;
+
+  /* Terminal & HUD Specifics */
+  --pixel-terminal-header: #f1f5f9;
+  --pixel-terminal-body: #f8fafc;
+  --pixel-terminal-prompt: #188038;
+  --pixel-terminal-cursor: #188038;
+  --pixel-terminal-line-active: rgba(26, 115, 232, 0.06);
+
+  /* Scanline & Grid Overlays */
+  --pixel-scanline-color: rgba(0, 0, 0, 0.04);
+  --pixel-grid-dot-color: rgba(0, 0, 0, 0.06);
+}
