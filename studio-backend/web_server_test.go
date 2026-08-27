@@ -4,6 +4,9 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -63,5 +66,41 @@ func TestConfiguredWebBFFRequiresCompleteConfiguration(t *testing.T) {
 	t.Setenv("MISSION_CONTROL_WEB_STATE_PATH", t.TempDir()+"/state.json")
 	if _, err := configuredWebBFF(nil); err != errWebBFFConfiguration {
 		t.Fatalf("partial config error = %v", err)
+	}
+}
+
+func TestWebSPAServesHistoryFallbackWithoutCapturingAPIs(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "assets"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "index.html"), []byte("<main>studio</main>"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "assets", "app-hash.js"), []byte("export{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	site, err := newWebSPAHandler(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	api := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusNoContent) })
+	mux := newServerMuxWithSite(api, nil, nil, site)
+	for _, path := range []string{"/", "/demo/demo_12345678", "/dashboard"} {
+		recorder := httptest.NewRecorder()
+		mux.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, path, nil))
+		if recorder.Code != http.StatusOK || recorder.Body.String() != "<main>studio</main>" {
+			t.Fatalf("%s => %d %q", path, recorder.Code, recorder.Body.String())
+		}
+	}
+	recorder := httptest.NewRecorder()
+	mux.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/assets/app-hash.js", nil))
+	if recorder.Code != http.StatusOK || !strings.Contains(recorder.Header().Get("Cache-Control"), "immutable") {
+		t.Fatalf("asset response %d %q", recorder.Code, recorder.Header().Get("Cache-Control"))
+	}
+	recorder = httptest.NewRecorder()
+	mux.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/runs", nil))
+	if recorder.Code != http.StatusNoContent {
+		t.Fatalf("API captured by SPA: %d", recorder.Code)
 	}
 }

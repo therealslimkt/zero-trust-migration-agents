@@ -3,11 +3,12 @@ package main
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 )
 
 func webRandomHex(bytes int) (string, error) {
@@ -37,7 +38,11 @@ func (h *webBFFHandler) handleCloudConnection(w http.ResponseWriter, r *http.Req
 		return
 	}
 	record := setups[len(setups)-1]
-	webWriteJSON(w, http.StatusOK, WebCloudConnectionResponse{SchemaVersion: WebSchemaVersion, Status: record.Status, SetupID: record.SetupID, ProjectID: record.ProjectID, Region: record.Region, DatasetPrefix: record.DatasetPrefix, VerifiedAt: record.VerifiedAt, MissingCapabilities: record.MissingCapabilities})
+	status := record.Status
+	if status == webCloudSetupVerifying {
+		status = webCloudSetupPending
+	}
+	webWriteJSON(w, http.StatusOK, WebCloudConnectionResponse{SchemaVersion: WebSchemaVersion, Status: status, SetupID: record.SetupID, ProjectID: record.ProjectID, Region: record.Region, DatasetPrefix: record.DatasetPrefix, VerifiedAt: record.VerifiedAt, MissingCapabilities: record.MissingCapabilities})
 }
 
 func (h *webBFFHandler) handleCloudSetup(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +73,20 @@ func (h *webBFFHandler) handleCloudSetup(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	setupID := "setup_" + idPart
-	command := fmt.Sprintf("set -euo pipefail\ngcloud services enable aiplatform.googleapis.com dataflow.googleapis.com bigquery.googleapis.com --project=%s\nbq --project_id=%s mk --dataset --location=%s %s:%s_migration\nprintf '%%s\\n' '%s'", req.ProjectID, req.ProjectID, req.Region, req.ProjectID, req.DatasetPrefix, receipt)
+	serviceAccountName := "ztm-" + idPart[:12]
+	serviceAccountEmail := serviceAccountName + "@" + req.ProjectID + ".iam.gserviceaccount.com"
+	repositoryName := serviceAccountName + "-drivers"
+	bucketName := req.ProjectID + "-" + serviceAccountName
+	command := strings.Join([]string{
+		"set -euo pipefail",
+		fmt.Sprintf("gcloud services enable aiplatform.googleapis.com dataflow.googleapis.com bigquery.googleapis.com artifactregistry.googleapis.com iamcredentials.googleapis.com storage.googleapis.com --project=%s --quiet", req.ProjectID),
+		fmt.Sprintf("gcloud iam service-accounts describe %s --project=%s >/dev/null 2>&1 || gcloud iam service-accounts create %s --project=%s --display-name='Zero Trust Migration Worker'", serviceAccountEmail, req.ProjectID, serviceAccountName, req.ProjectID),
+		fmt.Sprintf("for role in roles/dataflow.worker roles/dataflow.developer roles/bigquery.jobUser roles/bigquery.dataEditor roles/artifactregistry.reader roles/storage.objectAdmin; do gcloud projects add-iam-policy-binding %s --member=serviceAccount:%s --role=\"$role\" --condition=None --quiet >/dev/null; done", req.ProjectID, serviceAccountEmail),
+		fmt.Sprintf("bq --project_id=%s show %s:%s_migration >/dev/null 2>&1 || bq --project_id=%s mk --dataset --location=%s %s:%s_migration", req.ProjectID, req.ProjectID, req.DatasetPrefix, req.ProjectID, req.Region, req.ProjectID, req.DatasetPrefix),
+		fmt.Sprintf("gcloud storage buckets describe gs://%s --project=%s >/dev/null 2>&1 || gcloud storage buckets create gs://%s --project=%s --location=%s --uniform-bucket-level-access", bucketName, req.ProjectID, bucketName, req.ProjectID, req.Region),
+		fmt.Sprintf("gcloud artifacts repositories describe %s --project=%s --location=%s >/dev/null 2>&1 || gcloud artifacts repositories create %s --project=%s --location=%s --repository-format=maven --mode=remote-repository --remote-mvn-repo=maven-central --description='Governed JDBC driver remote'", repositoryName, req.ProjectID, req.Region, repositoryName, req.ProjectID, req.Region),
+		fmt.Sprintf("printf '%%s\\n' '%s'", receipt),
+	}, "\n")
 	commandSum := webSHA256(command)
 	now := h.now().UTC()
 	expires := now.Add(h.setupTTL)
@@ -97,31 +115,26 @@ func (h *webBFFHandler) handleCloudVerify(w http.ResponseWriter, r *http.Request
 		webWriteProblem(w, cpErrInvalidRequest)
 		return
 	}
-	record, found := h.store.CloudSetup(identity.Subject, req.SetupID)
-	if !found {
-		webWriteProblem(w, cpErrNotFound)
-		return
-	}
-	if record.Status == webCloudSetupVerified {
-		webWriteProblem(w, webErrCloudReceiptInvalid)
-		return
-	}
-	expires, valid := cpParseStamp(record.ExpiresAt)
-	if !valid || !h.now().UTC().Before(expires) {
-		webWriteProblem(w, webErrCloudSetupExpired)
-		return
-	}
-	actual := webSHA256(req.Receipt)
-	if subtle.ConstantTimeCompare([]byte(actual), []byte(record.ReceiptSHA256)) != 1 {
-		webWriteProblem(w, webErrCloudReceiptInvalid)
-		return
-	}
 	if h.cloudProber == nil {
 		webWriteProblem(w, webErrCloudUnavailable)
 		return
 	}
+	record, err := h.store.BeginCloudVerification(identity.Subject, req.SetupID, webSHA256(req.Receipt), h.stamp(h.now()))
+	if errors.Is(err, errWebStoreNotFound) {
+		webWriteProblem(w, cpErrNotFound)
+		return
+	}
+	if errors.Is(err, errWebStoreExpired) {
+		webWriteProblem(w, webErrCloudSetupExpired)
+		return
+	}
+	if err != nil {
+		webWriteProblem(w, webErrCloudReceiptInvalid)
+		return
+	}
 	missing, err := h.cloudProber.ProbeCloudCapabilities(r.Context(), record.ProjectID, record.Region, record.DatasetPrefix)
 	if err != nil || !webValidCapabilityList(missing) {
+		_, _ = h.store.RecordCloudVerification(identity.Subject, record.SetupID, h.stamp(h.now()), []string{"CAPABILITY_PROBE_FAILED"})
 		webWriteProblem(w, cpErrInternal)
 		return
 	}

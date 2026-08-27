@@ -116,6 +116,10 @@ func newServerMuxWithOrchestrator(controlPlane, orchestrator http.Handler) *http
 }
 
 func newServerMuxWithWeb(controlPlane, orchestrator, webBFF http.Handler) *http.ServeMux {
+	return newServerMuxWithSite(controlPlane, orchestrator, webBFF, nil)
+}
+
+func newServerMuxWithSite(controlPlane, orchestrator, webBFF, site http.Handler) *http.ServeMux {
 	mux := http.NewServeMux()
 	if controlPlane != nil {
 		mux.Handle("/api/v1/", controlPlane)
@@ -126,7 +130,18 @@ func newServerMuxWithWeb(controlPlane, orchestrator, webBFF http.Handler) *http.
 	if webBFF != nil {
 		mux.Handle("/api/web/v1/", webBFF)
 	}
+	if site != nil {
+		mux.Handle("/", site)
+	}
 	return mux
+}
+
+func configuredStudioSite() (http.Handler, error) {
+	directory := strings.TrimSpace(os.Getenv("MISSION_CONTROL_STUDIO_DIR"))
+	if directory == "" {
+		return nil, nil
+	}
+	return newWebSPAHandler(directory)
 }
 
 func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
@@ -179,7 +194,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Mission Control web BFF configuration is invalid")
 	}
-	mux := newServerMuxWithWeb(controlPlane, orchestrator, webBFF)
+	studioSite, err := configuredStudioSite()
+	if err != nil {
+		log.Fatal("Mission Control studio configuration is invalid")
+	}
+	mux := newServerMuxWithSite(controlPlane, orchestrator, webBFF, studioSite)
 
 	log.Println("Mission Control Backend started on :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {

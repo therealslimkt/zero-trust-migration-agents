@@ -946,7 +946,7 @@ func cpOpenStore(statePath string) (*cpStore, error) {
 			Approvals:       []*ControlPlaneApproval{},
 			Events:          []*ControlPlaneEvent{},
 		}
-		if werr := s.persist(s.snap); werr != nil {
+		if _, werr := s.persist(s.snap); werr != nil {
 			return nil, errors.New("control plane: initial state could not be written")
 		}
 	default:
@@ -985,14 +985,14 @@ func cpDecodeSnapshot(raw []byte) (*cpSnapshot, error) {
 // persist writes snap atomically and durably: a fresh 0600 temp file in the
 // same directory, fsync, rename, then an fsync of the parent directory so the
 // rename itself survives a crash.
-func (s *cpStore) persist(snap *cpSnapshot) error {
+func (s *cpStore) persist(snap *cpSnapshot) (bool, error) {
 	data, err := json.Marshal(snap)
 	if err != nil {
-		return err
+		return false, err
 	}
 	tmp, err := os.CreateTemp(s.dir, ".control-plane-*.tmp")
 	if err != nil {
-		return err
+		return false, err
 	}
 	name := tmp.Name()
 	committed := false
@@ -1003,30 +1003,30 @@ func (s *cpStore) persist(snap *cpSnapshot) error {
 	}()
 	if err := tmp.Chmod(0o600); err != nil {
 		_ = tmp.Close()
-		return err
+		return false, err
 	}
 	if _, err := tmp.Write(data); err != nil {
 		_ = tmp.Close()
-		return err
+		return false, err
 	}
 	if err := tmp.Sync(); err != nil {
 		_ = tmp.Close()
-		return err
+		return false, err
 	}
 	if err := tmp.Close(); err != nil {
-		return err
+		return false, err
 	}
 	if err := os.Rename(name, s.path); err != nil {
-		return err
+		return false, err
 	}
 	committed = true
 
 	d, err := os.Open(s.dir)
 	if err != nil {
-		return err
+		return true, err
 	}
 	defer d.Close()
-	return d.Sync()
+	return true, d.Sync()
 }
 
 // cloneForMutation returns a snapshot safe to mutate. Runs are copied because
@@ -1053,10 +1053,13 @@ func (s *cpStore) commit(next *cpSnapshot) error {
 	if err := cpValidateSnapshot(next); err != nil {
 		return cpErrInternal
 	}
-	if err := s.persist(next); err != nil {
+	renamed, err := s.persist(next)
+	if renamed {
+		s.snap = next
+	}
+	if err != nil {
 		return cpErrInternal
 	}
-	s.snap = next
 	return nil
 }
 

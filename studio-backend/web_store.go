@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -29,6 +30,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -49,9 +51,10 @@ const (
 // Cloud setup lifecycle states persisted by the store. The wire connection
 // status "not_connected" is derived, never stored.
 const (
-	webCloudSetupPending  = "pending"
-	webCloudSetupVerified = "verified"
-	webCloudSetupDegraded = "degraded"
+	webCloudSetupPending   = "pending"
+	webCloudSetupVerifying = "verifying"
+	webCloudSetupVerified  = "verified"
+	webCloudSetupDegraded  = "degraded"
 )
 
 // Driver research lifecycle states.
@@ -84,6 +87,8 @@ func webCorrupt(reason string) error {
 var errWebStoreConflict = errors.New("web store: record already exists")
 var errWebStoreNotFound = errors.New("web store: record not found")
 var errWebStoreInvalid = errors.New("web store: record rejected")
+var errWebStoreExpired = errors.New("web store: record expired")
+var errWebStoreReceipt = errors.New("web store: receipt rejected")
 
 // WebPublicationRecord is one immutable published demo. Summary fields are
 // extracted from the validated manifest at creation time so the anonymous
@@ -269,7 +274,38 @@ func OpenWebStateStore(statePath string) (*WebStateStore, error) {
 	default:
 		return nil, errors.New("web store: state could not be read")
 	}
+	if err := s.failInterruptedResearch(); err != nil {
+		return nil, errors.New("web store: interrupted research could not be recovered")
+	}
 	return s, nil
+}
+
+func (s *WebStateStore) failInterruptedResearch() error {
+	interrupted := false
+	now := time.Now().UTC()
+	for _, record := range s.snap.DriverResearch {
+		if record.Status != webResearchQueued && record.Status != webResearchRunning {
+			continue
+		}
+		stamp := now
+		if previous, ok := cpParseStamp(record.UpdatedAt); ok && !stamp.After(previous) {
+			stamp = previous.Add(time.Millisecond)
+		}
+		record.Status = webResearchFailed
+		record.FailureCode = "DRIVER_RESEARCH_INTERRUPTED"
+		record.Result = nil
+		record.Approval = nil
+		record.UpdatedAt = stamp.Format(cpTimeFormat)
+		interrupted = true
+	}
+	if !interrupted {
+		return nil
+	}
+	renamed, err := s.persist(s.snap)
+	if !renamed || err != nil {
+		return errWebStoreCorrupt
+	}
+	return nil
 }
 
 func webDecodeSnapshot(raw []byte) (*webSnapshot, error) {
@@ -935,14 +971,15 @@ func (s *WebStateStore) RecordCloudVerification(ownerUID, setupID, attemptedAt s
 	if target == nil {
 		return WebCloudSetupRecord{}, errWebStoreNotFound
 	}
+	if target.Status != webCloudSetupVerifying {
+		return WebCloudSetupRecord{}, errWebStoreConflict
+	}
 	if len(missing) == 0 {
 		target.Status = webCloudSetupVerified
 		target.VerifiedAt = attemptedAt
 		target.MissingCapabilities = nil
 	} else {
-		if target.Status == webCloudSetupVerified || target.Status == webCloudSetupDegraded {
-			target.Status = webCloudSetupDegraded
-		}
+		target.Status = webCloudSetupDegraded
 		target.MissingCapabilities = append([]string(nil), missing...)
 	}
 	if err := s.commitLocked(next); err != nil {
@@ -950,6 +987,44 @@ func (s *WebStateStore) RecordCloudVerification(ownerUID, setupID, attemptedAt s
 	}
 	out := *target
 	out.MissingCapabilities = append([]string(nil), target.MissingCapabilities...)
+	return out, nil
+}
+
+func (s *WebStateStore) BeginCloudVerification(ownerUID, setupID, receiptSHA256, attemptedAt string) (WebCloudSetupRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	next, err := s.cloneLocked()
+	if err != nil {
+		return WebCloudSetupRecord{}, err
+	}
+	var target *WebCloudSetupRecord
+	for _, record := range next.CloudSetups {
+		if record.SetupID == setupID && record.OwnerUID == ownerUID {
+			target = record
+			break
+		}
+	}
+	if target == nil {
+		return WebCloudSetupRecord{}, errWebStoreNotFound
+	}
+	if target.Status != webCloudSetupPending {
+		return WebCloudSetupRecord{}, errWebStoreReceipt
+	}
+	attempt, okAttempt := cpParseStamp(attemptedAt)
+	expiry, okExpiry := cpParseStamp(target.ExpiresAt)
+	if !okAttempt || !okExpiry || !attempt.Before(expiry) {
+		return WebCloudSetupRecord{}, errWebStoreExpired
+	}
+	if subtle.ConstantTimeCompare([]byte(receiptSHA256), []byte(target.ReceiptSHA256)) != 1 {
+		return WebCloudSetupRecord{}, errWebStoreReceipt
+	}
+	target.Status = webCloudSetupVerifying
+	target.VerifiedAt = attemptedAt
+	target.MissingCapabilities = nil
+	if err := s.commitLocked(next); err != nil {
+		return WebCloudSetupRecord{}, err
+	}
+	out := *target
 	return out, nil
 }
 
@@ -1310,6 +1385,10 @@ func webValidateStoreSnapshot(snap *webSnapshot) error {
 		case webCloudSetupPending:
 			if record.VerifiedAt != "" {
 				return webCorrupt("pending setup carries a verification timestamp")
+			}
+		case webCloudSetupVerifying:
+			if _, ok := cpParseStamp(record.VerifiedAt); !ok {
+				return webCorrupt("verifying setup has no claim timestamp")
 			}
 		case webCloudSetupVerified, webCloudSetupDegraded:
 			if _, ok := cpParseStamp(record.VerifiedAt); !ok {

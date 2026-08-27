@@ -40,6 +40,17 @@ func (p webTestProber) ProbeCloudCapabilities(context.Context, string, string, s
 	return append([]string(nil), p.missing...), nil
 }
 
+type webBlockingProber struct {
+	entered chan struct{}
+	release chan struct{}
+}
+
+func (p webBlockingProber) ProbeCloudCapabilities(context.Context, string, string, string) ([]string, error) {
+	close(p.entered)
+	<-p.release
+	return nil, nil
+}
+
 type webTestResearcher struct{ finding WebDriverResearchFinding }
 
 func (p webTestResearcher) ResearchDrivers(context.Context, WebDriverResearchRequest) (WebDriverResearchFinding, error) {
@@ -124,6 +135,29 @@ func TestWebCloudSetupVerificationIsOwnerBoundAndOneTime(t *testing.T) {
 	}
 }
 
+func TestWebCloudReceiptConcurrentRedemptionHasOneWinner(t *testing.T) {
+	entered, release := make(chan struct{}), make(chan struct{})
+	handler := webTestHandler(t, func(cfg *WebBFFConfig) { cfg.CloudProber = webBlockingProber{entered: entered, release: release} })
+	setup := webRequest(t, handler, http.MethodPost, "/api/web/v1/cloud/connection/setup", "owner", WebCloudSetupRequest{SchemaVersion: WebSchemaVersion, ProjectID: "owner-project1", Region: "us-central1", DatasetPrefix: "owner"})
+	var response WebCloudSetupResponse
+	if err := json.Unmarshal(setup.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.Split(response.Command, "'")
+	receipt := parts[len(parts)-2]
+	firstDone := make(chan *httptest.ResponseRecorder, 1)
+	go func() {
+		firstDone <- webRequest(t, handler, http.MethodPost, "/api/web/v1/cloud/connection/verify", "owner", WebCloudVerifyRequest{SchemaVersion: WebSchemaVersion, SetupID: response.SetupID, Receipt: receipt})
+	}()
+	<-entered
+	second := webRequest(t, handler, http.MethodPost, "/api/web/v1/cloud/connection/verify", "owner", WebCloudVerifyRequest{SchemaVersion: WebSchemaVersion, SetupID: response.SetupID, Receipt: receipt})
+	close(release)
+	first := <-firstDone
+	if first.Code != http.StatusOK || second.Code != http.StatusConflict {
+		t.Fatalf("concurrent statuses first=%d second=%d", first.Code, second.Code)
+	}
+}
+
 func TestWebDriverResearchAsyncResultAndApprovalRemainOwnerBound(t *testing.T) {
 	digest := "sha256:" + strings.Repeat("b", 64)
 	finding := WebDriverResearchFinding{Model: "gemini-3.7-flash", EvidenceDigest: digest, Candidates: []WebDriverCandidate{{CandidateID: "drv_candidate01", Coordinates: "vendor:driver:1", Version: "1", OfficialSource: "https://vendor.example.test/driver", Compatibility: "Reported compatible by the research provider.", License: "Vendor", Redistribution: "restricted", Confidence: .8, Caveats: []string{"Vendor download is required."}}}}
@@ -156,5 +190,26 @@ func TestWebDriverResearchAsyncResultAndApprovalRemainOwnerBound(t *testing.T) {
 	approved := webRequest(t, handler, http.MethodPost, accepted.StatusLocation+"/approval", "owner", WebDriverApprovalRequest{SchemaVersion: WebSchemaVersion, ResearchID: accepted.ResearchID, CandidateID: finding.Candidates[0].CandidateID, EvidenceDigest: digest})
 	if approved.Code != http.StatusOK || !strings.Contains(approved.Body.String(), `"retrievalMode":"manual_vendor_upload"`) || !strings.Contains(approved.Body.String(), `"status":"pending_upload"`) {
 		t.Fatalf("approval response: %d %s", approved.Code, approved.Body.String())
+	}
+}
+
+func TestWebStoreFailsInterruptedResearchOnRestart(t *testing.T) {
+	path := t.TempDir() + "/web-state.json"
+	store, err := OpenWebStateStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := "2026-08-27T12:00:00.000Z"
+	record := WebDriverResearchRecord{ResearchID: "research_12345678", OwnerUID: "owner", Status: webResearchRunning, Request: WebDriverResearchRequest{SchemaVersion: WebSchemaVersion, ProjectID: "owner-project1", DatabaseFamily: "Btrieve", DatabaseVersion: "6.15", ApplicationLayer: "Sage", JavaRuntime: "17", ConnectivityMode: "tailscale"}, CreatedAt: now, UpdatedAt: now}
+	if err := store.CreateDriverResearch(record); err != nil {
+		t.Fatal(err)
+	}
+	reopened, err := OpenWebStateStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovered, ok := reopened.DriverResearch("owner", record.ResearchID)
+	if !ok || recovered.Status != webResearchFailed || recovered.FailureCode != "DRIVER_RESEARCH_INTERRUPTED" {
+		t.Fatalf("recovered research %#v, %v", recovered, ok)
 	}
 }
