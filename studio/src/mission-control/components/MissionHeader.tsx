@@ -15,8 +15,6 @@ interface MissionHeaderProps {
   runState?: RunState;
   connection: ConnectionStatus;
   updatedAt?: string;
-  /** Presence only. The token value is never held in component state or rendered. */
-  credentialConfigured: boolean;
 }
 
 export function MissionHeader({
@@ -25,7 +23,6 @@ export function MissionHeader({
   runState,
   connection,
   updatedAt,
-  credentialConfigured,
 }: MissionHeaderProps) {
   return (
     <header className="mc-header">
@@ -53,8 +50,8 @@ export function MissionHeader({
           <dd>{formatDateTime(updatedAt)}</dd>
         </div>
         <div className="mc-fact">
-          <dt>Control-plane credential</dt>
-          <dd>{credentialConfigured ? 'Configured' : 'Missing'}</dd>
+          <dt>API authentication</dt>
+          <dd>Server-side</dd>
         </div>
       </dl>
 

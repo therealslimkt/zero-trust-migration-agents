@@ -39,7 +39,6 @@ const EVIDENCE_PANEL_ID = 'mc-evidence-panel';
 interface AppConfig {
   baseUrl: string;
   runId: string;
-  credentialConfigured: boolean;
   approver: string;
   missing: string[];
 }
@@ -48,27 +47,17 @@ function env(): Record<string, string | undefined> {
   return import.meta.env as unknown as Record<string, string | undefined>;
 }
 
-/**
- * The bearer token is read at the moment the client is constructed and is never
- * stored in component state, rendered, or written to the console.
- */
-function readToken(): string {
-  return (env().VITE_MISSION_API_TOKEN ?? '').trim();
-}
-
 function readConfig(): AppConfig {
   const source = env();
-  const baseUrl = (source.VITE_MISSION_API_BASE_URL ?? '').trim();
-  const runId = (source.VITE_MISSION_RUN_ID ?? '').trim();
-  const credentialConfigured = readToken().length > 0;
+  const queryRunId = new URLSearchParams(globalThis.location.search).get('runId')?.trim() ?? '';
+  const runId = queryRunId || (source.VITE_MISSION_RUN_ID ?? '').trim();
   const missing: string[] = [];
-  if (!baseUrl) missing.push('VITE_MISSION_API_BASE_URL');
   if (!runId) missing.push('VITE_MISSION_RUN_ID');
-  if (!credentialConfigured) missing.push('VITE_MISSION_API_TOKEN');
   return {
-    baseUrl,
+    // Same-origin is mandatory. The loopback Vite BFF injects the upstream
+    // bearer token server-side; no API credential is compiled into JavaScript.
+    baseUrl: '',
     runId,
-    credentialConfigured,
     approver: (source.VITE_MISSION_APPROVER ?? '').trim(),
     missing,
   };
@@ -97,7 +86,6 @@ export default function App() {
 
     const client = new MissionControlClient({
       baseUrl: config.baseUrl,
-      token: readToken(),
     });
 
     clientRef.current = client;
@@ -304,15 +292,14 @@ export default function App() {
         runState={view?.state}
         connection={connection}
         updatedAt={view?.updatedAt}
-        credentialConfigured={config.credentialConfigured}
       />
 
       {!configured ? (
         <div className="mc-notice mc-notice--critical" role="alert">
           <h2 className="mc-notice__title">Configuration required</h2>
           <p>
-            Mission Control is read-only until the control-plane connection is configured. Set the following Vite
-            environment variables and reload:
+            Mission Control needs a run ID. Set the following Vite environment variable, or open the page with a
+            valid <span className="mc-mono">?runId=mig_…</span> query parameter, and reload:
           </p>
           <ul className="mc-notice__list">
             {config.missing.map((name) => (
@@ -322,8 +309,8 @@ export default function App() {
             ))}
           </ul>
           <p className="mc-notice__foot">
-            The bearer token is read from the environment at startup and is never displayed, copied into the page,
-            or logged. No request is attempted while configuration is incomplete.
+            API authentication is held by the loopback server and is never compiled into, displayed by, or logged
+            from the browser application. No request is attempted while configuration is incomplete.
           </p>
         </div>
       ) : null}
@@ -381,8 +368,8 @@ export default function App() {
               Migration lanes
             </h2>
             <p className="mc-section-note">
-              All three estates migrate together under one gate. Every value below comes from a control-plane
-              event.
+              All three estates migrate together under one gate. States and counters come from the durable
+              control-plane snapshot; evidence and activity come from its persisted event log.
             </p>
           </div>
           <ol className="mc-lanes" id="mc-lanes" tabIndex={-1}>
