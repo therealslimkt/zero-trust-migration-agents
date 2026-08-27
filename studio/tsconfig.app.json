@@ -26,7 +26,9 @@
     "src/main.tsx",
     "src/App.tsx",
     "src/mission-control/**/*.ts",
-    "src/mission-control/**/*.tsx"
+    "src/mission-control/**/*.tsx",
+    "src/web/**/*.ts",
+    "src/web/**/*.tsx"
   ],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
 }
