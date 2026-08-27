@@ -79,7 +79,7 @@ export class RecordedDemoClient {
   }
 
   async getByDigest(bundleDigest: string): Promise<DemoManifest> {
-    return decode(await this.#fetch(`${this.#baseUrl}/api/web/v1/demo-bundles/${segment(bundleDigest)}`, { credentials: "same-origin" }));
+    return decode(await this.#fetch(`${this.#baseUrl}/api/web/v1/demo-bundles/${segment(bundleDigest)}`, { credentials: "same-origin", headers: { Accept: "application/json" } }));
   }
 }
 

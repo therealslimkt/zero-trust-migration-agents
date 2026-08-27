@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -126,7 +126,7 @@ describe("PixelIcon", () => {
 });
 
 describe("TerminalWindow", () => {
-  it("minimizes from its control button and restores from the keyboard-accessible header", async () => {
+  it("minimizes and restores from the focused control button", async () => {
     const user = userEvent.setup();
     const onMinimize = vi.fn();
     render(
@@ -141,9 +141,7 @@ describe("TerminalWindow", () => {
     });
     expect(onMinimize).toHaveBeenLastCalledWith(true);
 
-    const header = screen.getByRole("toolbar", { name: "Evidence trace window controls" });
-    header.focus();
-    fireEvent.keyDown(header, { key: "Enter" });
+    await user.click(screen.getByRole("button", { name: "Expand window" }));
 
     await waitFor(() => {
       expect(screen.getByText("Immutable evidence body")).toBeInTheDocument();

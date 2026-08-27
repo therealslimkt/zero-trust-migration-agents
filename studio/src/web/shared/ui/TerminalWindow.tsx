@@ -1,4 +1,4 @@
-import { useState, useId, type ReactNode, type KeyboardEvent } from "react";
+import { useState, useId, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { PixelIcon } from "./PixelIcon";
 
@@ -91,15 +91,6 @@ export function TerminalWindow({
     onMinimize?.(nextState);
   };
 
-  const handleHeaderKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      if (e.target === e.currentTarget) {
-        e.preventDefault();
-        handleToggleMinimize();
-      }
-    }
-  };
-
   const formatDimension = (val?: string | number) =>
     typeof val === "number" ? `${val}px` : val;
 
@@ -124,10 +115,6 @@ export function TerminalWindow({
       {/* Header Chrome */}
       <header
         className="terminal-window__header"
-        onKeyDown={handleHeaderKeyDown}
-        tabIndex={0}
-        role="toolbar"
-        aria-label={`${title} window controls`}
       >
         <div className="terminal-window__left">
           {showControls && (

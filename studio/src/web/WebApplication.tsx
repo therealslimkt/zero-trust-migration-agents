@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { createContext, lazy, Suspense, useContext, useEffect, useState, type ReactNode } from "react";
-import { createBrowserRouter, Navigate, RouterProvider, useLocation, useNavigate, useParams } from "react-router";
+import { createBrowserRouter, Navigate, RouterProvider, useLocation, useNavigate } from "react-router";
 
 import { RecordedDemoClient } from "./client";
 import { AuthProvider, ProtectedRoute, readSafeReturnTo, useAuth } from "./features/auth";
@@ -8,13 +8,13 @@ import type { ThemeMode } from "./shared/ui";
 import type { PublishedDemoDescriptor } from "./widgets/site";
 import "./shared/styles/index.css";
 
-const MissionControl = lazy(() => import('../App'))
 const LandingPage = lazy(() => import('./pages/public/LandingPage').then((module) => ({ default: module.LandingPage })))
 const LoginPage = lazy(() => import('./pages/public/LoginPage').then((module) => ({ default: module.LoginPage })))
 const AboutPage = lazy(() => import('./pages/public/AboutPage').then((module) => ({ default: module.AboutPage })))
 const NotFoundPage = lazy(() => import('./pages/public/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 const RecordedDemoRoute = lazy(() => import('./pages/replay/RecordedDemoRoute').then((module) => ({ default: module.RecordedDemoRoute })))
 const DashboardRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.DashboardRoute })))
+const LiveRunRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.LiveRunRoute })))
 const SourceDetailRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.SourceDetailRoute })))
 const SourceOnboardingRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.SourceOnboardingRoute })))
 const CloudSettingsRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.CloudSettingsRoute })))
@@ -88,7 +88,7 @@ function usePublicPageProps() {
 function HomeRoute() {
   const legacyRunId = new URLSearchParams(useLocation().search).get("runId")?.trim();
   const { shared } = usePublicPageProps();
-  if (legacyRunId) return <MissionControl runId={legacyRunId} />;
+  if (legacyRunId) return <Navigate to={`/runs/${encodeURIComponent(legacyRunId)}`} replace />;
   return <LandingPage {...shared} />;
 }
 
@@ -105,11 +105,6 @@ function LoginRoute() {
     if (auth.status === "authenticated") navigate(returnRoute, { replace: true });
   }, [auth.status, navigate, returnRoute]);
   return <LoginPage onNavigate={(route) => navigate(route)} theme={appearance.theme} onThemeChange={appearance.setTheme} authStatus={auth.status} userName={auth.user?.displayName} userEmail={auth.user?.email} userPhoto={auth.user?.photoURL} onSignIn={auth.status === "anonymous" ? () => void auth.signInWithGoogle().catch(() => undefined) : undefined} onSignOut={auth.status === "authenticated" ? () => void auth.signOut().catch(() => undefined) : undefined} errorMessage={auth.error?.message} returnRoute={returnRoute} dashboardRoute="/dashboard" demo={demo} />;
-}
-
-function LiveRunRoute() {
-  const { runId } = useParams<{ runId: string }>();
-  return runId ? <MissionControl runId={runId} /> : <Navigate to="/dashboard" replace />;
 }
 
 function Protected({ children }: { readonly children: ReactNode }) {

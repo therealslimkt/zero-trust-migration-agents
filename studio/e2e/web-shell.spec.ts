@@ -33,6 +33,10 @@ test('renders direct public routes and fails closed for private routes without F
   await guardedPage.goto('/dashboard')
   await expect(guardedPage.getByRole('heading', { name: 'Authentication is not configured' })).toBeVisible()
 
+  await guardedPage.goto('/?runId=mig_123456789012')
+  await expect(guardedPage).toHaveURL(/\/runs\/mig_123456789012$/)
+  await expect(guardedPage.getByRole('heading', { name: 'Authentication is not configured' })).toBeVisible()
+
   await guardedPage.goto('/route-that-does-not-exist')
   await expect(guardedPage.getByText('REQUESTED PATH: /route-that-does-not-exist')).toBeVisible()
 })

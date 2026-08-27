@@ -12,6 +12,7 @@ import type {
   DriverCandidate,
   DriverResearchRequest,
   DriverResearchStatusResponse,
+  ListLiveRunsResponse,
   LiveRunEvent,
   LiveSourceResponse,
   SourceId,
@@ -46,6 +47,18 @@ export function DashboardRoute() {
   const navigate = useNavigate()
   const query = useQuery({ queryKey: ['live-runs'], queryFn: () => client.listRuns(), refetchInterval: 10_000 })
   return <DashboardPage runs={queryState(query, (data) => data.runs.length === 0)} onRetry={() => void query.refetch()} onCreateRun={() => navigate('/sources/new')} onOpenRun={(runId) => navigate(`/runs/${encodeURIComponent(runId)}`)} onOpenSource={(runId, sourceId) => navigate(`/runs/${encodeURIComponent(runId)}/sources/${sourceId}`)} />
+}
+
+export function LiveRunRoute() {
+  const client = useLiveClient()
+  const navigate = useNavigate()
+  const { runId } = useParams<{ runId: string }>()
+  const query = useQuery({ queryKey: ['live-run', runId], queryFn: () => client.getRun(runId!), enabled: Boolean(runId), refetchInterval: 10_000 })
+  const state = queryState(query)
+  const runs: ResourceState<ListLiveRunsResponse> = state.status === 'ready'
+    ? { ...state, data: { schemaVersion: '1.0.0', runs: [state.data] } }
+    : state
+  return <DashboardPage runs={runs} onRetry={() => void query.refetch()} onOpenSource={(ownedRunId, sourceId) => navigate(`/runs/${encodeURIComponent(ownedRunId)}/sources/${sourceId}`)} />
 }
 
 function parseEventBlock(block: string): { readonly id?: string; readonly event?: LiveRunEvent } {

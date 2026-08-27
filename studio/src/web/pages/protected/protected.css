@@ -311,3 +311,7 @@
   .protected-page *::before,
   .protected-page *::after { scroll-behavior: auto !important; transition-duration: 0ms !important; animation-duration: 0ms !important; }
 }
+
+@media (min-width: 1101px) {
+  .source-pane-tabs { display: none; }
+}
