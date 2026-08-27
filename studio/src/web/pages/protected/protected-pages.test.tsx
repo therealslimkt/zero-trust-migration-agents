@@ -389,7 +389,7 @@ describe('SourceDetailPage', () => {
     expect(copy).toHaveBeenCalledWith('f1f2f3c4')
   })
 
-  it('shows progress without fabricating missing schema, plan, or evidence detail', () => {
+  it('shows all three truthful progress panes without fabricating missing captured artifacts', () => {
     const progressOnly: LiveSourceResponse = { ...LIVE_SOURCE, detail: undefined }
     render(
       <SourceDetailPage
@@ -400,7 +400,11 @@ describe('SourceDetailPage', () => {
     )
 
     expect(screen.getByText('Live updates are offline')).toBeVisible()
-    expect(screen.getByText('Detailed replay not available')).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Source system / Google VM' })).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Agentic compiler middleware' })).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'BigQuery evidence' })).toBeVisible()
+    expect(screen.getByText('sha256:plan')).toBeVisible()
+    expect(screen.getByText('Schema and sample artifacts have not been captured for this run. The authenticated counters remain visible.')).toBeVisible()
     expect(screen.queryByText('Address number')).not.toBeInTheDocument()
   })
 

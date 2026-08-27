@@ -5,7 +5,7 @@ import { createBrowserRouter, Navigate, RouterProvider, useLocation, useNavigate
 import { RecordedDemoClient } from "./client";
 import { AuthProvider, ProtectedRoute, readSafeReturnTo, useAuth } from "./features/auth";
 import type { ThemeMode } from "./shared/ui";
-import type { PublishedDemoDescriptor } from "./widgets/site";
+import { SiteFooter, SiteHeader, type PublishedDemoDescriptor } from "./widgets/site";
 import "./shared/styles/index.css";
 
 const LegacyMissionControl = import.meta.env.DEV ? lazy(() => import('../App')) : undefined
@@ -78,7 +78,7 @@ function usePublicPageProps() {
       userName: auth.user?.displayName,
       userEmail: auth.user?.email,
       userPhoto: auth.user?.photoURL,
-      onSignInClick: auth.status === "anonymous" ? () => void auth.signInWithGoogle().catch(() => undefined) : undefined,
+      onSignInClick: auth.status === "anonymous" ? () => void auth.signInWithGoogle().then(() => navigate("/dashboard", { replace: true })).catch(() => undefined) : undefined,
       onSignOutClick: auth.status === "authenticated" ? () => void auth.signOut().catch(() => undefined) : undefined,
       demo,
       dashboardRoute: "/dashboard",
@@ -111,11 +111,20 @@ function LoginRoute() {
   useEffect(() => {
     if (auth.status === "authenticated") navigate(returnRoute, { replace: true });
   }, [auth.status, navigate, returnRoute]);
-  return <LoginPage onNavigate={(route) => navigate(route)} theme={appearance.theme} onThemeChange={appearance.setTheme} authStatus={auth.status} authMode={import.meta.env.DEV && import.meta.env.VITE_LOCAL_DEMO === "true" ? "local_demo" : "firebase"} userName={auth.user?.displayName} userEmail={auth.user?.email} userPhoto={auth.user?.photoURL} onSignIn={auth.status === "anonymous" ? () => void auth.signInWithGoogle().catch(() => undefined) : undefined} onSignOut={auth.status === "authenticated" ? () => void auth.signOut().catch(() => undefined) : undefined} errorMessage={auth.error?.message} returnRoute={returnRoute} dashboardRoute="/dashboard" demo={demo} />;
+  return <LoginPage onNavigate={(route) => navigate(route)} theme={appearance.theme} onThemeChange={appearance.setTheme} authStatus={auth.status} authMode={import.meta.env.DEV && import.meta.env.VITE_LOCAL_DEMO === "true" ? "local_demo" : "firebase"} userName={auth.user?.displayName} userEmail={auth.user?.email} userPhoto={auth.user?.photoURL} onSignIn={auth.status === "anonymous" ? () => void auth.signInWithGoogle().then(() => navigate(returnRoute, { replace: true })).catch(() => undefined) : undefined} onSignOut={auth.status === "authenticated" ? () => void auth.signOut().catch(() => undefined) : undefined} errorMessage={auth.error?.message} returnRoute={returnRoute} dashboardRoute="/dashboard" demo={demo} />;
+}
+
+function AuthenticatedSiteLayout({ children }: { readonly children: ReactNode }) {
+  const auth = useAuth();
+  const appearance = useAppearance();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const demo = usePublishedDemo();
+  return <div className="public-page"><SiteHeader activeRoute={location.pathname} mode="live" onNavigate={(route) => navigate(route)} authStatus={auth.status} userName={auth.user?.displayName} userEmail={auth.user?.email} userPhoto={auth.user?.photoURL} onSignOutClick={() => void auth.signOut().then(() => navigate("/", { replace: true })).catch(() => undefined)} theme={appearance.theme} onThemeChange={appearance.setTheme} demo={demo} dashboardRoute="/dashboard" /><div className="protected-site-content">{children}</div><SiteFooter onNavigate={(route) => navigate(route)} demo={demo} documentationUrl="/about" links={[{ label: "Overview", route: "/" }, { label: "Mission control", route: "/dashboard" }, { label: "Cloud setup", route: "/settings/cloud" }]} /></div>;
 }
 
 function Protected({ children }: { readonly children: ReactNode }) {
-  return <ProtectedRoute initializingFallback={<RouteNotice title="Preparing your identity" detail="Waiting for the configured Firebase session." />} unconfiguredFallback={<RouteNotice title="Authentication is not configured" detail="Supply the Firebase public configuration before opening private run data." />} errorFallback={<RouteNotice title="Identity verification failed" detail="Private run data remains unavailable." />}>{children}</ProtectedRoute>;
+  return <ProtectedRoute initializingFallback={<RouteNotice title="Preparing your identity" detail="Waiting for the configured identity session." />} unconfiguredFallback={<RouteNotice title="Authentication is not configured" detail="Supply the Firebase public configuration before opening private run data." />} errorFallback={<RouteNotice title="Identity verification failed" detail="Private run data remains unavailable." />}><AuthenticatedSiteLayout>{children}</AuthenticatedSiteLayout></ProtectedRoute>;
 }
 
 function RouteNotice({ title, detail }: { readonly title: string; readonly detail: string }) {

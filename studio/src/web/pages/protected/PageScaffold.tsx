@@ -27,7 +27,7 @@ export function PageScaffold({
   const showFreshness = stale || connection === 'reconnecting' || connection === 'offline'
 
   return (
-    <main className="protected-page">
+    <main id="main-content" className="protected-page">
       <header className="protected-page__header">
         <div>
           <p className="protected-page__eyebrow">{eyebrow}</p>

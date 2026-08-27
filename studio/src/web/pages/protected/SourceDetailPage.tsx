@@ -286,6 +286,51 @@ function tabletVisible(active: SourcePane, pane: SourcePane): boolean {
   return pane !== 'evidence'
 }
 
+function ProgressOnlyPanes({ source, events, activePane }: { readonly source: LiveSourceResponse; readonly events: readonly LiveRunEvent[]; readonly activePane: SourcePane }) {
+  const progress = source.progress
+  return (
+    <div className="source-three-pane">
+      <section id="source-panel-source" className="source-pane source-pane--source" role="tabpanel" aria-labelledby="source-tab-source" data-active={activePane === 'source'} data-tablet-visible={tabletVisible(activePane, 'source')}>
+        <header><span>01</span><h2>Source system / Google VM</h2></header>
+        <section className="source-pane__section">
+          <h3>Authenticated source snapshot</h3>
+          <dl className="protected-definition-grid">
+            <div><dt>Source ID</dt><dd><CodeValue>{source.sourceId}</CodeValue></dd></div>
+            <div><dt>Hostname</dt><dd><CodeValue>{source.hostname}</CodeValue></dd></div>
+            <div><dt>State</dt><dd>{source.state}</dd></div>
+            <div><dt>Snapshot</dt><dd>{source.snapshotVersion}</dd></div>
+          </dl>
+          <p className="protected-muted">Schema and sample artifacts have not been captured for this run. The authenticated counters remain visible.</p>
+        </section>
+      </section>
+      <section id="source-panel-plan" className="source-pane source-pane--plan" role="tabpanel" aria-labelledby="source-tab-plan" data-active={activePane === 'plan'} data-tablet-visible={tabletVisible(activePane, 'plan')}>
+        <header><span>02</span><h2>Agentic compiler middleware</h2></header>
+        <section className="source-pane__section">
+          <h3>Persisted plan state</h3>
+          <p>Plan digest {progress.planDigest ? <CodeValue>{progress.planDigest}</CodeValue> : 'not published'}</p>
+          <p className="protected-muted">Compiler actions and transform artifacts were not captured as source-detail data for this run.</p>
+          <EvidenceList evidence={progress.evidenceReferences} />
+        </section>
+      </section>
+      <section id="source-panel-evidence" className="source-pane source-pane--evidence" role="tabpanel" aria-labelledby="source-tab-evidence" data-active={activePane === 'evidence'} data-tablet-visible={tabletVisible(activePane, 'evidence')}>
+        <header><span>03</span><h2>BigQuery evidence</h2></header>
+        <section className="source-pane__section">
+          <h3>Persisted source evidence</h3>
+          <EvidenceList evidence={progress.evidenceReferences} />
+        </section>
+        <section className="source-pane__section">
+          <h3>Persisted event timeline</h3>
+          <EventTimeline events={events} />
+        </section>
+        <section className="source-pane__section">
+          <h3>Destination status</h3>
+          <p>{progress.recordsWritten > 0 ? `${progress.recordsWritten.toLocaleString()} records reported written.` : 'No verified destination writes have been reported.'}</p>
+        </section>
+      </section>
+    </div>
+  )
+}
+
 export interface SourceDetailPageProps {
   readonly source: ResourceState<LiveSourceResponse>
   readonly events?: readonly LiveRunEvent[]
@@ -341,11 +386,7 @@ export function SourceDetailPage({ source, events = [], activePane, onActivePane
             {ready.progress.failureCode ? <p className="protected-inline-alert" role="alert">Failure code <CodeValue>{ready.progress.failureCode}</CodeValue></p> : null}
           </section>
 
-          {!replay ? (
-            <StatePanel kind="empty" title="Detailed replay not available" message="Progress is available, but the service has not returned schema, plan, or evidence detail for this source." />
-          ) : (
-            <>
-              <div className="source-pane-tabs" role="tablist" aria-label="Source detail panes">
+          <div className="source-pane-tabs" role="tablist" aria-label="Source detail panes">
                 {PANES.map((pane, paneIndex) => (
                   <button
                     key={pane.id}
@@ -362,7 +403,10 @@ export function SourceDetailPage({ source, events = [], activePane, onActivePane
                     {pane.label}
                   </button>
                 ))}
-              </div>
+          </div>
+          {!replay ? (
+            <ProgressOnlyPanes source={ready} events={relevantEvents} activePane={activePane} />
+          ) : (
               <div className="source-three-pane">
                 <section id="source-panel-source" className="source-pane source-pane--source" role="tabpanel" aria-labelledby="source-tab-source" data-active={activePane === 'source'} data-tablet-visible={tabletVisible(activePane, 'source')}>
                   <header><span>01</span><h2>Source system / Google VM</h2></header>
@@ -377,7 +421,6 @@ export function SourceDetailPage({ source, events = [], activePane, onActivePane
                   <EvidencePaneContent replay={replay} events={relevantEvents} onCopy={onCopy} />
                 </section>
               </div>
-            </>
           )}
         </>
       ) : null}
