@@ -187,7 +187,8 @@ func webEncodeJSON(w io.Writer, body any) {
 // empty slice means every capability was actually observed. Implementations
 // must hold no long-lived key material for the customer project.
 type WebCloudCapabilityProber interface {
-	ProbeCloudCapabilities(ctx context.Context, projectID, region, datasetPrefix string) ([]string, error)
+	ProbeCloudCapabilities(ctx context.Context, setup WebCloudSetupRecord) ([]string, error)
+	VerifierPrincipal() string
 }
 
 // WebDriverResearchFinding is what a research provider (production: Gemini
@@ -238,9 +239,13 @@ type WebBFFConfig struct {
 	// LiveDetails resolves captured source/compiler/destination detail.
 	LiveDetails WebLiveSourceDetailReader
 
-	CloudProber      WebCloudCapabilityProber
-	DriverResearcher WebDriverResearcher
-	DriverRegistry   WebDriverArtifactRegistry
+	CloudProber WebCloudCapabilityProber
+	// CloudVerifierPrincipal is the deployment-owned service account granted
+	// read-only verification access by each reviewed setup command. It must
+	// match CloudProber.VerifierPrincipal exactly when a prober is configured.
+	CloudVerifierPrincipal string
+	DriverResearcher       WebDriverResearcher
+	DriverRegistry         WebDriverArtifactRegistry
 
 	// SyntheticDemoRunIDs is a deployment-owned allowlist of completed control-
 	// plane runs that may be considered for public demo publication. Browser
@@ -258,20 +263,21 @@ type WebBFFConfig struct {
 }
 
 type webBFFHandler struct {
-	verifier       WebIdentityVerifier
-	runs           WebRunBackend
-	store          *WebStateStore
-	artifacts      WebPublicationArtifactReader
-	liveDetails    WebLiveSourceDetailReader
-	cloudProber    WebCloudCapabilityProber
-	researcher     WebDriverResearcher
-	driverRegistry WebDriverArtifactRegistry
-	syntheticRuns  map[string]struct{}
-	allowedOrigins []string
-	now            func() time.Time
-	runAsync       func(func()) bool
-	setupTTL       time.Duration
-	mux            *http.ServeMux
+	verifier               WebIdentityVerifier
+	runs                   WebRunBackend
+	store                  *WebStateStore
+	artifacts              WebPublicationArtifactReader
+	liveDetails            WebLiveSourceDetailReader
+	cloudProber            WebCloudCapabilityProber
+	cloudVerifierPrincipal string
+	researcher             WebDriverResearcher
+	driverRegistry         WebDriverArtifactRegistry
+	syntheticRuns          map[string]struct{}
+	allowedOrigins         []string
+	now                    func() time.Time
+	runAsync               func(func()) bool
+	setupTTL               time.Duration
+	mux                    *http.ServeMux
 }
 
 // NewWebBFFHandler builds the complete /api/web/v1 handler. The returned
@@ -295,21 +301,30 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 		}
 		syntheticRuns[runID] = struct{}{}
 	}
+	cloudVerifierPrincipal := ""
+	if cfg.CloudProber != nil {
+		var ok bool
+		cloudVerifierPrincipal, ok = webNormalizeGoogleServiceAccountPrincipal(cfg.CloudVerifierPrincipal)
+		if !ok || cloudVerifierPrincipal != cfg.CloudProber.VerifierPrincipal() {
+			return nil, errors.New("web bff: cloud verifier principal is required and must match the prober")
+		}
+	}
 	h := &webBFFHandler{
-		verifier:       cfg.Verifier,
-		runs:           cfg.Runs,
-		store:          cfg.Store,
-		artifacts:      cfg.Artifacts,
-		liveDetails:    cfg.LiveDetails,
-		cloudProber:    cfg.CloudProber,
-		researcher:     cfg.DriverResearcher,
-		driverRegistry: cfg.DriverRegistry,
-		syntheticRuns:  syntheticRuns,
-		allowedOrigins: cfg.AllowedOrigins,
-		now:            cfg.Now,
-		runAsync:       cfg.RunAsync,
-		setupTTL:       cfg.SetupTTL,
-		mux:            http.NewServeMux(),
+		verifier:               cfg.Verifier,
+		runs:                   cfg.Runs,
+		store:                  cfg.Store,
+		artifacts:              cfg.Artifacts,
+		liveDetails:            cfg.LiveDetails,
+		cloudProber:            cfg.CloudProber,
+		cloudVerifierPrincipal: cloudVerifierPrincipal,
+		researcher:             cfg.DriverResearcher,
+		driverRegistry:         cfg.DriverRegistry,
+		syntheticRuns:          syntheticRuns,
+		allowedOrigins:         cfg.AllowedOrigins,
+		now:                    cfg.Now,
+		runAsync:               cfg.RunAsync,
+		setupTTL:               cfg.SetupTTL,
+		mux:                    http.NewServeMux(),
 	}
 	if len(h.allowedOrigins) == 0 {
 		h.allowedOrigins = allowedOrigins()

@@ -300,11 +300,48 @@ func webTestOwnershipRecord(index int, owner string) WebRunOwnershipRecord {
 }
 
 func webTestSetupRecord(index int, owner string) WebCloudSetupRecord {
+	suffix := fmt.Sprintf("%012d", index)
+	resourcePrefix := "ztm-" + suffix
 	return WebCloudSetupRecord{
-		SetupID: fmt.Sprintf("setup_%08d", index), OwnerUID: owner,
+		SetupID: "setup_" + suffix, OwnerUID: owner,
 		ProjectID: "owner-project1", Region: "us-central1", DatasetPrefix: "owner",
+		ResourcePrefix: resourcePrefix, ServiceAccountName: resourcePrefix,
+		RepositoryName: resourcePrefix + "-drivers", BucketName: "owner-project1-" + resourcePrefix,
 		CommandDigest: webTestDigest("a"), ReceiptSHA256: fmt.Sprintf("%064x", index+1),
 		Status: webCloudSetupPending, CreatedAt: "2026-08-27T12:00:00.000Z", ExpiresAt: "2026-08-27T13:00:00.000Z",
+	}
+}
+
+func TestWebStoreCloudSetupResourceBindingSurvivesRestartAndRejectsTampering(t *testing.T) {
+	statePath := filepath.Join(t.TempDir(), "web-state.json")
+	store, err := OpenWebStateStore(statePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	record := webTestSetupRecord(1, "owner")
+	if err := store.PutCloudSetup(record); err != nil {
+		t.Fatal(err)
+	}
+	restarted, err := OpenWebStateStore(statePath)
+	if err != nil {
+		t.Fatalf("valid setup restart: %v", err)
+	}
+	got, ok := restarted.CloudSetup("owner", record.SetupID)
+	if !ok || got.ResourcePrefix != record.ResourcePrefix || got.ServiceAccountName != record.ServiceAccountName ||
+		got.RepositoryName != record.RepositoryName || got.BucketName != record.BucketName {
+		t.Fatalf("setup resource identity was not preserved: %#v", got)
+	}
+
+	restarted.snap.CloudSetups[0].RepositoryName = "ztm-stale-drivers"
+	raw, err := json.Marshal(restarted.snap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(statePath, raw, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := OpenWebStateStore(statePath); err == nil {
+		t.Fatal("restart accepted tampered setup resource identity")
 	}
 }
 

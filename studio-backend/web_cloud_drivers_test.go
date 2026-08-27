@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const webTestCloudVerifierPrincipal = "serviceAccount:verifier@owner-project1.iam.gserviceaccount.com"
+
 type webTestVerifier struct{}
 
 func (webTestVerifier) VerifyWebIdentity(_ context.Context, token string) (WebVerifiedIdentity, error) {
@@ -36,20 +38,22 @@ func (webTestRuns) Decide(string, *cpApprovalRequest) (*ControlPlaneApproval, er
 
 type webTestProber struct{ missing []string }
 
-func (p webTestProber) ProbeCloudCapabilities(context.Context, string, string, string) ([]string, error) {
+func (p webTestProber) ProbeCloudCapabilities(context.Context, WebCloudSetupRecord) ([]string, error) {
 	return append([]string(nil), p.missing...), nil
 }
+func (webTestProber) VerifierPrincipal() string { return webTestCloudVerifierPrincipal }
 
 type webBlockingProber struct {
 	entered chan struct{}
 	release chan struct{}
 }
 
-func (p webBlockingProber) ProbeCloudCapabilities(context.Context, string, string, string) ([]string, error) {
+func (p webBlockingProber) ProbeCloudCapabilities(context.Context, WebCloudSetupRecord) ([]string, error) {
 	close(p.entered)
 	<-p.release
 	return nil, nil
 }
+func (webBlockingProber) VerifierPrincipal() string { return webTestCloudVerifierPrincipal }
 
 type webTestResearcher struct{ finding WebDriverResearchFinding }
 
@@ -63,7 +67,7 @@ func webTestHandler(t *testing.T, configure func(*WebBFFConfig)) http.Handler {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg := WebBFFConfig{Verifier: webTestVerifier{}, Runs: webTestRuns{}, Store: store, AllowedOrigins: []string{"http://127.0.0.1:5173"}, Now: func() time.Time { return time.Date(2026, 8, 27, 12, 0, 0, 0, time.UTC) }, RunAsync: func(task func()) bool { task(); return true }}
+	cfg := WebBFFConfig{Verifier: webTestVerifier{}, Runs: webTestRuns{}, Store: store, CloudVerifierPrincipal: webTestCloudVerifierPrincipal, AllowedOrigins: []string{"http://127.0.0.1:5173"}, Now: func() time.Time { return time.Date(2026, 8, 27, 12, 0, 0, 0, time.UTC) }, RunAsync: func(task func()) bool { task(); return true }}
 	if configure != nil {
 		configure(&cfg)
 	}
@@ -105,6 +109,13 @@ func TestWebCloudSetupVerificationIsOwnerBoundAndOneTime(t *testing.T) {
 	if err := json.Unmarshal(setup.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
 	}
+	if !strings.Contains(response.Command, "iam.googleapis.com") ||
+		!strings.Contains(response.Command, "--member="+webTestCloudVerifierPrincipal) ||
+		!strings.Contains(response.Command, "roles/iam.securityReviewer") ||
+		strings.Contains(response.Command, "roles/browser") || strings.Contains(response.Command, "roles/owner") ||
+		strings.Contains(response.Command, "roles/editor") {
+		t.Fatalf("reviewed command has unsafe or incomplete verifier grants: %s", response.Command)
+	}
 	parts := strings.Split(response.Command, "'")
 	if len(parts) < 2 {
 		t.Fatal("reviewed command does not carry its non-secret receipt")
@@ -132,6 +143,25 @@ func TestWebCloudSetupVerificationIsOwnerBoundAndOneTime(t *testing.T) {
 	replay := webRequest(t, handler, http.MethodPost, "/api/web/v1/cloud/connection/verify", "owner", WebCloudVerifyRequest{SchemaVersion: WebSchemaVersion, SetupID: response.SetupID, Receipt: receipt})
 	if replay.Code != http.StatusConflict {
 		t.Fatalf("receipt replay status %d", replay.Code)
+	}
+}
+
+func TestWebBFFRequiresMatchingCloudVerifierPrincipal(t *testing.T) {
+	store, err := OpenWebStateStore(t.TempDir() + "/web-state.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := WebBFFConfig{Verifier: webTestVerifier{}, Runs: webTestRuns{}, Store: store, CloudProber: webTestProber{}}
+	if _, err := NewWebBFFHandler(base); err == nil {
+		t.Fatal("cloud prober without verifier principal was accepted")
+	}
+	base.CloudVerifierPrincipal = "serviceAccount:different@owner-project1.iam.gserviceaccount.com"
+	if _, err := NewWebBFFHandler(base); err == nil {
+		t.Fatal("cloud prober with a different verifier principal was accepted")
+	}
+	base.CloudVerifierPrincipal = strings.TrimPrefix(webTestCloudVerifierPrincipal, "serviceAccount:")
+	if _, err := NewWebBFFHandler(base); err != nil {
+		t.Fatalf("explicit service-account email should normalize: %v", err)
 	}
 }
 
@@ -164,7 +194,7 @@ func TestWebDriverResearchAsyncResultAndApprovalRemainOwnerBound(t *testing.T) {
 	var store *WebStateStore
 	handler := webTestHandler(t, func(cfg *WebBFFConfig) { store = cfg.Store; cfg.DriverResearcher = webTestResearcher{finding: finding} })
 	now := "2026-08-27T12:00:00.000Z"
-	if err := store.PutCloudSetup(WebCloudSetupRecord{SetupID: "setup_12345678", OwnerUID: "owner", ProjectID: "owner-project1", Region: "us-central1", DatasetPrefix: "owner", CommandDigest: "sha256:" + strings.Repeat("a", 64), ReceiptSHA256: strings.Repeat("c", 64), Status: webCloudSetupVerified, CreatedAt: now, ExpiresAt: "2026-08-27T13:00:00.000Z", VerifiedAt: now}); err != nil {
+	if err := store.PutCloudSetup(WebCloudSetupRecord{SetupID: "setup_123456789abc", OwnerUID: "owner", ProjectID: "owner-project1", Region: "us-central1", DatasetPrefix: "owner", ResourcePrefix: "ztm-123456789abc", ServiceAccountName: "ztm-123456789abc", RepositoryName: "ztm-123456789abc-drivers", BucketName: "owner-project1-ztm-123456789abc", CommandDigest: "sha256:" + strings.Repeat("a", 64), ReceiptSHA256: strings.Repeat("c", 64), Status: webCloudSetupVerified, CreatedAt: now, ExpiresAt: "2026-08-27T13:00:00.000Z", VerifiedAt: now}); err != nil {
 		t.Fatal(err)
 	}
 	request := WebDriverResearchRequest{SchemaVersion: WebSchemaVersion, ProjectID: "owner-project1", DatabaseFamily: "Btrieve", DatabaseVersion: "6.15", ApplicationLayer: "Sage", JavaRuntime: "17", ConnectivityMode: "tailscale"}

@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	webSnapshotVersion = 2
+	webSnapshotVersion = 3
 
 	webMaxStoredPublications = 100
 	webMaxStoredOwnerships   = 1000
@@ -144,6 +144,10 @@ type WebCloudSetupRecord struct {
 	ProjectID           string   `json:"projectId"`
 	Region              string   `json:"region"`
 	DatasetPrefix       string   `json:"datasetPrefix"`
+	ResourcePrefix      string   `json:"resourcePrefix"`
+	ServiceAccountName  string   `json:"serviceAccountName"`
+	RepositoryName      string   `json:"repositoryName"`
+	BucketName          string   `json:"bucketName"`
 	CommandDigest       string   `json:"commandDigest"`
 	ReceiptSHA256       string   `json:"receiptSha256"`
 	Status              string   `json:"status"`
@@ -1371,6 +1375,15 @@ func webValidateStoreSnapshot(snap *webSnapshot) error {
 			!webRegionPattern.MatchString(record.Region) ||
 			!webDatasetPrefixPattern.MatchString(record.DatasetPrefix) {
 			return webCorrupt("malformed setup target")
+		}
+		setupSuffix := strings.TrimPrefix(record.SetupID, "setup_")
+		if len(setupSuffix) < 12 {
+			return webCorrupt("malformed setup resource binding")
+		}
+		expectedPrefix := "ztm-" + setupSuffix[:12]
+		if record.ResourcePrefix != expectedPrefix || record.ServiceAccountName != expectedPrefix ||
+			record.RepositoryName != expectedPrefix+"-drivers" || record.BucketName != record.ProjectID+"-"+expectedPrefix {
+			return webCorrupt("malformed setup resource binding")
 		}
 		if !validWebDigest(record.CommandDigest) || !webReceiptHashPattern.MatchString(record.ReceiptSHA256) {
 			return webCorrupt("malformed setup binding")

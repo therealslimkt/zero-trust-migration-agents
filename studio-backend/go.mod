@@ -2,7 +2,10 @@ module mission-control
 
 go 1.26.5
 
-require github.com/gorilla/websocket v1.5.3
+require (
+	github.com/gorilla/websocket v1.5.3
+	google.golang.org/api v0.279.0
+)
 
 require (
 	cel.dev/expr v0.25.2 // indirect
@@ -52,7 +55,6 @@ require (
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	google.golang.org/api v0.279.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
 	google.golang.org/genproto v0.0.0-20260511170946-3700d4141b60 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60 // indirect
