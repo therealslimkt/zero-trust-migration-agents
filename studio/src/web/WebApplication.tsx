@@ -8,6 +8,7 @@ import type { ThemeMode } from "./shared/ui";
 import type { PublishedDemoDescriptor } from "./widgets/site";
 import "./shared/styles/index.css";
 
+const LegacyMissionControl = import.meta.env.DEV ? lazy(() => import('../App')) : undefined
 const LandingPage = lazy(() => import('./pages/public/LandingPage').then((module) => ({ default: module.LandingPage })))
 const LoginPage = lazy(() => import('./pages/public/LoginPage').then((module) => ({ default: module.LoginPage })))
 const AboutPage = lazy(() => import('./pages/public/AboutPage').then((module) => ({ default: module.AboutPage })))
@@ -92,6 +93,12 @@ function HomeRoute() {
   return <LandingPage {...shared} />;
 }
 
+function InternalHITLRoute() {
+  const runId = new URLSearchParams(useLocation().search).get("runId")?.trim();
+  if (!LegacyMissionControl || import.meta.env.VITE_ENABLE_LEGACY_HITL !== "true") return <Navigate to="/" replace />;
+  return runId ? <LegacyMissionControl runId={runId} /> : <RouteNotice title="HITL run ID required" detail="Supply the synthetic or live run ID in the local-only HITL route." />;
+}
+
 function AboutRoute() {
   const { shared } = usePublicPageProps();
   return <AboutPage {...shared} />;
@@ -125,6 +132,7 @@ const router = createBrowserRouter([
   { path: "/login", element: <LoginRoute /> },
   { path: "/about", element: <AboutRoute /> },
   { path: "/demo/:demoId", element: <RecordedDemoRoute /> },
+  { path: "/internal-hitl", element: <InternalHITLRoute /> },
   { path: "/dashboard", element: <Protected><DashboardRoute /></Protected> },
   { path: "/runs/:runId", element: <Protected><LiveRunRoute /></Protected> },
   { path: "/runs/:runId/sources/:sourceId", element: <Protected><SourceDetailRoute /></Protected> },
