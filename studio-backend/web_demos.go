@@ -122,12 +122,9 @@ func (h *webBFFHandler) handlePublishDemo(w http.ResponseWriter, r *http.Request
 		webWriteProblem(w, cpErrInvalidRequest)
 		return
 	}
-	// Owner-only: publication requires the caller's own server-side trusted
-	// record for the manifest's source run. A foreign or unknown run is
-	// indistinguishable from a missing one.
-	trusted, ok := h.store.TrustedPublicationRecord(identity.Subject, req.Manifest.SourceRunID)
-	if !ok {
-		webWriteProblem(w, cpErrNotFound)
+	trusted, err := h.derivePublicationTrust(identity.Subject, req.Manifest)
+	if err != nil {
+		webWriteProblem(w, err)
 		return
 	}
 	publisher := WebDemoPublisher{Artifacts: h.artifacts, Store: h.store}

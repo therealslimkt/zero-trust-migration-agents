@@ -178,7 +178,16 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 	if err != nil {
 		return nil, errWebBFFConfiguration
 	}
-	return NewWebBFFHandler(WebBFFConfig{Verifier: verifier, Runs: runs, Store: store})
+	var syntheticRunIDs []string
+	if raw := strings.TrimSpace(os.Getenv("MISSION_CONTROL_SYNTHETIC_DEMO_RUN_IDS")); raw != "" {
+		for _, runID := range strings.Split(raw, ",") {
+			syntheticRunIDs = append(syntheticRunIDs, strings.TrimSpace(runID))
+		}
+	}
+	return NewWebBFFHandler(WebBFFConfig{
+		Verifier: verifier, Runs: runs, Store: store,
+		SyntheticDemoRunIDs: syntheticRunIDs,
+	})
 }
 
 func main() {

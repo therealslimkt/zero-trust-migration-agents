@@ -233,6 +233,11 @@ type WebBFFConfig struct {
 	DriverResearcher WebDriverResearcher
 	DriverRegistry   WebDriverArtifactRegistry
 
+	// SyntheticDemoRunIDs is a deployment-owned allowlist of completed control-
+	// plane runs that may be considered for public demo publication. Browser
+	// input can never classify a private run as synthetic.
+	SyntheticDemoRunIDs []string
+
 	// AllowedOrigins is the exact-match origin allowlist for mutations.
 	// Empty falls back to the process-wide configured allowlist.
 	AllowedOrigins []string
@@ -251,6 +256,7 @@ type webBFFHandler struct {
 	cloudProber    WebCloudCapabilityProber
 	researcher     WebDriverResearcher
 	driverRegistry WebDriverArtifactRegistry
+	syntheticRuns  map[string]struct{}
 	allowedOrigins []string
 	now            func() time.Time
 	runAsync       func(func()) bool
@@ -271,6 +277,14 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 	if cfg.Store == nil {
 		return nil, errors.New("web bff: a state store is required")
 	}
+	syntheticRuns := make(map[string]struct{}, len(cfg.SyntheticDemoRunIDs))
+	for _, runID := range cfg.SyntheticDemoRunIDs {
+		runID = strings.TrimSpace(runID)
+		if !webRunIDPattern.MatchString(runID) {
+			return nil, errors.New("web bff: synthetic demo run allowlist contains an invalid run id")
+		}
+		syntheticRuns[runID] = struct{}{}
+	}
 	h := &webBFFHandler{
 		verifier:       cfg.Verifier,
 		runs:           cfg.Runs,
@@ -279,6 +293,7 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 		cloudProber:    cfg.CloudProber,
 		researcher:     cfg.DriverResearcher,
 		driverRegistry: cfg.DriverRegistry,
+		syntheticRuns:  syntheticRuns,
 		allowedOrigins: cfg.AllowedOrigins,
 		now:            cfg.Now,
 		runAsync:       cfg.RunAsync,
