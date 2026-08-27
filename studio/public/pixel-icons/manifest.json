@@ -1,0 +1,109 @@
+{
+  "formatVersion": 1,
+  "sourceSize": 16,
+  "rendering": "crispEdges",
+  "spriteSheet": "pixel-icons.svg",
+  "previewSheet": "pixel-icons-sheet.svg",
+  "icons": [
+    {
+      "name": "activity",
+      "file": "icons/activity.svg",
+      "symbol": "pixel-activity"
+    },
+    {
+      "name": "alert-triangle",
+      "file": "icons/alert-triangle.svg",
+      "symbol": "pixel-alert-triangle"
+    },
+    {
+      "name": "branch",
+      "file": "icons/branch.svg",
+      "symbol": "pixel-branch"
+    },
+    {
+      "name": "bug",
+      "file": "icons/bug.svg",
+      "symbol": "pixel-bug"
+    },
+    {
+      "name": "check-pixel",
+      "file": "icons/check-pixel.svg",
+      "symbol": "pixel-check-pixel"
+    },
+    {
+      "name": "cpu",
+      "file": "icons/cpu.svg",
+      "symbol": "pixel-cpu"
+    },
+    {
+      "name": "cross-pixel",
+      "file": "icons/cross-pixel.svg",
+      "symbol": "pixel-cross-pixel"
+    },
+    {
+      "name": "database",
+      "file": "icons/database.svg",
+      "symbol": "pixel-database"
+    },
+    {
+      "name": "key",
+      "file": "icons/key.svg",
+      "symbol": "pixel-key"
+    },
+    {
+      "name": "lock",
+      "file": "icons/lock.svg",
+      "symbol": "pixel-lock"
+    },
+    {
+      "name": "moon",
+      "file": "icons/moon.svg",
+      "symbol": "pixel-moon"
+    },
+    {
+      "name": "play",
+      "file": "icons/play.svg",
+      "symbol": "pixel-play"
+    },
+    {
+      "name": "radar",
+      "file": "icons/radar.svg",
+      "symbol": "pixel-radar"
+    },
+    {
+      "name": "rewind",
+      "file": "icons/rewind.svg",
+      "symbol": "pixel-rewind"
+    },
+    {
+      "name": "satellite",
+      "file": "icons/satellite.svg",
+      "symbol": "pixel-satellite"
+    },
+    {
+      "name": "server",
+      "file": "icons/server.svg",
+      "symbol": "pixel-server"
+    },
+    {
+      "name": "shield-check",
+      "file": "icons/shield-check.svg",
+      "symbol": "pixel-shield-check"
+    },
+    {
+      "name": "sparkle",
+      "file": "icons/sparkle.svg",
+      "symbol": "pixel-sparkle"
+    },
+    {
+      "name": "sun",
+      "file": "icons/sun.svg",
+      "symbol": "pixel-sun"
+    },
+    {
+      "name": "terminal",
+      "file": "icons/terminal.svg",
+      "symbol": "pixel-terminal"
+    }
+  ]
+}

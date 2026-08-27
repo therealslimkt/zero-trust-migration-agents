@@ -57,6 +57,7 @@ func TestServerMuxMountsWebBFFOnlyUnderWebPrefix(t *testing.T) {
 }
 
 func TestConfiguredWebBFFRequiresCompleteConfiguration(t *testing.T) {
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO", "")
 	t.Setenv("MISSION_CONTROL_WEB_STATE_PATH", "")
 	t.Setenv("MISSION_CONTROL_FIREBASE_PROJECT_ID", "")
 	handler, err := configuredWebBFF(nil)
@@ -66,6 +67,47 @@ func TestConfiguredWebBFFRequiresCompleteConfiguration(t *testing.T) {
 	t.Setenv("MISSION_CONTROL_WEB_STATE_PATH", t.TempDir()+"/state.json")
 	if _, err := configuredWebBFF(nil); err != errWebBFFConfiguration {
 		t.Fatalf("partial config error = %v", err)
+	}
+}
+
+func TestConfiguredLocalDemoBindsExplicitDurableRunsToLoopbackIdentity(t *testing.T) {
+	directory := t.TempDir()
+	controlPlane, err := NewControlPlaneHandler(filepath.Join(directory, "control.json"), "api-token")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cpHandler := controlPlane.(*ControlPlaneHandler)
+	run, err := cpHandler.store.CreateRunWithOwnership(webValidCreateRequest(), func(*ControlPlaneRun) error { return nil })
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO", "true")
+	t.Setenv("MISSION_CONTROL_WEB_STATE_PATH", filepath.Join(directory, "web.json"))
+	t.Setenv("MISSION_CONTROL_FIREBASE_PROJECT_ID", "")
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO_RUN_IDS", run.RunID)
+
+	handler, err := configuredWebBFF(controlPlane)
+	if err != nil {
+		t.Fatalf("configuredWebBFF: %v", err)
+	}
+	request := httptest.NewRequest(http.MethodGet, "/api/web/v1/runs", nil)
+	request.Header.Set("Authorization", "Bearer "+localDemoWebToken)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), run.RunID) {
+		t.Fatalf("local demo run response = %d %s", response.Code, response.Body.String())
+	}
+}
+
+func TestLocalDemoVerifierRejectsEveryOtherToken(t *testing.T) {
+	verifier := localDemoWebIdentityVerifier{}
+	identity, err := verifier.VerifyWebIdentity(t.Context(), localDemoWebToken)
+	if err != nil || identity.Subject != "local-demo-operator" {
+		t.Fatalf("local identity = %#v, %v", identity, err)
+	}
+	if _, err := verifier.VerifyWebIdentity(t.Context(), "wrong"); !errors.Is(err, errWebTokenRejected) {
+		t.Fatalf("wrong token error = %v", err)
 	}
 }
 

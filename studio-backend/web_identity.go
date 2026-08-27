@@ -27,6 +27,11 @@ import (
 // webMaxBearerBytes bounds the accepted encoded ID token length.
 const webMaxBearerBytes = 4096
 
+// localDemoWebToken is intentionally public and non-secret. It is accepted
+// only when the process explicitly enables the loopback-only local demo
+// profile; production continues to use Firebase verification.
+const localDemoWebToken = "ztm-loopback-demo-v1"
+
 // WebVerifiedIdentity is the caller identity extracted from one successfully
 // verified ID token. Subject is the stable Identity Platform UID; the other
 // fields are optional profile claims.
@@ -42,6 +47,17 @@ type WebVerifiedIdentity struct {
 // currently valid; the BFF never distinguishes failure causes to callers.
 type WebIdentityVerifier interface {
 	VerifyWebIdentity(ctx context.Context, idToken string) (WebVerifiedIdentity, error)
+}
+
+type localDemoWebIdentityVerifier struct{}
+
+func (localDemoWebIdentityVerifier) VerifyWebIdentity(_ context.Context, idToken string) (WebVerifiedIdentity, error) {
+	if idToken != localDemoWebToken {
+		return WebVerifiedIdentity{}, errWebTokenRejected
+	}
+	return WebVerifiedIdentity{
+		Subject: "local-demo-operator", DisplayName: "Local Demo Operator", Email: "operator@local.demo",
+	}, nil
 }
 
 // errWebTokenRejected deliberately carries no verifier detail, so upstream

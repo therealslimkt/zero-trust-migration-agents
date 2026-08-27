@@ -1,0 +1,49 @@
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { basename, resolve } from 'node:path'
+
+const studioDirectory = resolve(import.meta.dirname, '..')
+const sourceDirectory = resolve(studioDirectory, 'src/web/assets/pixel')
+const outputDirectory = resolve(studioDirectory, 'public/pixel-icons')
+const iconDirectory = resolve(outputDirectory, 'icons')
+
+await mkdir(iconDirectory, { recursive: true })
+const files = (await readdir(sourceDirectory)).filter((file) => file.endsWith('.svg')).sort()
+const icons = []
+
+for (const file of files) {
+  const name = basename(file, '.svg')
+  const svg = await readFile(resolve(sourceDirectory, file), 'utf8')
+  const path = svg.match(/<path d="([^"]+)"\s*\/>/)?.[1]
+  if (!path || !svg.includes('viewBox="0 0 16 16"') || !svg.includes('shape-rendering="crispEdges"')) {
+    throw new Error(`Pixel asset is not a canonical 16x16 SVG: ${file}`)
+  }
+  icons.push({ name, path })
+  await writeFile(resolve(iconDirectory, file), svg)
+}
+
+const symbols = icons.map(({ name, path }) => `  <symbol id="pixel-${name}" viewBox="0 0 16 16"><path d="${path}"/></symbol>`).join('\n')
+await writeFile(resolve(outputDirectory, 'pixel-icons.svg'), `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" shape-rendering="crispEdges">\n${symbols}\n</svg>\n`)
+
+const columns = 5
+const cellWidth = 128
+const cellHeight = 76
+const rows = Math.ceil(icons.length / columns)
+const previews = icons.map(({ name }, index) => {
+  const x = (index % columns) * cellWidth
+  const y = Math.floor(index / columns) * cellHeight
+  return `  <g transform="translate(${x} ${y})"><rect width="${cellWidth}" height="${cellHeight}" rx="8" fill="#111927" stroke="#2b3b50"/><svg x="12" y="12" width="32" height="32" viewBox="0 0 16 16" fill="#FBBC05" shape-rendering="crispEdges"><use href="#pixel-${name}"/></svg><text x="12" y="61" fill="#d7e4f2" font-family="ui-monospace, monospace" font-size="11">${name}</text></g>`
+}).join('\n')
+await writeFile(resolve(outputDirectory, 'pixel-icons-sheet.svg'), `<svg xmlns="http://www.w3.org/2000/svg" width="${columns * cellWidth}" height="${rows * cellHeight}" viewBox="0 0 ${columns * cellWidth} ${rows * cellHeight}">\n<defs>\n${symbols}\n</defs>\n<rect width="100%" height="100%" fill="#080d14"/>\n${previews}\n</svg>\n`)
+
+const manifest = {
+  formatVersion: 1,
+  sourceSize: 16,
+  rendering: 'crispEdges',
+  spriteSheet: 'pixel-icons.svg',
+  previewSheet: 'pixel-icons-sheet.svg',
+  icons: icons.map(({ name }) => ({ name, file: `icons/${name}.svg`, symbol: `pixel-${name}` })),
+}
+await writeFile(resolve(outputDirectory, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+await writeFile(resolve(outputDirectory, 'README.md'), `# Mission Control pixel icons\n\nGenerated from \`src/web/assets/pixel/*.svg\` with \`npm run assets:pixel\`. Do not hand-edit this directory.\n\n- Standalone assets: \`icons/<name>.svg\`\n- SVG symbol sprite: \`pixel-icons.svg#pixel-<name>\`\n- Visual contact sheet: \`pixel-icons-sheet.svg\`\n- Machine-readable index: \`manifest.json\`\n\nStandalone example:\n\n\`<img src="/pixel-icons/icons/radar.svg" width="32" height="32" alt="Radar">\`\n\nSame-document symbol example:\n\n\`<svg viewBox="0 0 16 16"><use href="/pixel-icons/pixel-icons.svg#pixel-radar" /></svg>\`\n\nAll artwork uses \`currentColor\`, a \`16 16\` view box, and crisp integer-grid geometry.\n`)
+
+console.log(`Generated ${icons.length} standalone pixel icons and two SVG sprite sheets.`)

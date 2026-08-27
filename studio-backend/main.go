@@ -95,6 +95,10 @@ var (
 var errControlPlaneConfiguration = errors.New("control plane configuration is incomplete")
 var errWebBFFConfiguration = errors.New("web bff configuration is incomplete")
 
+func localDemoEnabled() bool {
+	return strings.EqualFold(strings.TrimSpace(os.Getenv("MISSION_CONTROL_LOCAL_DEMO")), "true")
+}
+
 func configuredControlPlane() (http.Handler, error) {
 	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_STATE_PATH"))
 	bearerToken := os.Getenv("MISSION_CONTROL_API_TOKEN")
@@ -147,10 +151,11 @@ func configuredStudioSite() (http.Handler, error) {
 func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_WEB_STATE_PATH"))
 	projectID := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIREBASE_PROJECT_ID"))
-	if statePath == "" && projectID == "" {
+	localDemo := localDemoEnabled()
+	if statePath == "" && projectID == "" && !localDemo {
 		return nil, nil
 	}
-	if statePath == "" || projectID == "" {
+	if statePath == "" || (!localDemo && projectID == "") {
 		return nil, errWebBFFConfiguration
 	}
 	cpHandler, ok := controlPlane.(*ControlPlaneHandler)
@@ -158,17 +163,22 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 		return nil, errWebBFFConfiguration
 	}
 	ctx := context.Background()
-	app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: projectID})
-	if err != nil {
-		return nil, errWebBFFConfiguration
-	}
-	authClient, err := app.Auth(ctx)
-	if err != nil {
-		return nil, errWebBFFConfiguration
-	}
-	verifier, err := NewFirebaseWebIdentityVerifier(authClient)
-	if err != nil {
-		return nil, errWebBFFConfiguration
+	var verifier WebIdentityVerifier
+	if localDemo {
+		verifier = localDemoWebIdentityVerifier{}
+	} else {
+		app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: projectID})
+		if err != nil {
+			return nil, errWebBFFConfiguration
+		}
+		authClient, err := app.Auth(ctx)
+		if err != nil {
+			return nil, errWebBFFConfiguration
+		}
+		verifier, err = NewFirebaseWebIdentityVerifier(authClient)
+		if err != nil {
+			return nil, errWebBFFConfiguration
+		}
 	}
 	store, err := OpenWebStateStore(statePath)
 	if err != nil {
@@ -189,6 +199,34 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 	if raw := strings.TrimSpace(os.Getenv("MISSION_CONTROL_SYNTHETIC_DEMO_RUN_IDS")); raw != "" {
 		for _, runID := range strings.Split(raw, ",") {
 			syntheticRunIDs = append(syntheticRunIDs, strings.TrimSpace(runID))
+		}
+	}
+	if localDemo {
+		var localRunIDs []string
+		if raw := strings.TrimSpace(os.Getenv("MISSION_CONTROL_LOCAL_DEMO_RUN_IDS")); raw != "" {
+			for _, runID := range strings.Split(raw, ",") {
+				localRunIDs = append(localRunIDs, strings.TrimSpace(runID))
+			}
+		}
+		identity, _ := verifier.VerifyWebIdentity(ctx, localDemoWebToken)
+		owner, ok := webIdentitySummaryFromVerified(identity)
+		if !ok {
+			return nil, errWebBFFConfiguration
+		}
+		for _, runID := range localRunIDs {
+			run, _, snapshotErr := runs.WebRunSnapshot(runID)
+			if snapshotErr != nil || !webValidPortfolioName(run.PortfolioName) {
+				return nil, errWebBFFConfiguration
+			}
+			if existing, found := store.RunOwnership(runID); found {
+				if existing.OwnerUID != identity.Subject {
+					return nil, errWebBFFConfiguration
+				}
+				continue
+			}
+			if err := store.PutRunOwnership(WebRunOwnershipRecord{RunID: run.RunID, OwnerUID: identity.Subject, PortfolioName: run.PortfolioName, Owner: owner, CreatedAt: run.CreatedAt}); err != nil {
+				return nil, errWebBFFConfiguration
+			}
 		}
 	}
 	var cloudProber WebCloudCapabilityProber
@@ -250,8 +288,12 @@ func main() {
 	}
 	mux := newServerMuxWithSite(controlPlane, orchestrator, webBFF, studioSite)
 
-	log.Println("Mission Control Backend started on :8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	listenAddress := ":8080"
+	if localDemoEnabled() {
+		listenAddress = "127.0.0.1:8080"
+	}
+	log.Printf("Mission Control Backend started on %s", listenAddress)
+	if err := http.ListenAndServe(listenAddress, mux); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }

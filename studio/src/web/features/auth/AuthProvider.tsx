@@ -30,8 +30,9 @@ function normalizeError(error: unknown): Error {
 
 export function AuthProvider({ children, adapter: injectedAdapter }: AuthProviderProps) {
   const configResult = useMemo(() => readFirebasePublicConfig(), [])
+  const localDemoEnabled = import.meta.env.DEV && import.meta.env.VITE_LOCAL_DEMO === 'true'
   const [snapshot, setSnapshot] = useState<AuthSnapshot>(
-    injectedAdapter || configResult.config ? INITIAL_SNAPSHOT : {
+    injectedAdapter || configResult.config || localDemoEnabled ? INITIAL_SNAPSHOT : {
       status: 'unconfigured',
       user: null,
       error: null,
@@ -69,6 +70,15 @@ export function AuthProvider({ children, adapter: injectedAdapter }: AuthProvide
 
     if (injectedAdapter) {
       attach(injectedAdapter)
+    } else if (localDemoEnabled) {
+      void import('./localDemoAdapter')
+        .then(({ createLocalDemoAuthAdapter }) => {
+          if (active) attach(createLocalDemoAuthAdapter())
+        })
+        .catch((error: unknown) => {
+          if (!active) return
+          setSnapshot({ status: 'error', user: null, error: normalizeError(error) })
+        })
     } else if (!configResult.config) {
       adapterRef.current = null
     } else {
@@ -88,7 +98,7 @@ export function AuthProvider({ children, adapter: injectedAdapter }: AuthProvide
       adapterRef.current = null
       unsubscribe?.()
     }
-  }, [configResult.config, injectedAdapter])
+  }, [configResult.config, injectedAdapter, localDemoEnabled])
 
   const runOperation = useCallback(async (kind: Exclude<AuthOperation, null>, action: (adapter: AuthAdapter) => Promise<void>) => {
     const adapter = adapterRef.current

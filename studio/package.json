@@ -4,8 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "assets:pixel": "node scripts/build-pixel-assets.mjs",
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev:demo": "node scripts/start-local-demo.mjs",
+    "build": "npm run assets:pixel && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",

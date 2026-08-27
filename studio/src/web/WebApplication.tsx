@@ -111,7 +111,7 @@ function LoginRoute() {
   useEffect(() => {
     if (auth.status === "authenticated") navigate(returnRoute, { replace: true });
   }, [auth.status, navigate, returnRoute]);
-  return <LoginPage onNavigate={(route) => navigate(route)} theme={appearance.theme} onThemeChange={appearance.setTheme} authStatus={auth.status} userName={auth.user?.displayName} userEmail={auth.user?.email} userPhoto={auth.user?.photoURL} onSignIn={auth.status === "anonymous" ? () => void auth.signInWithGoogle().catch(() => undefined) : undefined} onSignOut={auth.status === "authenticated" ? () => void auth.signOut().catch(() => undefined) : undefined} errorMessage={auth.error?.message} returnRoute={returnRoute} dashboardRoute="/dashboard" demo={demo} />;
+  return <LoginPage onNavigate={(route) => navigate(route)} theme={appearance.theme} onThemeChange={appearance.setTheme} authStatus={auth.status} authMode={import.meta.env.DEV && import.meta.env.VITE_LOCAL_DEMO === "true" ? "local_demo" : "firebase"} userName={auth.user?.displayName} userEmail={auth.user?.email} userPhoto={auth.user?.photoURL} onSignIn={auth.status === "anonymous" ? () => void auth.signInWithGoogle().catch(() => undefined) : undefined} onSignOut={auth.status === "authenticated" ? () => void auth.signOut().catch(() => undefined) : undefined} errorMessage={auth.error?.message} returnRoute={returnRoute} dashboardRoute="/dashboard" demo={demo} />;
 }
 
 function Protected({ children }: { readonly children: ReactNode }) {

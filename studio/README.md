@@ -1,5 +1,20 @@
 # React + TypeScript + Vite
 
+## Local working demo
+
+Run the modern site, loopback-only demo identity, browser BFF, and a durable
+control-plane snapshot together with one command:
+
+```bash
+npm run dev:demo -- --state /private/tmp/ztm-hitl-YYYYMMDD-a/synthetic-control-plane.json
+```
+
+Open `http://127.0.0.1:5173`, choose **Sign in**, then **Enter as local demo
+operator**. The dashboard lists the exact runs in the supplied state file; it
+does not fabricate progress or publish them as public replays. The local demo
+credential is intentionally non-secret and is accepted only while the Go
+server is explicitly bound to loopback in this development profile.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:
