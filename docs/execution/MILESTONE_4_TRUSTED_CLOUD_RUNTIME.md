@@ -48,6 +48,13 @@ values are not reflected into errors.
 - `cloudbuild.dataflow.yaml`: digest-resolved worker image and Flex spec build.
 - `scripts/render_m4_bigquery_schemas.py`: local, approval-bound target and
   audit schema renderer; it emits no records or cell values.
+- `scripts/run_m4_cloud.py`: executable composition boundary that consumes the
+  durable UI-recorded approval, constructs official clients only after local
+  validation, and writes a new `0600` sanitized proof.
+- `control_plane/mission_control_client.py` and
+  `studio-backend/orchestrator_bridge.go`: separately authenticated,
+  loopback-only event-store bridge. Dataflow, BigQuery, reconciliation, and
+  audit references are persisted before the three UI lanes show completion.
 
 ## Deployment gate
 

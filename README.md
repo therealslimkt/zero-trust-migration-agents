@@ -1,57 +1,106 @@
 # Zero-Trust Migration Agents
 
-A zero-trust, multi-agent system that autonomously reverse-engineers, parses, and migrates proprietary legacy data into Google BigQuery. Built for the **All Things Agentic Hackathon**.
+A governed agent fleet that migrates three legacy data formats—JDE/AS400,
+SAP MaxDB, and Accpac/Btrieve—into BigQuery under one human approval. The
+system is built for the **All Things Agentic Hackathon**.
 
-## 📖 Overview
-Enterprise companies want to use AI to migrate legacy data, but they cannot send sensitive PII to the cloud. This project solves "Data Gravity" by utilizing a Zero-Trust architecture:
-1. **Edge AI:** A local Gemma model acts as a privacy firewall, scrubbing PII *before* it leaves the internal network.
-2. **Cloud AI:** Gemini 3.5 Flash acts as the Orchestrator, dynamically spawning specialized subagents (Researcher, Reverse-Engineer, Pipeline).
-3. **Trusted Execution:** Agents emit schema-validated declarative TransformPlans. After portfolio approval, a pre-registered Dataflow Flex Template interprets only allowlisted operations; generated code is never executed.
+The business problem is not merely parsing old files. Enterprises otherwise
+maintain three middleware and licensing paths to move the same class of legacy
+customer data. This project replaces that fragmented path with one auditable
+migration portfolio:
 
-Read the full [ARCHITECTURE.md](ARCHITECTURE.md) for details on the agent fleet.
+1. private edge readers fetch all three exports through Tailscale MagicDNS;
+2. deterministic protection plus local Gemma review prevents raw PII from
+   leaving the edge;
+3. Gemini 3.5 Flash compiles schema-validated declarative plans for all three
+   sources;
+4. one exact portfolio digest waits for a human decision in Mission Control;
+5. a fixed Dataflow Flex Template writes only approved protected rows; and
+6. BigQuery counts, lineage, reconciliation, and `migration_audit` must all
+   agree before the portfolio completes.
 
----
+Generated code is never evaluated. See [ARCHITECTURE.md](ARCHITECTURE.md) and
+[the trusted cloud runtime](docs/execution/MILESTONE_4_TRUSTED_CLOUD_RUNTIME.md).
 
-## 🚀 Spin-Up Instructions
+## Local verification
 
-### Prerequisites
-- Python 3.10+
-- Google Cloud CLI (`gcloud`) installed and authenticated
-- Node.js & npm (for the Mission Control UI)
-- `uv` (optional, for fast Python dependency management)
+Prerequisites are Python 3.11+, Node.js 24+, npm, and Go 1.24+.
 
-### 1. Local Setup
-Clone the repository and install the dependencies:
 ```bash
-git clone https://github.com/therealslimkt/zero-trust-migration-agents
-cd zero-trust-migration-agents
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+python3 -m venv venv
+venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+cd studio && npm install && cd ..
+
+venv/bin/python -m pytest -q
+(cd studio-backend && go test ./... && go test -race ./... && go vet ./...)
+(cd studio && npm run build && npm run lint && node src/mission-control/model.test.ts)
 ```
 
-### 2. Authentication
-This project requires Google Cloud Application Default Credentials (ADC) to interact with Vertex AI, Cloud Run, and BigQuery.
+These gates use local fakes for Google Cloud adapters and do not create cloud
+resources. The Dataflow image/spec build, IAM, APIs, buckets, tables, and live
+jobs remain a separate deployment/cost approval.
+
+## Run the real three-lane approval flow
+
+Use independent printable tokens for browser/API traffic and the loopback-only
+Python orchestration bridge:
+
 ```bash
-gcloud auth application-default login
-```
-Set up your environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your Google Cloud Project ID
+export MISSION_CONTROL_STATE_PATH=/private/tmp/ztm-mission-control.json
+export MISSION_CONTROL_API_TOKEN='<local-demo-api-token>'
+export MISSION_CONTROL_ORCHESTRATOR_TOKEN='<different-local-orchestrator-token>'
+
+(cd studio-backend && go run .)
 ```
 
-### 3. Run the Mission Control Dashboard
-The Skin Studio Mission Control dashboard provides a real-time view of agent-to-agent (A2A) communications and local execution state.
+In a second terminal, start the loopback-only Vite BFF. The token is held by
+the server process and is never compiled into browser JavaScript:
+
 ```bash
+export MISSION_CONTROL_API_TOKEN='<local-demo-api-token>'
 cd studio
-npm install
 npm run dev
 ```
 
-### 4. Initialize the Orchestrator
-In a new terminal window (with your venv activated), start the main orchestration agent:
+With the three MagicDNS sources reachable and Google ADC configured, prepare a
+live portfolio. This command stops at the approval boundary and writes the
+protected snapshot with mode `0600`:
+
 ```bash
-python main.py
+venv/bin/python scripts/verify_m3_control_plane.py plan \
+  --snapshot /private/tmp/ztm-prepared.json \
+  --project '<gcp-project>' \
+  --location us \
+  --model gemini-3.5-flash \
+  --mission-control-url http://127.0.0.1:8080
 ```
-Upload a dummy hex file to the dashboard to watch the fleet autonomously scrub, reverse-engineer, and migrate the data!
+
+Open `http://127.0.0.1:5173/?runId=<runId-from-command>` and approve the exact
+portfolio digest once. Mission Control displays all three migrations
+simultaneously; counters come from its durable run snapshot and evidence comes
+from its persisted SSE event log.
+
+## Trusted cloud execution
+
+Before a live M4 canary, render the exact approved target schemas and pre-create
+the three target tables plus `migration_audit`:
+
+```bash
+venv/bin/python scripts/render_m4_bigquery_schemas.py \
+  --snapshot /private/tmp/ztm-prepared.json \
+  --digest 'sha256:<approved-digest>' \
+  --dataset legacy_migration \
+  --output-dir /private/tmp/ztm-bigquery-schemas
+```
+
+`scripts/run_m4_cloud.py --help` lists the explicit bucket, Flex spec, worker
+identity, private subnetwork, digest-pinned SDK image, and proof-output
+arguments. Pass `--mission-control-url http://127.0.0.1:8080` to consume the
+durable UI-recorded approval and publish Dataflow, BigQuery, reconciliation,
+and audit evidence back to the three lanes. Successful proof contains only
+resource identifiers, counts, and digests—never rows, credentials, or the
+approver identity.
+
+The reproducible image/spec build is [cloudbuild.dataflow.yaml](cloudbuild.dataflow.yaml),
+but running it mutates Google Cloud and can incur cost. Do not run it merely to
+perform local verification.
