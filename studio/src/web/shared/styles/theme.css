@@ -101,7 +101,8 @@
   /* Typography & Ink */
   --pixel-text-primary: #0f172a;
   --pixel-text-secondary: #334155;
-  --pixel-text-muted: #64748b;
+  /* Dark enough for 10px tactical labels on both white and sunken panels. */
+  --pixel-text-muted: #526176;
   --pixel-text-faint: #94a3b8;
   --pixel-text-inverse: #ffffff;
 

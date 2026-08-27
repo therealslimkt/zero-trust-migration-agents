@@ -518,7 +518,7 @@
 }
 
 .site-footer__disclosure-box strong {
-  color: var(--google-yellow);
+  color: var(--pixel-status-warning);
   font-weight: 700;
   font-family: var(--font-mono-tactical);
 }
