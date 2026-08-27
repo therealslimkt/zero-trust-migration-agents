@@ -58,8 +58,24 @@ function missionControlProxy(): ProxyOptions {
   }
 }
 
+function webBffProxy(): ProxyOptions {
+  return {
+    target: requireLoopbackTarget(),
+    changeOrigin: false,
+    ws: false,
+    // Identity Platform bearer tokens belong to the browser-facing BFF and
+    // are deliberately preserved. Unlike `/api/v1`, this route never injects
+    // or substitutes the Mission Control service credential.
+  }
+}
+
 export default defineConfig(({ command }) => {
-  const proxy = command === 'serve' ? { '/api/v1': missionControlProxy() } : undefined
+  const proxy = command === 'serve'
+    ? {
+        '/api/v1': missionControlProxy(),
+        '/api/web/v1': webBffProxy(),
+      }
+    : undefined
   const localServer = {
     host: LOOPBACK_HOST,
     strictPort: true,
