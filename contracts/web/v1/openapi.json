@@ -1,0 +1,224 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Zero-Trust Migration Browser BFF",
+    "version": "1.0.0",
+    "description": "Same-origin browser API. This contract is independent of and does not replace the internal service-token /api/v1 API."
+  },
+  "servers": [{"url": "/"}],
+  "paths": {
+    "/api/web/v1/session": {
+      "get": {
+        "operationId": "getSession",
+        "security": [{"identityToken": []}],
+        "responses": {
+          "200": {"description": "Verified current identity", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/sessionResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/demos": {
+      "get": {
+        "operationId": "listPublishedDemos",
+        "security": [],
+        "responses": {
+          "200": {"description": "Published demo summaries", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/listDemosResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/demos/{demo_id}": {
+      "get": {
+        "operationId": "getPublishedDemo",
+        "security": [],
+        "parameters": [{"$ref": "#/components/parameters/DemoId"}],
+        "responses": {
+          "200": {"description": "Immutable recorded demo manifest", "headers": {"ETag": {"schema": {"type": "string"}}}, "content": {"application/json": {"schema": {"$ref": "./schemas/demo-manifest.schema.json"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/demo-bundles/{bundle_digest}": {
+      "get": {
+        "operationId": "getDemoBundleByDigest",
+        "security": [],
+        "parameters": [{"$ref": "#/components/parameters/BundleDigest"}],
+        "responses": {
+          "200": {"description": "Content-addressed recorded demo manifest", "headers": {"ETag": {"schema": {"type": "string"}}}, "content": {"application/json": {"schema": {"$ref": "./schemas/demo-manifest.schema.json"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/demo-publications": {
+      "post": {
+        "operationId": "publishDemo",
+        "x-max-body-bytes": 8388608,
+        "security": [{"identityToken": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/publishDemoRequest"}}}},
+        "responses": {
+          "201": {"description": "Manifest validated and published", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/publishDemoResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/runs": {
+      "get": {
+        "operationId": "listLiveRuns",
+        "security": [{"identityToken": []}],
+        "responses": {
+          "200": {"description": "Authenticated user's live runs", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/listLiveRunsResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      },
+      "post": {
+        "operationId": "createLiveRun",
+        "security": [{"identityToken": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/createLiveRunRequest"}}}},
+        "responses": {
+          "202": {"description": "Live run accepted", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/liveRunSummary"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/runs/{run_id}": {
+      "get": {
+        "operationId": "getLiveRun",
+        "security": [{"identityToken": []}],
+        "parameters": [{"$ref": "#/components/parameters/RunId"}],
+        "responses": {
+          "200": {"description": "Live run snapshot", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/liveRunSummary"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/runs/{run_id}/sources/{source_id}": {
+      "get": {
+        "operationId": "getLiveSource",
+        "security": [{"identityToken": []}],
+        "parameters": [{"$ref": "#/components/parameters/RunId"}, {"$ref": "#/components/parameters/SourceId"}],
+        "responses": {
+          "200": {"description": "Truthful live source snapshot", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/liveSourceResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/runs/{run_id}/events": {
+      "get": {
+        "operationId": "streamLiveRunEvents",
+        "description": "Authenticated resumable SSE fetched with an Identity Platform bearer token.",
+        "security": [{"identityToken": []}],
+        "parameters": [{"$ref": "#/components/parameters/RunId"}, {"$ref": "#/components/parameters/LastEventId"}],
+        "responses": {
+          "200": {
+            "description": "Persisted live events in sequence order",
+            "content": {
+              "text/event-stream": {
+                "schema": {"type": "string"},
+                "x-sse-data-schema": {"$ref": "./schemas/operations.schema.json#/$defs/liveRunEvent"}
+              }
+            }
+          },
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/runs/{run_id}/approval": {
+      "post": {
+        "operationId": "decideLiveRun",
+        "description": "The server derives the decision actor from the verified identity token; no actor field is accepted.",
+        "security": [{"identityToken": []}],
+        "parameters": [{"$ref": "#/components/parameters/RunId"}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/liveApprovalRequest"}}}},
+        "responses": {
+          "200": {"description": "Recorded live decision", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/liveApprovalResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/cloud/connection": {
+      "get": {
+        "operationId": "getCloudConnection",
+        "security": [{"identityToken": []}],
+        "responses": {
+          "200": {"description": "Current user's non-secret cloud connection", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/cloudConnectionResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/cloud/connection/setup": {
+      "post": {
+        "operationId": "createCloudSetup",
+        "security": [{"identityToken": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/cloudSetupRequest"}}}},
+        "responses": {
+          "201": {"description": "Reviewed setup command", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/cloudSetupResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/cloud/connection/verify": {
+      "post": {
+        "operationId": "verifyCloudSetup",
+        "security": [{"identityToken": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/cloudVerifyRequest"}}}},
+        "responses": {
+          "200": {"description": "Non-secret setup verification", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/cloudVerifyResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/drivers/research": {
+      "post": {
+        "operationId": "researchDrivers",
+        "security": [{"identityToken": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/driverResearchRequest"}}}},
+        "responses": {
+          "202": {"description": "Driver research accepted", "headers": {"Location": {"schema": {"type": "string"}}}, "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/driverResearchAccepted"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/drivers/research/{research_id}": {
+      "get": {
+        "operationId": "getDriverResearch",
+        "security": [{"identityToken": []}],
+        "parameters": [{"$ref": "#/components/parameters/ResearchId"}],
+        "responses": {
+          "200": {"description": "Current research status and completed result when available", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/driverResearchStatusResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/web/v1/drivers/research/{research_id}/approval": {
+      "post": {
+        "operationId": "approveDriverCandidate",
+        "security": [{"identityToken": []}],
+        "parameters": [{"$ref": "#/components/parameters/ResearchId"}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/driverApprovalRequest"}}}},
+        "responses": {
+          "200": {"description": "Immutable approved candidate", "content": {"application/json": {"schema": {"$ref": "./schemas/operations.schema.json#/$defs/driverApprovalResponse"}}}},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "identityToken": {"type": "http", "scheme": "bearer", "bearerFormat": "Identity Platform ID token"}
+    },
+    "parameters": {
+      "DemoId": {"name": "demo_id", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^demo_[A-Za-z0-9_-]{8,64}$"}},
+      "BundleDigest": {"name": "bundle_digest", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}},
+      "RunId": {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^mig_[A-Za-z0-9]{12,64}$"}},
+      "SourceId": {"name": "source_id", "in": "path", "required": true, "schema": {"type": "string", "enum": ["jde", "maxdb", "btrieve"]}},
+      "ResearchId": {"name": "research_id", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^research_[A-Za-z0-9_-]{8,64}$"}},
+      "LastEventId": {"name": "Last-Event-ID", "in": "header", "required": false, "description": "Resume after the most recently processed live event.", "schema": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"}}
+    },
+    "responses": {
+      "Problem": {
+        "description": "Request failed",
+        "content": {"application/problem+json": {"schema": {"$ref": "./schemas/common.schema.json#/$defs/problem"}}}
+      }
+    }
+  }
+}

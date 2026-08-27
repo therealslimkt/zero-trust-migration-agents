@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/web/v1/schemas/common.schema.json",
+  "title": "Web v1 Common Definitions",
+  "$defs": {
+    "schemaVersion": {"type": "string", "const": "1.0.0"},
+    "experienceMode": {"type": "string", "enum": ["recorded_demo", "live"]},
+    "dataClass": {"type": "string", "enum": ["synthetic_demo", "private"]},
+    "sourceId": {"type": "string", "enum": ["jde", "maxdb", "btrieve"]},
+    "runState": {
+      "type": "string",
+      "enum": [
+        "created", "inventorying", "redacting", "planning",
+        "awaiting_approval", "approved", "executing", "verifying",
+        "completed", "failed", "cancelled"
+      ]
+    },
+    "digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "runId": {"type": "string", "pattern": "^mig_[A-Za-z0-9]{12,64}$"},
+    "demoId": {"type": "string", "pattern": "^demo_[A-Za-z0-9_-]{8,64}$"},
+    "artifactId": {"type": "string", "pattern": "^art_[A-Za-z0-9._-]{8,128}$"},
+    "eventId": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"},
+    "dateTime": {"type": "string", "format": "date-time"},
+    "syntheticValue": {"type": ["string", "number", "boolean", "null"]},
+    "namedValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "dataType", "value"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 128},
+        "dataType": {"type": "string", "minLength": 1, "maxLength": 64},
+        "value": {"$ref": "#/$defs/syntheticValue"}
+      }
+    },
+    "schemaField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "dataType", "nullable"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 128},
+        "dataType": {"type": "string", "minLength": 1, "maxLength": 64},
+        "nullable": {"type": "boolean"},
+        "description": {"type": "string", "maxLength": 500}
+      }
+    },
+    "evidenceKind": {
+      "type": "string",
+      "enum": [
+        "source_manifest", "redaction_report", "transform_plan",
+        "dataflow_job", "bigquery_table", "reconciliation", "audit_log"
+      ]
+    },
+    "evidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "kind", "digest"],
+      "properties": {
+        "artifactId": {"$ref": "#/$defs/artifactId"},
+        "kind": {"$ref": "#/$defs/evidenceKind"},
+        "digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status", "recordsRead", "recordsWritten", "recordsRejected",
+        "outputRows", "sourceChecksum", "destinationChecksum", "evidence"
+      ],
+      "properties": {
+        "status": {"type": "string", "enum": ["matched", "mismatched"]},
+        "recordsRead": {"type": "integer", "minimum": 0},
+        "recordsWritten": {"type": "integer", "minimum": 0},
+        "recordsRejected": {"type": "integer", "minimum": 0},
+        "outputRows": {"type": "integer", "minimum": 0},
+        "sourceChecksum": {"$ref": "#/$defs/digest"},
+        "destinationChecksum": {"$ref": "#/$defs/digest"},
+        "evidence": {"$ref": "#/$defs/evidenceReference"}
+      }
+    },
+    "problem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "type", "title", "status"],
+      "properties": {
+        "schemaVersion": {"$ref": "#/$defs/schemaVersion"},
+        "type": {"type": "string", "format": "uri"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 120},
+        "status": {"type": "integer", "minimum": 400, "maximum": 599},
+        "detail": {"type": "string", "maxLength": 500},
+        "requestId": {"type": "string", "maxLength": 128}
+      }
+    }
+  }
+}

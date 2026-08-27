@@ -1,0 +1,16 @@
+{
+  "contractVersion": "1.0.0",
+  "jsonSchemaDraft": "2020-12",
+  "requirementsSha256": "37374d4fb13c4fd890e60c07b7d691fec0fe34ac5440b878aa275e5d9f3c0191",
+  "openapi": "openapi.json",
+  "schemas": [
+    "schemas/common.schema.json",
+    "schemas/demo-manifest.schema.json",
+    "schemas/operations.schema.json"
+  ],
+  "digest": {
+    "algorithm": "sha256",
+    "canonicalization": "lexicographically sorted JSON object keys, compact UTF-8 JSON, array order preserved, root bundleDigest omitted",
+    "field": "bundleDigest"
+  }
+}

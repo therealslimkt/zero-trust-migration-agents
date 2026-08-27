@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/web/v1/schemas/demo-manifest.schema.json",
+  "title": "Immutable Recorded Demo Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "demoId", "experienceMode", "dataClass", "title",
+    "sourceRunId", "runState", "portfolioPlanDigest", "publishedAt",
+    "bundleDigest", "practiceApproval", "sources", "events", "evidence",
+    "reconciliation"
+  ],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "demoId": {"$ref": "common.schema.json#/$defs/demoId"},
+    "experienceMode": {"const": "recorded_demo"},
+    "dataClass": {"const": "synthetic_demo"},
+    "title": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+    "sourceRunId": {"$ref": "common.schema.json#/$defs/runId"},
+    "runState": {"const": "completed"},
+    "portfolioPlanDigest": {"$ref": "common.schema.json#/$defs/digest"},
+    "publishedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+    "bundleDigest": {"$ref": "common.schema.json#/$defs/digest"},
+    "practiceApproval": {"$ref": "#/$defs/practiceApproval"},
+    "sources": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"$ref": "#/$defs/sourceReplay"},
+      "allOf": [
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "jde"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "maxdb"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "btrieve"}}}, "minContains": 1, "maxContains": 1}
+      ]
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10000,
+      "items": {"$ref": "#/$defs/replayEvent"}
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 1000,
+      "items": {"$ref": "common.schema.json#/$defs/evidenceReference"}
+    },
+    "reconciliation": {"$ref": "common.schema.json#/$defs/reconciliation"}
+  },
+  "$defs": {
+    "practiceApproval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pauseAfterSequence", "planDigest", "prompt"],
+      "properties": {
+        "pauseAfterSequence": {"type": "integer", "minimum": 1},
+        "planDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "prompt": {"type": "string", "minLength": 1, "maxLength": 500, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"}
+      }
+    },
+    "sourceReplay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceId", "hostname", "displayName", "source", "compiler", "destination"],
+      "properties": {
+        "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+        "hostname": {"type": "string", "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]},
+        "displayName": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "source": {"$ref": "#/$defs/sourceSystem"},
+        "compiler": {"$ref": "#/$defs/compiler"},
+        "destination": {"$ref": "#/$defs/destination"}
+      },
+      "oneOf": [
+        {"properties": {"sourceId": {"const": "jde"}, "hostname": {"const": "legacy-jde-db"}}},
+        {"properties": {"sourceId": {"const": "maxdb"}, "hostname": {"const": "legacy-maxdb"}}},
+        {"properties": {"sourceId": {"const": "btrieve"}, "hostname": {"const": "legacy-btrieve-db"}}}
+      ]
+    },
+    "sourceSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["databaseFamily", "databaseVersion", "applicationLayer", "schema", "samples", "exampleQueries"],
+      "properties": {
+        "databaseFamily": {"type": "string", "minLength": 1, "maxLength": 120},
+        "databaseVersion": {"type": "string", "minLength": 1, "maxLength": 120},
+        "applicationLayer": {"type": "string", "minLength": 1, "maxLength": 120},
+        "schema": {"type": "array", "minItems": 1, "maxItems": 500, "items": {"$ref": "common.schema.json#/$defs/schemaField"}},
+        "samples": {"type": "array", "minItems": 1, "maxItems": 100, "items": {"$ref": "#/$defs/sourceSample"}},
+        "exampleQueries": {"type": "array", "minItems": 1, "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 2000}}
+      }
+    },
+    "sourceSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordId", "rawBytesHex", "decodedFields"],
+      "properties": {
+        "recordId": {"type": "string", "minLength": 1, "maxLength": 128},
+        "rawBytesHex": {"type": "string", "pattern": "^(?:[a-fA-F0-9]{2})+$", "maxLength": 131072},
+        "decodedFields": {"type": "array", "minItems": 1, "maxItems": 500, "items": {"$ref": "common.schema.json#/$defs/namedValue"}}
+      }
+    },
+    "compiler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actions", "transforms", "driver", "localGemmaEvidence", "geminiVertexEvidence", "beamTransformIds", "dataflowJobId", "approval"],
+      "properties": {
+        "actions": {"type": "array", "minItems": 1, "maxItems": 1000, "items": {"$ref": "#/$defs/compilerAction"}},
+        "transforms": {"type": "array", "minItems": 1, "maxItems": 500, "items": {"$ref": "#/$defs/transform"}},
+        "driver": {"$ref": "#/$defs/driver"},
+        "localGemmaEvidence": {"$ref": "common.schema.json#/$defs/evidenceReference"},
+        "geminiVertexEvidence": {"$ref": "common.schema.json#/$defs/evidenceReference"},
+        "beamTransformIds": {"type": "array", "minItems": 1, "maxItems": 100, "items": {"type": "string", "minLength": 1, "maxLength": 128}},
+        "dataflowJobId": {"type": "string", "minLength": 1, "maxLength": 128},
+        "approval": {"$ref": "#/$defs/recordedApproval"}
+      }
+    },
+    "compilerAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "eventId", "timestamp", "stage", "agent", "tool", "summary", "result", "evidenceReferences"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "eventId": {"$ref": "common.schema.json#/$defs/eventId"},
+        "timestamp": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "stage": {"type": "string", "enum": ["connect", "read", "protect", "plan", "approve", "execute", "verify", "land"]},
+        "agent": {"type": "string", "minLength": 1, "maxLength": 120},
+        "tool": {"type": "string", "minLength": 1, "maxLength": 120},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 500, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "result": {"type": "string", "minLength": 1, "maxLength": 2000, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "evidenceReferences": {"type": "array", "maxItems": 50, "items": {"$ref": "common.schema.json#/$defs/evidenceReference"}}
+      }
+    },
+    "transform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "operation", "sourceField", "targetField"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "operation": {"type": "string", "enum": ["decode_text", "packed_decimal", "map_date", "rename", "cast", "drop", "tokenize"]},
+        "sourceField": {"type": "string", "minLength": 1, "maxLength": 128},
+        "targetField": {"type": "string", "minLength": 1, "maxLength": 128},
+        "encoding": {"type": "string", "maxLength": 64},
+        "targetType": {"type": "string", "maxLength": 64},
+        "format": {"type": "string", "maxLength": 120}
+      }
+    },
+    "driver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coordinates", "version", "sourceUrl", "license", "sha256", "signatureVerified"],
+      "properties": {
+        "coordinates": {"type": "string", "minLength": 1, "maxLength": 300},
+        "version": {"type": "string", "minLength": 1, "maxLength": 120},
+        "sourceUrl": {"type": "string", "format": "uri", "maxLength": 2000},
+        "license": {"type": "string", "minLength": 1, "maxLength": 200},
+        "sha256": {"$ref": "common.schema.json#/$defs/digest"},
+        "signatureVerified": {"type": "boolean"}
+      }
+    },
+    "recordedApproval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approvalId", "decision", "decidedAt", "planDigest"],
+      "properties": {
+        "approvalId": {"type": "string", "pattern": "^apr_[A-Za-z0-9]{12,64}$"},
+        "decision": {"const": "approved"},
+        "decidedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "planDigest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dataset", "table", "schema", "rows", "reconciliation", "dataflowEvidence", "bigQueryEvidence", "suggestedQueries"],
+      "properties": {
+        "dataset": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,1023}$"},
+        "table": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,1023}$"},
+        "schema": {"type": "array", "minItems": 1, "maxItems": 500, "items": {"$ref": "common.schema.json#/$defs/schemaField"}},
+        "rows": {"type": "array", "minItems": 1, "maxItems": 100, "items": {"$ref": "#/$defs/destinationRow"}},
+        "reconciliation": {"$ref": "common.schema.json#/$defs/reconciliation"},
+        "dataflowEvidence": {"$ref": "common.schema.json#/$defs/evidenceReference"},
+        "bigQueryEvidence": {"$ref": "common.schema.json#/$defs/evidenceReference"},
+        "suggestedQueries": {"type": "array", "minItems": 1, "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 2000}}
+      }
+    },
+    "destinationRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordId", "fields"],
+      "properties": {
+        "recordId": {"type": "string", "minLength": 1, "maxLength": 128},
+        "fields": {"type": "array", "minItems": 1, "maxItems": 500, "items": {"$ref": "common.schema.json#/$defs/namedValue"}}
+      }
+    },
+    "replayEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "eventId", "timestamp", "eventType", "state", "summary", "evidenceReferences"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "eventId": {"$ref": "common.schema.json#/$defs/eventId"},
+        "timestamp": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+        "eventType": {
+          "type": "string",
+          "enum": [
+            "source.inventory.started", "source.inventory.completed",
+            "source.redaction.completed", "source.plan.ready",
+            "source.execution.started", "source.execution.completed",
+            "source.verification.completed", "source.failed",
+            "migration.created", "portfolio.awaiting_approval",
+            "portfolio.approved", "portfolio.rejected",
+            "migration.completed", "migration.failed", "migration.cancelled"
+          ]
+        },
+        "state": {"$ref": "common.schema.json#/$defs/runState"},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 500, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "evidenceReferences": {"type": "array", "maxItems": 50, "items": {"$ref": "common.schema.json#/$defs/evidenceReference"}}
+      },
+      "oneOf": [
+        {
+          "required": ["sourceId"],
+          "properties": {
+            "eventType": {
+              "enum": [
+                "source.inventory.started", "source.inventory.completed",
+                "source.redaction.completed", "source.plan.ready",
+                "source.execution.started", "source.execution.completed",
+                "source.verification.completed", "source.failed"
+              ]
+            }
+          }
+        },
+        {
+          "not": {"required": ["sourceId"]},
+          "properties": {
+            "eventType": {
+              "enum": [
+                "migration.created", "portfolio.awaiting_approval",
+                "portfolio.approved", "portfolio.rejected",
+                "migration.completed", "migration.failed", "migration.cancelled"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

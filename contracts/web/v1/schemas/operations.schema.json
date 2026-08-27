@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/web/v1/schemas/operations.schema.json",
+  "title": "Browser Web v1 Operation Types",
+  "$defs": {
+    "identitySummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject", "displayName", "email"],
+      "properties": {
+        "subject": {"type": "string", "minLength": 1, "maxLength": 256},
+        "displayName": {"type": "string", "minLength": 1, "maxLength": 200},
+        "email": {"type": "string", "minLength": 3, "maxLength": 320},
+        "pictureUrl": {"type": "string", "format": "uri", "maxLength": 2000}
+      }
+    },
+    "sessionResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "authenticated", "user"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "authenticated": {"const": true},
+        "user": {"$ref": "#/$defs/identitySummary"}
+      }
+    },
+    "demoSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "demoId", "title", "sourceRunId", "publishedAt", "bundleDigest"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "demoId": {"$ref": "common.schema.json#/$defs/demoId"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 120},
+        "sourceRunId": {"$ref": "common.schema.json#/$defs/runId"},
+        "publishedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "bundleDigest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    },
+    "listDemosResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "demos"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "demos": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/demoSummary"}}
+      }
+    },
+    "publishDemoRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "manifest"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "manifest": {"$ref": "demo-manifest.schema.json"}
+      }
+    },
+    "publishDemoResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "demoId", "publishedAt", "bundleDigest", "location"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "demoId": {"$ref": "common.schema.json#/$defs/demoId"},
+        "publishedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "bundleDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "location": {"type": "string", "pattern": "^/api/web/v1/demos/demo_[A-Za-z0-9_-]{8,64}$"}
+      }
+    },
+    "liveRunSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "experienceMode", "dataClass", "runId", "portfolioName", "owner", "state", "sources", "updatedAt"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "experienceMode": {"const": "live"},
+        "dataClass": {"const": "private"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "portfolioName": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "owner": {"$ref": "#/$defs/identitySummary"},
+        "state": {"$ref": "common.schema.json#/$defs/runState"},
+        "sources": {"$ref": "#/$defs/liveSourceSet"},
+        "portfolioPlanDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "updatedAt": {"$ref": "common.schema.json#/$defs/dateTime"}
+      }
+    },
+    "listLiveRunsResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runs"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "runs": {"type": "array", "maxItems": 1000, "items": {"$ref": "#/$defs/liveRunSummary"}}
+      }
+    },
+    "createLiveRunRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "portfolioName", "cloudSetupId", "sources"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "portfolioName": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "cloudSetupId": {"type": "string", "pattern": "^setup_[A-Za-z0-9_-]{8,64}$"},
+        "sources": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/sourceId"},
+          "allOf": [
+            {"contains": {"const": "jde"}, "minContains": 1, "maxContains": 1},
+            {"contains": {"const": "maxdb"}, "minContains": 1, "maxContains": 1},
+            {"contains": {"const": "btrieve"}, "minContains": 1, "maxContains": 1}
+          ]
+        }
+      }
+    },
+    "liveSourceResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "experienceMode", "dataClass", "runId", "state", "sourceId", "hostname", "snapshotVersion", "updatedAt", "progress"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "experienceMode": {"const": "live"},
+        "dataClass": {"const": "private"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "state": {"$ref": "common.schema.json#/$defs/runState"},
+        "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+        "hostname": {"type": "string", "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]},
+        "snapshotVersion": {"type": "integer", "minimum": 0},
+        "updatedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "progress": {"$ref": "#/$defs/liveSourceProgress"},
+        "detail": {"$ref": "demo-manifest.schema.json#/$defs/sourceReplay"}
+      }
+    },
+    "liveSourceProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceId", "hostname", "state", "recordsRead", "recordsWritten", "recordsRejected", "evidenceReferences"],
+      "properties": {
+        "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+        "hostname": {"type": "string", "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]},
+        "state": {"$ref": "common.schema.json#/$defs/runState"},
+        "recordsRead": {"type": "integer", "minimum": 0},
+        "recordsWritten": {"type": "integer", "minimum": 0},
+        "recordsRejected": {"type": "integer", "minimum": 0},
+        "planDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "failureCode": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,63}$"},
+        "evidenceReferences": {"type": "array", "maxItems": 100, "items": {"$ref": "common.schema.json#/$defs/evidenceReference"}}
+      },
+      "oneOf": [
+        {"properties": {"sourceId": {"const": "jde"}, "hostname": {"const": "legacy-jde-db"}}},
+        {"properties": {"sourceId": {"const": "maxdb"}, "hostname": {"const": "legacy-maxdb"}}},
+        {"properties": {"sourceId": {"const": "btrieve"}, "hostname": {"const": "legacy-btrieve-db"}}}
+      ]
+    },
+    "liveSourceSet": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"$ref": "#/$defs/liveSourceProgress"},
+      "allOf": [
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "jde"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "maxdb"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "btrieve"}}}, "minContains": 1, "maxContains": 1}
+      ]
+    },
+    "liveRunEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "eventId", "runId", "sequence", "timestamp", "eventType", "state", "summary", "evidenceReferences"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "eventId": {"$ref": "common.schema.json#/$defs/eventId"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "sequence": {"type": "integer", "minimum": 1},
+        "timestamp": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
+        "eventType": {
+          "type": "string",
+          "enum": [
+            "source.inventory.started", "source.inventory.completed",
+            "source.redaction.completed", "source.plan.ready",
+            "source.execution.started", "source.execution.completed",
+            "source.verification.completed", "source.failed",
+            "migration.created", "portfolio.awaiting_approval",
+            "portfolio.approved", "portfolio.rejected",
+            "migration.completed", "migration.failed", "migration.cancelled"
+          ]
+        },
+        "state": {"$ref": "common.schema.json#/$defs/runState"},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 500, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "evidenceReferences": {"type": "array", "maxItems": 50, "items": {"$ref": "common.schema.json#/$defs/evidenceReference"}}
+      },
+      "oneOf": [
+        {"required": ["sourceId"], "properties": {"eventType": {"enum": ["source.inventory.started", "source.inventory.completed", "source.redaction.completed", "source.plan.ready", "source.execution.started", "source.execution.completed", "source.verification.completed", "source.failed"]}}},
+        {"not": {"required": ["sourceId"]}, "properties": {"eventType": {"enum": ["migration.created", "portfolio.awaiting_approval", "portfolio.approved", "portfolio.rejected", "migration.completed", "migration.failed", "migration.cancelled"]}}}
+      ]
+    },
+    "liveApprovalRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "planDigest", "decision"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "planDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "decision": {"type": "string", "enum": ["approve", "reject"]},
+        "reason": {"type": "string", "maxLength": 500, "pattern": "^[^\\u0000-\\u001F\\u007F]*$"}
+      }
+    },
+    "liveApprovalResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "approvalId", "planDigest", "decision", "resultingState", "decidedAt"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "approvalId": {"type": "string", "pattern": "^apr_[A-Za-z0-9]{12,64}$"},
+        "planDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "decision": {"type": "string", "enum": ["approve", "reject"]},
+        "resultingState": {"type": "string", "enum": ["approved", "cancelled"]},
+        "decidedAt": {"$ref": "common.schema.json#/$defs/dateTime"}
+      }
+    },
+    "cloudSetupRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "projectId", "region", "datasetPrefix"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "projectId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"},
+        "region": {"type": "string", "pattern": "^[a-z]+-[a-z]+[0-9]+$"},
+        "datasetPrefix": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$"}
+      }
+    },
+    "cloudConnectionResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "status"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "status": {"type": "string", "enum": ["not_connected", "pending", "verified", "degraded"]},
+        "setupId": {"type": "string", "pattern": "^setup_[A-Za-z0-9_-]{8,64}$"},
+        "projectId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"},
+        "region": {"type": "string", "pattern": "^[a-z]+-[a-z]+[0-9]+$"},
+        "datasetPrefix": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$"},
+        "verifiedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "missingCapabilities": {"type": "array", "maxItems": 100, "items": {"type": "string", "minLength": 1, "maxLength": 200}}
+      }
+    },
+    "cloudSetupResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "setupId", "projectId", "region", "command", "commandDigest", "expiresAt"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "setupId": {"type": "string", "pattern": "^setup_[A-Za-z0-9_-]{8,64}$"},
+        "projectId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"},
+        "region": {"type": "string", "pattern": "^[a-z]+-[a-z]+[0-9]+$"},
+        "command": {"type": "string", "minLength": 1, "maxLength": 20000},
+        "commandDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "expiresAt": {"$ref": "common.schema.json#/$defs/dateTime"}
+      }
+    },
+    "cloudVerifyRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "setupId", "receipt"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "setupId": {"type": "string", "pattern": "^setup_[A-Za-z0-9_-]{8,64}$"},
+        "receipt": {"type": "string", "minLength": 16, "maxLength": 4096}
+      }
+    },
+    "cloudVerifyResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "setupId", "status", "projectId", "region", "verifiedAt"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "setupId": {"type": "string", "pattern": "^setup_[A-Za-z0-9_-]{8,64}$"},
+        "status": {"type": "string", "enum": ["verified", "incomplete"]},
+        "projectId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"},
+        "region": {"type": "string", "pattern": "^[a-z]+-[a-z]+[0-9]+$"},
+        "verifiedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "missingCapabilities": {"type": "array", "maxItems": 100, "items": {"type": "string", "minLength": 1, "maxLength": 200}}
+      }
+    },
+    "driverResearchRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "projectId", "databaseFamily", "databaseVersion", "applicationLayer", "javaRuntime", "connectivityMode"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "projectId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"},
+        "databaseFamily": {"type": "string", "minLength": 1, "maxLength": 120},
+        "databaseVersion": {"type": "string", "minLength": 1, "maxLength": 120},
+        "applicationLayer": {"type": "string", "minLength": 1, "maxLength": 120},
+        "javaRuntime": {"type": "string", "minLength": 1, "maxLength": 120},
+        "connectivityMode": {"type": "string", "enum": ["tailscale", "private_service_connect", "vpn"]},
+        "officialRepository": {"type": "string", "format": "uri", "maxLength": 2000}
+      }
+    },
+    "driverCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidateId", "coordinates", "version", "officialSource", "compatibility", "license", "redistribution", "checksumAvailable", "signatureAvailable", "confidence", "caveats"],
+      "properties": {
+        "candidateId": {"type": "string", "pattern": "^drv_[A-Za-z0-9_-]{8,64}$"},
+        "coordinates": {"type": "string", "minLength": 1, "maxLength": 300},
+        "version": {"type": "string", "minLength": 1, "maxLength": 120},
+        "officialSource": {"type": "string", "format": "uri", "maxLength": 2000},
+        "compatibility": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "license": {"type": "string", "minLength": 1, "maxLength": 200},
+        "redistribution": {"type": "string", "enum": ["allowed", "restricted", "unknown"]},
+        "checksumAvailable": {"type": "boolean"},
+        "signatureAvailable": {"type": "boolean"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "caveats": {"type": "array", "maxItems": 50, "items": {"type": "string", "minLength": 1, "maxLength": 500}}
+      }
+    },
+    "driverResearchResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "researchId", "model", "projectId", "createdAt", "candidates", "evidenceDigest"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "researchId": {"type": "string", "pattern": "^research_[A-Za-z0-9_-]{8,64}$"},
+        "model": {"type": "string", "pattern": "^gemini-3\\.7-flash(?:-[A-Za-z0-9._-]+)?$"},
+        "projectId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"},
+        "createdAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "candidates": {"type": "array", "minItems": 1, "maxItems": 50, "items": {"$ref": "#/$defs/driverCandidate"}},
+        "evidenceDigest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    },
+    "driverResearchAccepted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "researchId", "status", "statusLocation", "createdAt"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "researchId": {"type": "string", "pattern": "^research_[A-Za-z0-9_-]{8,64}$"},
+        "status": {"const": "queued"},
+        "statusLocation": {"type": "string", "pattern": "^/api/web/v1/drivers/research/research_[A-Za-z0-9_-]{8,64}$"},
+        "createdAt": {"$ref": "common.schema.json#/$defs/dateTime"}
+      }
+    },
+    "driverResearchStatusResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "researchId", "status", "updatedAt"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "researchId": {"type": "string", "pattern": "^research_[A-Za-z0-9_-]{8,64}$"},
+        "status": {"type": "string", "enum": ["queued", "running", "completed", "failed"]},
+        "updatedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "result": {"$ref": "#/$defs/driverResearchResponse"},
+        "failureCode": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,63}$"}
+      },
+      "allOf": [
+        {"if": {"properties": {"status": {"const": "completed"}}}, "then": {"required": ["result"], "not": {"required": ["failureCode"]}}},
+        {"if": {"properties": {"status": {"const": "failed"}}}, "then": {"required": ["failureCode"], "not": {"required": ["result"]}}},
+        {"if": {"properties": {"status": {"enum": ["queued", "running"]}}}, "then": {"allOf": [{"not": {"required": ["result"]}}, {"not": {"required": ["failureCode"]}}]}}
+      ]
+    },
+    "driverApprovalRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "researchId", "candidateId", "evidenceDigest"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "researchId": {"type": "string", "pattern": "^research_[A-Za-z0-9_-]{8,64}$"},
+        "candidateId": {"type": "string", "pattern": "^drv_[A-Za-z0-9_-]{8,64}$"},
+        "evidenceDigest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    },
+    "driverApprovalResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "researchId", "candidateId", "status", "approvedAt", "retrievalMode"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "researchId": {"type": "string", "pattern": "^research_[A-Za-z0-9_-]{8,64}$"},
+        "candidateId": {"type": "string", "pattern": "^drv_[A-Za-z0-9_-]{8,64}$"},
+        "status": {"type": "string", "enum": ["pending_upload", "retrieving", "verified"]},
+        "approvedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
+        "artifactFingerprint": {"$ref": "common.schema.json#/$defs/digest"},
+        "retrievalMode": {"type": "string", "enum": ["artifact_registry_remote", "manual_vendor_upload"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"status": {"const": "verified"}}}, "then": {"required": ["artifactFingerprint"]}}
+      ]
+    }
+  }
+}
