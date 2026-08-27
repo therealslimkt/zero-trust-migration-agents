@@ -37,7 +37,7 @@ describe('ProtectedRoute', () => {
       <AuthProvider adapter={adapter}>
         <MemoryRouter initialEntries={['/runs/run-7?pane=evidence#digest']}>
           <Routes>
-            <Route path="/sign-in" element={<SignInProbe />} />
+            <Route path="/login" element={<SignInProbe />} />
             <Route
               path="/runs/:runId"
               element={<ProtectedRoute initializingFallback={<p>Loading auth</p>}><p>Protected run</p></ProtectedRoute>}
@@ -80,7 +80,7 @@ describe('ProtectedRoute', () => {
     const adapter = new FakeAuthAdapter()
     render(
       <AuthProvider adapter={adapter}>
-        <MemoryRouter initialEntries={['/sign-in']}>
+        <MemoryRouter initialEntries={['/login']}>
           <ProtectedRoute anonymousFallback={<p>Sign-in unavailable</p>}>
             <p>Protected content</p>
           </ProtectedRoute>

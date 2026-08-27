@@ -19,7 +19,7 @@ function locationPath(location: Pick<Location, 'pathname' | 'search' | 'hash'>):
 
 export function ProtectedRoute({
   children,
-  signInPath = '/sign-in',
+  signInPath = '/login',
   initializingFallback = null,
   anonymousFallback = null,
   unconfiguredFallback = null,
