@@ -278,6 +278,51 @@ async function testProxyModeOmitsBrowserCredential(): Promise<void> {
   equal(authorization, null, "same-origin proxy mode must omit browser Authorization");
 }
 
+async function testNativeFetchUsesGlobalReceiver(): Promise<void> {
+  const originalFetch = globalThis.fetch;
+  const run = approvalRun();
+  let usedGlobalReceiver = false;
+  globalThis.fetch = async function (this: unknown): Promise<Response> {
+    usedGlobalReceiver = this === globalThis;
+    return new Response(JSON.stringify(run), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } as typeof fetch;
+  try {
+    const client = new MissionControlClient({ baseUrl: "" });
+    await client.getMigration(run.runId);
+    assert(usedGlobalReceiver, "native fetch receiver must be globalThis");
+    client.close();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+async function testMigrationReadRetriesTransportFailure(): Promise<void> {
+  const run = approvalRun();
+  let requestCount = 0;
+  const retryCodes: string[] = [];
+  const fakeFetch = (async (): Promise<Response> => {
+    requestCount += 1;
+    if (requestCount === 1) throw new Error("simulated startup race");
+    return new Response(JSON.stringify(run), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+  const client = new MissionControlClient({ baseUrl: "", fetchImpl: fakeFetch });
+  const loaded = await client.getMigrationWithRetry(run.runId, {
+    retryMs: 1,
+    onRetry: (error) => retryCodes.push(error.code),
+  });
+
+  equal(loaded?.runId, run.runId, "retried run id");
+  equal(requestCount, 2, "transport retry request count");
+  equal(retryCodes.join(","), "network_error", "transport retry code");
+  client.close();
+}
+
 async function testTransportFailureStaysStaleUntilRecovery(): Promise<void> {
   const runId = "mig_PORTFOLIO0001";
   const firstEvent = evidenceEvents(runId)[0]!;
@@ -317,4 +362,6 @@ await testAuthenticatedResumption();
 await testErrorsDoNotLeakToken();
 await testFrozenRestMethods();
 await testProxyModeOmitsBrowserCredential();
+await testNativeFetchUsesGlobalReceiver();
+await testMigrationReadRetriesTransportFailure();
 await testTransportFailureStaysStaleUntilRecovery();

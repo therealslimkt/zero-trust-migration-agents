@@ -95,6 +95,12 @@ export interface StreamEventsOptions {
   onConnectionStateChange?: (state: ConnectionState) => void;
 }
 
+export interface MigrationRetryOptions {
+  signal?: AbortSignal;
+  retryMs?: number;
+  onRetry?: (error: MissionControlClientError) => void;
+}
+
 export type MissionControlClientErrorCode =
   | "invalid_configuration"
   | "client_closed"
@@ -272,7 +278,11 @@ export class MissionControlClient {
     }
     this.baseUrl = normalizeBaseUrl(options.baseUrl);
     this.token = options.token;
-    this.fetchImpl = options.fetchImpl ?? fetch;
+    // Some embedded browser runtimes require the native fetch receiver to be
+    // the global object. Storing an unbound native function and later calling
+    // it as `this.fetchImpl(...)` can otherwise fail before a request reaches
+    // the network. Injected test fetches are already caller-owned functions.
+    this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
   }
 
   async createMigration(request: CreateMigrationRequest): Promise<MigrationRun> {
@@ -306,6 +316,30 @@ export class MissionControlClient {
 
   async get(runId: string): Promise<MigrationRun> {
     return this.getMigration(runId);
+  }
+
+  /**
+   * Retry only transport/server failures while preserving closed validation
+   * for authentication, missing runs, conflicts, and malformed responses.
+   * Aborting returns null so a React effect can unmount without surfacing a
+   * false terminal error.
+   */
+  async getMigrationWithRetry(
+    runId: string,
+    options: MigrationRetryOptions = {},
+  ): Promise<MigrationRun | null> {
+    const signal = options.signal ?? new AbortController().signal;
+    const retryMs = options.retryMs ?? DEFAULT_RETRY_MS;
+    while (!signal.aborted) {
+      try {
+        return await this.getMigration(runId);
+      } catch (error) {
+        if (!(error instanceof MissionControlClientError) || !error.retryable) throw error;
+        options.onRetry?.(error);
+        if (!(await waitForRetry(retryMs, signal))) return null;
+      }
+    }
+    return null;
   }
 
   async approveMigration(runId: string, request: ApprovalRequest): Promise<ApprovalResponse> {

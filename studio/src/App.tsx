@@ -91,6 +91,7 @@ export default function App() {
     clientRef.current = client;
     const abort = new AbortController();
     let active = true;
+    let hasLoadedSnapshot = false;
     let connectionState: MissionControlSnapshot['connectionState'] = 'connecting';
 
     const setConnectionState = (next: MissionControlSnapshot['connectionState']) => {
@@ -101,8 +102,24 @@ export default function App() {
 
     void (async () => {
       try {
-        const initialRun = await client.getMigration(config.runId);
-        if (!active) return;
+        const onRetry = (error: MissionControlClientError) => {
+          if (!active) return;
+          if (hasLoadedSnapshot) {
+            // A refresh failure after the first trusted snapshot must degrade
+            // that snapshot in place. It must never turn a populated run back
+            // into the empty initial/error presentation.
+            setConnectionState('stale');
+            setClientError(null);
+            return;
+          }
+          setClientError(error.message);
+        };
+        const initialRun = await client.getMigrationWithRetry(config.runId, {
+          signal: abort.signal,
+          onRetry,
+        });
+        if (!active || initialRun === null) return;
+        hasLoadedSnapshot = true;
         setClientError(null);
         setSnapshot({ run: initialRun, events: [], connectionState });
 
@@ -118,8 +135,13 @@ export default function App() {
 
           // Events intentionally contain no counters. Refresh the closed run
           // document after each persisted event so lane counts remain factual.
-          const refreshedRun = await client.getMigration(config.runId);
-          if (!active) return;
+          const refreshedRun = await client.getMigrationWithRetry(config.runId, {
+            signal: abort.signal,
+            onRetry,
+          });
+          if (!active || refreshedRun === null) return;
+          hasLoadedSnapshot = true;
+          setClientError(null);
           setSnapshot((current) =>
             current ? { ...current, run: refreshedRun } : { run: refreshedRun, events: [event], connectionState },
           );
@@ -157,13 +179,13 @@ export default function App() {
   // Approval eligibility is the domain layer's decision. A throwing predicate
   // fails closed rather than opening the gate.
   const approvalAllowed = useMemo(() => {
-    if (!domainView) return false;
+    if (!domainView || clientError) return false;
     try {
       return Boolean(canApprove(domainView));
     } catch {
       return false;
     }
-  }, [domainView]);
+  }, [clientError, domainView]);
 
   const lanes = useMemo(() => selectLanes(view), [view]);
   const events = useMemo(() => snapshot?.events ?? [], [snapshot?.events]);
@@ -185,10 +207,12 @@ export default function App() {
   const loading = configured && !snapshot && !clientError;
   const fallbackConnection: ConnectionStatus = !configured
     ? 'unconfigured'
-    : clientError
-      ? 'failed'
-      : snapshot
-        ? 'live'
+    : snapshot
+      ? clientError
+        ? 'stale'
+        : 'live'
+      : clientError
+        ? 'failed'
         : 'connecting';
   const connection = selectConnectionStatus(view, fallbackConnection);
   const streamDegraded = connection === 'stale' || connection === 'disconnected' || connection === 'failed';
@@ -315,7 +339,7 @@ export default function App() {
         </div>
       ) : null}
 
-      {clientError ? (
+      {clientError && !snapshot ? (
         <div className="mc-notice mc-notice--critical" role="alert">
           <h2 className="mc-notice__title">Control-plane connection failed</h2>
           <p>{clientError}</p>
@@ -339,7 +363,7 @@ export default function App() {
         </div>
       ) : null}
 
-      {streamDegraded && !clientError ? (
+      {streamDegraded && snapshot ? (
         <div className="mc-notice mc-notice--attention" role="status">
           <h2 className="mc-notice__title">{CONNECTION_LABEL[connection]}</h2>
           <p>
