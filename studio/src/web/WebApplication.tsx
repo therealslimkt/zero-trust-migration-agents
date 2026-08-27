@@ -22,6 +22,7 @@ const CloudSettingsRoute = lazy(() => import('./pages/protected/ProtectedRoutes'
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } });
 const publicClient = new RecordedDemoClient();
+const localDemoAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_LOCAL_DEMO === "true";
 
 interface AppearanceValue {
   readonly theme: ThemeMode;
@@ -88,8 +89,9 @@ function usePublicPageProps() {
 
 function HomeRoute() {
   const legacyRunId = new URLSearchParams(useLocation().search).get("runId")?.trim();
-  const { shared } = usePublicPageProps();
+  const { auth, shared } = usePublicPageProps();
   if (legacyRunId) return <Navigate to={`/runs/${encodeURIComponent(legacyRunId)}`} replace />;
+  if (localDemoAuthEnabled && auth.status === "authenticated") return <Navigate to="/dashboard" replace />;
   return <LandingPage {...shared} />;
 }
 
@@ -111,7 +113,7 @@ function LoginRoute() {
   useEffect(() => {
     if (auth.status === "authenticated") navigate(returnRoute, { replace: true });
   }, [auth.status, navigate, returnRoute]);
-  return <LoginPage onNavigate={(route) => navigate(route)} theme={appearance.theme} onThemeChange={appearance.setTheme} authStatus={auth.status} authMode={import.meta.env.DEV && import.meta.env.VITE_LOCAL_DEMO === "true" ? "local_demo" : "firebase"} userName={auth.user?.displayName} userEmail={auth.user?.email} userPhoto={auth.user?.photoURL} onSignIn={auth.status === "anonymous" ? () => void auth.signInWithGoogle().then(() => navigate(returnRoute, { replace: true })).catch(() => undefined) : undefined} onSignOut={auth.status === "authenticated" ? () => void auth.signOut().catch(() => undefined) : undefined} errorMessage={auth.error?.message} returnRoute={returnRoute} dashboardRoute="/dashboard" demo={demo} />;
+  return <LoginPage onNavigate={(route) => navigate(route)} theme={appearance.theme} onThemeChange={appearance.setTheme} authStatus={auth.status} authMode={localDemoAuthEnabled ? "local_demo" : "firebase"} userName={auth.user?.displayName} userEmail={auth.user?.email} userPhoto={auth.user?.photoURL} onSignIn={auth.status === "anonymous" ? () => void auth.signInWithGoogle().then(() => navigate(returnRoute, { replace: true })).catch(() => undefined) : undefined} onSignOut={auth.status === "authenticated" ? () => void auth.signOut().catch(() => undefined) : undefined} errorMessage={auth.error?.message} returnRoute={returnRoute} dashboardRoute="/dashboard" demo={demo} />;
 }
 
 function AuthenticatedSiteLayout({ children }: { readonly children: ReactNode }) {

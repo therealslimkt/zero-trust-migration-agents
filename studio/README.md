@@ -15,6 +15,19 @@ does not fabricate progress or publish them as public replays. The local demo
 credential is intentionally non-secret and is accepted only while the Go
 server is explicitly bound to loopback in this development profile.
 
+## Firebase account setup
+
+The production login uses Google Identity Platform through Firebase Auth. Set
+the four `VITE_FIREBASE_*` public application values listed in `.env.example`
+for the browser, and set the matching `MISSION_CONTROL_FIREBASE_PROJECT_ID` for
+server-side ID-token verification. Google sign-in creates the Firebase user on
+first successful authentication.
+
+Do not add Firebase Admin credentials, service-account JSON, refresh tokens, or
+cloud access keys to a `VITE_*` setting. Public recorded replays do not require
+authentication. The production owner/admin designation and the future
+self-service BYO-cloud switch remain deployment-controlled release gates.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:
