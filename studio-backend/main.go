@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	firebase "firebase.google.com/go/v4"
 	"github.com/gorilla/websocket"
 )
 
@@ -91,6 +93,7 @@ var (
 )
 
 var errControlPlaneConfiguration = errors.New("control plane configuration is incomplete")
+var errWebBFFConfiguration = errors.New("web bff configuration is incomplete")
 
 func configuredControlPlane() (http.Handler, error) {
 	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_STATE_PATH"))
@@ -105,10 +108,14 @@ func configuredControlPlane() (http.Handler, error) {
 }
 
 func newServerMux(controlPlane http.Handler) *http.ServeMux {
-	return newServerMuxWithOrchestrator(controlPlane, nil)
+	return newServerMuxWithWeb(controlPlane, nil, nil)
 }
 
 func newServerMuxWithOrchestrator(controlPlane, orchestrator http.Handler) *http.ServeMux {
+	return newServerMuxWithWeb(controlPlane, orchestrator, nil)
+}
+
+func newServerMuxWithWeb(controlPlane, orchestrator, webBFF http.Handler) *http.ServeMux {
 	mux := http.NewServeMux()
 	if controlPlane != nil {
 		mux.Handle("/api/v1/", controlPlane)
@@ -116,7 +123,47 @@ func newServerMuxWithOrchestrator(controlPlane, orchestrator http.Handler) *http
 	if orchestrator != nil {
 		mux.Handle("/internal/v1/", orchestrator)
 	}
+	if webBFF != nil {
+		mux.Handle("/api/web/v1/", webBFF)
+	}
 	return mux
+}
+
+func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
+	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_WEB_STATE_PATH"))
+	projectID := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIREBASE_PROJECT_ID"))
+	if statePath == "" && projectID == "" {
+		return nil, nil
+	}
+	if statePath == "" || projectID == "" {
+		return nil, errWebBFFConfiguration
+	}
+	cpHandler, ok := controlPlane.(*ControlPlaneHandler)
+	if !ok || cpHandler == nil {
+		return nil, errWebBFFConfiguration
+	}
+	ctx := context.Background()
+	app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: projectID})
+	if err != nil {
+		return nil, errWebBFFConfiguration
+	}
+	authClient, err := app.Auth(ctx)
+	if err != nil {
+		return nil, errWebBFFConfiguration
+	}
+	verifier, err := NewFirebaseWebIdentityVerifier(authClient)
+	if err != nil {
+		return nil, errWebBFFConfiguration
+	}
+	store, err := OpenWebStateStore(statePath)
+	if err != nil {
+		return nil, errWebBFFConfiguration
+	}
+	runs, err := NewWebControlPlaneRunBackend(cpHandler)
+	if err != nil {
+		return nil, errWebBFFConfiguration
+	}
+	return NewWebBFFHandler(WebBFFConfig{Verifier: verifier, Runs: runs, Store: store})
 }
 
 func main() {
@@ -128,7 +175,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Mission Control orchestrator bridge configuration is invalid")
 	}
-	mux := newServerMuxWithOrchestrator(controlPlane, orchestrator)
+	webBFF, err := configuredWebBFF(controlPlane)
+	if err != nil {
+		log.Fatal("Mission Control web BFF configuration is invalid")
+	}
+	mux := newServerMuxWithWeb(controlPlane, orchestrator, webBFF)
 
 	log.Println("Mission Control Backend started on :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {

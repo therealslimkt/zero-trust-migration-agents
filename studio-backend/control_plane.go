@@ -1170,6 +1170,14 @@ func cpValidateSourceSet(in []cpSourceDescriptor) error {
 
 // CreateRun validates and durably records a new three-source portfolio.
 func (s *cpStore) CreateRun(req *cpCreateRequest) (*ControlPlaneRun, error) {
+	return s.createRunWithPrecommit(req, nil)
+}
+
+// createRunWithPrecommit permits trusted in-process adapters to durably bind
+// metadata before the control-plane run becomes visible. A callback failure
+// leaves no run; a later control-plane commit failure can leave only a safe
+// dangling external binding, never an executable unowned run.
+func (s *cpStore) createRunWithPrecommit(req *cpCreateRequest, beforeCommit func(*ControlPlaneRun) error) (*ControlPlaneRun, error) {
 	if req.SchemaVersion != cpSchemaVersion {
 		return nil, cpErrInvalidRequest
 	}
@@ -1221,6 +1229,11 @@ func (s *cpStore) CreateRun(req *cpCreateRequest) (*ControlPlaneRun, error) {
 	if err := s.appendEvent(next, run, "", "migration.created", stamp,
 		"Portfolio created for the three legacy sources.", nil); err != nil {
 		return nil, err
+	}
+	if beforeCommit != nil {
+		if err := beforeCommit(run.clone()); err != nil {
+			return nil, err
+		}
 	}
 	if err := s.commit(next); err != nil {
 		return nil, err
