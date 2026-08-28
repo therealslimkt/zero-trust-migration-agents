@@ -3,6 +3,7 @@ module mission-control
 go 1.26.5
 
 require (
+	cloud.google.com/go/storage v1.62.1
 	github.com/gorilla/websocket v1.5.3
 	google.golang.org/api v0.279.0
 	google.golang.org/genai v1.70.0
@@ -18,7 +19,6 @@ require (
 	cloud.google.com/go/iam v1.11.0 // indirect
 	cloud.google.com/go/longrunning v1.0.0 // indirect
 	cloud.google.com/go/monitoring v1.29.0 // indirect
-	cloud.google.com/go/storage v1.62.1 // indirect
 	firebase.google.com/go/v4 v4.21.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.56.0 // indirect

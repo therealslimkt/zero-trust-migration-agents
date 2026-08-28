@@ -68,6 +68,16 @@ var (
 		Title:  "Identity incomplete",
 		Detail: "The verified identity does not carry the profile claims this API requires.",
 	}
+	webErrAccessDenied = &cpFault{
+		Status: http.StatusForbidden, Slug: "access-denied",
+		Title:  "Access denied",
+		Detail: "This verified account is not invited to this deployment.",
+	}
+	webErrViewerReadOnly = &cpFault{
+		Status: http.StatusForbidden, Slug: "viewer-read-only",
+		Title:  "Viewer access is read-only",
+		Detail: "This invited account may review published demos but cannot change migration state.",
+	}
 	webErrCloudSetupNotVerified = &cpFault{
 		Status: http.StatusConflict, Slug: "cloud-setup-not-verified",
 		Title:  "Cloud setup not verified",
@@ -231,9 +241,10 @@ type WebLiveSourceDetailReader interface {
 // operations report honest incomplete/unavailable states instead of
 // fabricating success.
 type WebBFFConfig struct {
-	Verifier WebIdentityVerifier
-	Runs     WebRunBackend
-	Store    *WebStateStore
+	Verifier     WebIdentityVerifier
+	Runs         WebRunBackend
+	Store        *WebStateStore
+	AccessPolicy *WebAccessPolicy
 
 	// Artifacts resolves trusted evidence bodies for demo publication.
 	Artifacts WebPublicationArtifactReader
@@ -268,6 +279,7 @@ type WebBFFConfig struct {
 
 type webBFFHandler struct {
 	verifier                WebIdentityVerifier
+	accessPolicy            *WebAccessPolicy
 	runs                    WebRunBackend
 	store                   *WebStateStore
 	artifacts               WebPublicationArtifactReader
@@ -322,6 +334,7 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 	terminalProducerAuth := sha256.Sum256([]byte("Bearer " + cfg.TerminalProducerToken))
 	h := &webBFFHandler{
 		verifier:                cfg.Verifier,
+		accessPolicy:            cfg.AccessPolicy,
 		runs:                    cfg.Runs,
 		store:                   cfg.Store,
 		artifacts:               cfg.Artifacts,
@@ -465,6 +478,22 @@ func (h *webBFFHandler) authenticate(w http.ResponseWriter, r *http.Request) (We
 	}
 	if !webValidSubject(identity.Subject) {
 		webWriteProblem(w, webErrIdentityIncomplete)
+		return WebVerifiedIdentity{}, false
+	}
+	if h.accessPolicy != nil {
+		role, allowed := h.accessPolicy.Authorize(identity)
+		if !allowed {
+			webWriteProblem(w, webErrAccessDenied)
+			return WebVerifiedIdentity{}, false
+		}
+		identity.Role = role
+	} else if identity.Role == "" {
+		// Tests and the loopback development profile retain full local authority;
+		// production wiring always supplies an explicit access policy.
+		identity.Role = WebAccessRoleAdmin
+	}
+	if r.Method != http.MethodGet && r.Method != http.MethodHead && identity.Role != WebAccessRoleAdmin {
+		webWriteProblem(w, webErrViewerReadOnly)
 		return WebVerifiedIdentity{}, false
 	}
 	return identity, true

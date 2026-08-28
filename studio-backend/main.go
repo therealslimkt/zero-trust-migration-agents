@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -99,14 +100,41 @@ func localDemoEnabled() bool {
 	return strings.EqualFold(strings.TrimSpace(os.Getenv("MISSION_CONTROL_LOCAL_DEMO")), "true")
 }
 
+func configuredListenAddress() (string, error) {
+	if localDemoEnabled() {
+		return "127.0.0.1:8080", nil
+	}
+	port := strings.TrimSpace(os.Getenv("PORT"))
+	if port == "" {
+		port = "8080"
+	}
+	parsed, err := strconv.Atoi(port)
+	if err != nil || parsed < 1 || parsed > 65535 || strconv.Itoa(parsed) != port {
+		return "", errors.New("server port configuration is invalid")
+	}
+	return ":" + port, nil
+}
+
 func configuredControlPlane() (http.Handler, error) {
 	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_STATE_PATH"))
+	hostedBucket := strings.TrimSpace(os.Getenv("MISSION_CONTROL_GCS_STATE_BUCKET"))
+	hostedPrefix := strings.TrimSpace(os.Getenv("MISSION_CONTROL_GCS_STATE_PREFIX"))
 	bearerToken := os.Getenv("MISSION_CONTROL_API_TOKEN")
-	if statePath == "" && bearerToken == "" {
+	if statePath == "" && hostedBucket == "" && bearerToken == "" {
 		return nil, nil
 	}
-	if statePath == "" || bearerToken == "" {
+	if bearerToken == "" || (statePath == "") == (hostedBucket == "") {
 		return nil, errControlPlaneConfiguration
+	}
+	if hostedBucket != "" {
+		if hostedPrefix == "" {
+			hostedPrefix = "hosted-draft"
+		}
+		remote, err := newGCSObjectStore(context.Background(), hostedBucket, hostedPrefix)
+		if err != nil {
+			return nil, errControlPlaneConfiguration
+		}
+		return NewHostedControlPlaneHandler(context.Background(), remote, "control-plane.json", bearerToken)
 	}
 	return NewControlPlaneHandler(statePath, bearerToken)
 }
@@ -151,12 +179,14 @@ func configuredStudioSite() (http.Handler, error) {
 
 func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_WEB_STATE_PATH"))
+	hostedBucket := strings.TrimSpace(os.Getenv("MISSION_CONTROL_GCS_STATE_BUCKET"))
+	hostedPrefix := strings.TrimSpace(os.Getenv("MISSION_CONTROL_GCS_STATE_PREFIX"))
 	projectID := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIREBASE_PROJECT_ID"))
 	localDemo := localDemoEnabled()
-	if statePath == "" && projectID == "" && !localDemo {
+	if statePath == "" && hostedBucket == "" && projectID == "" && !localDemo {
 		return nil, nil
 	}
-	if statePath == "" || (!localDemo && projectID == "") {
+	if (!localDemo && projectID == "") || (statePath == "") == (hostedBucket == "") || (localDemo && hostedBucket != "") {
 		return nil, errWebBFFConfiguration
 	}
 	cpHandler, ok := controlPlane.(*ControlPlaneHandler)
@@ -164,11 +194,17 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 		return nil, errWebBFFConfiguration
 	}
 	ctx := context.Background()
+	var err error
 	var verifier WebIdentityVerifier
+	var accessPolicy *WebAccessPolicy
 	if localDemo {
 		verifier = localDemoWebIdentityVerifier{}
 	} else {
 		app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: projectID})
+		if err != nil {
+			return nil, errWebBFFConfiguration
+		}
+		accessPolicy, err = NewWebAccessPolicy(os.Getenv("MISSION_CONTROL_ALLOWED_EMAILS"), os.Getenv("MISSION_CONTROL_ADMIN_EMAILS"))
 		if err != nil {
 			return nil, errWebBFFConfiguration
 		}
@@ -181,7 +217,19 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 			return nil, errWebBFFConfiguration
 		}
 	}
-	store, err := OpenWebStateStore(statePath)
+	var store *WebStateStore
+	if hostedBucket != "" {
+		if hostedPrefix == "" {
+			hostedPrefix = "hosted-draft"
+		}
+		remote, remoteErr := newGCSObjectStore(ctx, hostedBucket, hostedPrefix)
+		if remoteErr != nil {
+			return nil, errWebBFFConfiguration
+		}
+		store, err = OpenHostedWebStateStore(ctx, remote, "web-state.json")
+	} else {
+		store, err = OpenWebStateStore(statePath)
+	}
 	if err != nil {
 		return nil, errWebBFFConfiguration
 	}
@@ -262,7 +310,7 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 		return nil, errWebBFFConfiguration
 	}
 	return NewWebBFFHandler(WebBFFConfig{
-		Verifier: verifier, Runs: runs, Store: store,
+		Verifier: verifier, Runs: runs, Store: store, AccessPolicy: accessPolicy,
 		Artifacts: artifactStore, LiveDetails: artifactStore,
 		CloudProber: cloudProber, CloudVerifierPrincipal: cloudVerifierPrincipal,
 		DriverResearcher: driverResearcher, DriverRegistry: driverRegistry,
@@ -290,9 +338,9 @@ func main() {
 	}
 	mux := newServerMuxWithSite(controlPlane, orchestrator, webBFF, studioSite)
 
-	listenAddress := ":8080"
-	if localDemoEnabled() {
-		listenAddress = "127.0.0.1:8080"
+	listenAddress, err := configuredListenAddress()
+	if err != nil {
+		log.Fatal("Mission Control listen configuration is invalid")
 	}
 	log.Printf("Mission Control Backend started on %s", listenAddress)
 	if err := http.ListenAndServe(listenAddress, mux); err != nil {

@@ -36,10 +36,12 @@ const localDemoWebToken = "ztm-loopback-demo-v1"
 // verified ID token. Subject is the stable Identity Platform UID; the other
 // fields are optional profile claims.
 type WebVerifiedIdentity struct {
-	Subject     string
-	DisplayName string
-	Email       string
-	PictureURL  string
+	Subject       string
+	DisplayName   string
+	Email         string
+	EmailVerified bool
+	PictureURL    string
+	Role          WebAccessRole
 }
 
 // WebIdentityVerifier verifies one encoded ID token and returns the verified
@@ -56,7 +58,7 @@ func (localDemoWebIdentityVerifier) VerifyWebIdentity(_ context.Context, idToken
 		return WebVerifiedIdentity{}, errWebTokenRejected
 	}
 	return WebVerifiedIdentity{
-		Subject: "local-demo-operator", DisplayName: "Local Demo Operator", Email: "operator@local.demo",
+		Subject: "local-demo-operator", DisplayName: "Local Demo Operator", Email: "operator@local.demo", EmailVerified: true, Role: WebAccessRoleAdmin,
 	}, nil
 }
 
@@ -91,6 +93,9 @@ func (v *FirebaseWebIdentityVerifier) VerifyWebIdentity(ctx context.Context, idT
 	}
 	if email, ok := token.Claims["email"].(string); ok {
 		identity.Email = email
+	}
+	if verified, ok := token.Claims["email_verified"].(bool); ok {
+		identity.EmailVerified = verified
 	}
 	if picture, ok := token.Claims["picture"].(string); ok {
 		identity.PictureURL = picture

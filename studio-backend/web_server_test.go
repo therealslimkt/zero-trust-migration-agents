@@ -70,6 +70,24 @@ func TestConfiguredWebBFFRequiresCompleteConfiguration(t *testing.T) {
 	}
 }
 
+func TestConfiguredListenAddressHonorsCloudRunPortAndLoopbackDemo(t *testing.T) {
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO", "")
+	t.Setenv("PORT", "9090")
+	address, err := configuredListenAddress()
+	if err != nil || address != ":9090" {
+		t.Fatalf("hosted address = %q, %v", address, err)
+	}
+	t.Setenv("PORT", "not-a-port")
+	if _, err := configuredListenAddress(); err == nil {
+		t.Fatal("invalid port unexpectedly accepted")
+	}
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO", "true")
+	address, err = configuredListenAddress()
+	if err != nil || address != "127.0.0.1:8080" {
+		t.Fatalf("local demo address = %q, %v", address, err)
+	}
+}
+
 func TestConfiguredLocalDemoBindsExplicitDurableRunsToLoopbackIdentity(t *testing.T) {
 	directory := t.TempDir()
 	controlPlane, err := NewControlPlaneHandler(filepath.Join(directory, "control.json"), "api-token")

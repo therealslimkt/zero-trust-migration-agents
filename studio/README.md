@@ -28,6 +28,10 @@ cloud access keys to a `VITE_*` setting. Public recorded replays do not require
 authentication. The production owner/admin designation and the future
 self-service BYO-cloud switch remain deployment-controlled release gates.
 
+For the combined Cloud Run image, durable Cloud Storage state, invitation
+policy, and deployment sequence, see
+[`cloud_architecture/HOSTED_DRAFT.md`](../cloud_architecture/HOSTED_DRAFT.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

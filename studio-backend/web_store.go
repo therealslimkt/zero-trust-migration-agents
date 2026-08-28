@@ -224,6 +224,9 @@ type WebStateStore struct {
 	dir           string
 	bundleDir     string
 	bundleRel     string
+	remote        *gcsObjectStore
+	remoteObject  string
+	generation    int64
 	syncDirectory func(string) error
 	snap          *webSnapshot
 }
@@ -282,6 +285,33 @@ func OpenWebStateStore(statePath string) (*WebStateStore, error) {
 		}
 	default:
 		return nil, errors.New("web store: state could not be read")
+	}
+	if err := s.failInterruptedResearch(); err != nil {
+		return nil, errors.New("web store: interrupted research could not be recovered")
+	}
+	return s, nil
+}
+
+func OpenHostedWebStateStore(ctx context.Context, remote *gcsObjectStore, object string) (*WebStateStore, error) {
+	if remote == nil || strings.TrimSpace(object) == "" {
+		return nil, errors.New("web store: hosted state configuration is required")
+	}
+	initial, err := json.Marshal(webEmptySnapshot())
+	if err != nil {
+		return nil, errors.New("web store: initial hosted state is invalid")
+	}
+	raw, generation, err := remote.loadOrCreate(ctx, object, initial)
+	if err != nil {
+		return nil, errors.New("web store: hosted state could not be loaded")
+	}
+	snap, err := webDecodeSnapshot(raw)
+	if err != nil {
+		return nil, err
+	}
+	bundleRel := filepath.Base(object) + ".bundles"
+	s := &WebStateStore{remote: remote, remoteObject: object, generation: generation, bundleRel: bundleRel, snap: snap}
+	if err := s.validatePublicationBodies(snap); err != nil {
+		return nil, err
 	}
 	if err := s.failInterruptedResearch(); err != nil {
 		return nil, errors.New("web store: interrupted research could not be recovered")
@@ -356,6 +386,16 @@ func (s *WebStateStore) persist(snap *webSnapshot) (bool, error) {
 	data, err := json.Marshal(snap)
 	if err != nil {
 		return false, err
+	}
+	if s.remote != nil {
+		ctx, cancel := gcsOperationContext()
+		defer cancel()
+		generation, err := s.remote.write(ctx, s.remoteObject, data, s.generation, false)
+		if err != nil {
+			return false, err
+		}
+		s.generation = generation
+		return true, nil
 	}
 	tmp, err := os.CreateTemp(s.dir, ".web-state-*.tmp")
 	if err != nil {
@@ -576,6 +616,24 @@ func (s *WebStateStore) publicationAbsolutePath(record *WebPublicationRecord) (s
 }
 
 func (s *WebStateStore) readAndValidatePublication(record *WebPublicationRecord) ([]byte, error) {
+	if s.remote != nil {
+		expected := s.publicationRelativePath(record.ManifestSHA256)
+		if record.ManifestPath != expected || filepath.Clean(record.ManifestPath) != record.ManifestPath {
+			return nil, errWebStoreCorrupt
+		}
+		ctx, cancel := gcsOperationContext()
+		defer cancel()
+		body, _, err := s.remote.read(ctx, filepath.ToSlash(record.ManifestPath), WebMaxPublicationBytes)
+		if err != nil || len(body) == 0 || webBodySHA256(body) != record.ManifestSHA256 {
+			return nil, errWebStoreCorrupt
+		}
+		manifest, err := webDecodeAndValidatePublishedManifest(body)
+		if err != nil || manifest.DemoID != record.DemoID || manifest.BundleDigest != record.BundleDigest ||
+			manifest.Title != record.Title || manifest.SourceRunID != record.SourceRunID || manifest.PublishedAt != record.PublishedAt {
+			return nil, errWebStoreCorrupt
+		}
+		return body, nil
+	}
 	path, ok := s.publicationAbsolutePath(record)
 	if !ok {
 		return nil, errWebStoreCorrupt
@@ -614,6 +672,26 @@ func (s *WebStateStore) validatePublicationBodies(snap *webSnapshot) error {
 // link is used as the create-only visibility boundary, so a crash can leave at
 // most an unindexed, valid orphan; it can never replace a published body.
 func (s *WebStateStore) ensurePublicationBody(record *WebPublicationRecord, body []byte) error {
+	if s.remote != nil {
+		expected := s.publicationRelativePath(record.ManifestSHA256)
+		if record.ManifestPath != expected || filepath.Clean(record.ManifestPath) != record.ManifestPath {
+			return errWebStoreInvalid
+		}
+		ctx, cancel := gcsOperationContext()
+		defer cancel()
+		_, err := s.remote.write(ctx, filepath.ToSlash(record.ManifestPath), body, 0, true)
+		if err == nil {
+			return nil
+		}
+		if !errors.Is(err, errGCSConflict) {
+			return errWebStoreCorrupt
+		}
+		existing, readErr := s.readAndValidatePublication(record)
+		if readErr == nil && bytes.Equal(existing, body) {
+			return nil
+		}
+		return errWebStoreConflict
+	}
 	path, ok := s.publicationAbsolutePath(record)
 	if !ok {
 		return errWebStoreInvalid

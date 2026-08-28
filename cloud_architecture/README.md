@@ -5,6 +5,11 @@ Cloud inventory and the planned migration runtime. It separates things that
 were observed in project `ztm-agent-9049c3` from things the repository is
 designed to create later. It is not deployment evidence for a planned service.
 
+The combined authenticated web deployment is specified in
+[HOSTED_DRAFT.md](HOSTED_DRAFT.md). Its code and runbook are ready, but it
+remains planned until the named Cloud Run, Firebase, and storage resources are
+created and verified.
+
 ## Current inventory at a glance
 
 | Item | Status | Observed or intended detail |

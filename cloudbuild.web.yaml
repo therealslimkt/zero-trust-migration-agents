@@ -1,0 +1,29 @@
+# Builds the combined Studio + Go BFF image. This file does not deploy or
+# change IAM; deployment remains a separately reviewed owner action.
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: sparky-services
+  _IMAGE: mission-control-web
+  _VITE_FIREBASE_API_KEY: FIREBASE_API_KEY_NOT_SET
+  _VITE_FIREBASE_AUTH_DOMAIN: FIREBASE_AUTH_DOMAIN_NOT_SET
+  _VITE_FIREBASE_PROJECT_ID: FIREBASE_PROJECT_ID_NOT_SET
+  _VITE_FIREBASE_APP_ID: FIREBASE_APP_ID_NOT_SET
+
+steps:
+  - id: build-combined-web-service
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --file=Dockerfile.web
+      - --tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${COMMIT_SHA}
+      - --build-arg=VITE_FIREBASE_API_KEY=${_VITE_FIREBASE_API_KEY}
+      - --build-arg=VITE_FIREBASE_AUTH_DOMAIN=${_VITE_FIREBASE_AUTH_DOMAIN}
+      - --build-arg=VITE_FIREBASE_PROJECT_ID=${_VITE_FIREBASE_PROJECT_ID}
+      - --build-arg=VITE_FIREBASE_APP_ID=${_VITE_FIREBASE_APP_ID}
+      - .
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${COMMIT_SHA}
+
+options:
+  logging: CLOUD_LOGGING_ONLY

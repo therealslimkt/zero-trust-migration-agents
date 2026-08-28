@@ -20,6 +20,7 @@ package main
 //     free text never reaches an event, a summary, or a response.
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
@@ -908,11 +909,25 @@ func cpValidateEvents(snap *cpSnapshot, runs map[string]*ControlPlaneRun) error 
 // for its whole duration, so reads never observe a half-applied mutation and
 // concurrent writers serialise behind one durable write each.
 type cpStore struct {
-	mu   sync.Mutex
-	path string
-	dir  string
-	snap *cpSnapshot
-	now  func() time.Time
+	mu           sync.Mutex
+	path         string
+	dir          string
+	remote       *gcsObjectStore
+	remoteObject string
+	generation   int64
+	snap         *cpSnapshot
+	now          func() time.Time
+}
+
+func cpEmptySnapshot() *cpSnapshot {
+	return &cpSnapshot{
+		SnapshotVersion: cpSnapshotVersion,
+		SchemaVersion:   cpSchemaVersion,
+		NextSeq:         1,
+		Runs:            []*ControlPlaneRun{},
+		Approvals:       []*ControlPlaneApproval{},
+		Events:          []*ControlPlaneEvent{},
+	}
 }
 
 func cpOpenStore(statePath string) (*cpStore, error) {
@@ -938,14 +953,7 @@ func cpOpenStore(statePath string) (*cpStore, error) {
 		}
 		s.snap = snap
 	case errors.Is(err, os.ErrNotExist):
-		s.snap = &cpSnapshot{
-			SnapshotVersion: cpSnapshotVersion,
-			SchemaVersion:   cpSchemaVersion,
-			NextSeq:         1,
-			Runs:            []*ControlPlaneRun{},
-			Approvals:       []*ControlPlaneApproval{},
-			Events:          []*ControlPlaneEvent{},
-		}
+		s.snap = cpEmptySnapshot()
 		if _, werr := s.persist(s.snap); werr != nil {
 			return nil, errors.New("control plane: initial state could not be written")
 		}
@@ -953,6 +961,25 @@ func cpOpenStore(statePath string) (*cpStore, error) {
 		return nil, errors.New("control plane: state could not be read")
 	}
 	return s, nil
+}
+
+func cpOpenGCSStore(ctx context.Context, remote *gcsObjectStore, object string) (*cpStore, error) {
+	if remote == nil {
+		return nil, errors.New("control plane: hosted state is required")
+	}
+	initial, err := json.Marshal(cpEmptySnapshot())
+	if err != nil {
+		return nil, errors.New("control plane: initial hosted state is invalid")
+	}
+	raw, generation, err := remote.loadOrCreate(ctx, object, initial)
+	if err != nil {
+		return nil, errors.New("control plane: hosted state could not be loaded")
+	}
+	snap, err := cpDecodeSnapshot(raw)
+	if err != nil {
+		return nil, err
+	}
+	return &cpStore{remote: remote, remoteObject: object, generation: generation, snap: snap, now: func() time.Time { return time.Now().UTC() }}, nil
 }
 
 // cpDecodeSnapshot parses a snapshot strictly: unknown fields, trailing data
@@ -989,6 +1016,16 @@ func (s *cpStore) persist(snap *cpSnapshot) (bool, error) {
 	data, err := json.Marshal(snap)
 	if err != nil {
 		return false, err
+	}
+	if s.remote != nil {
+		ctx, cancel := gcsOperationContext()
+		defer cancel()
+		generation, err := s.remote.write(ctx, s.remoteObject, data, s.generation, false)
+		if err != nil {
+			return false, err
+		}
+		s.generation = generation
+		return true, nil
 	}
 	tmp, err := os.CreateTemp(s.dir, ".control-plane-*.tmp")
 	if err != nil {
@@ -1828,6 +1865,22 @@ type ControlPlaneHandler struct {
 // handler backed by the snapshot at statePath. An empty bearer token, or one
 // that cannot appear verbatim in a header, is a configuration error.
 func NewControlPlaneHandler(statePath, bearerToken string) (http.Handler, error) {
+	store, err := cpOpenStore(statePath)
+	if err != nil {
+		return nil, err
+	}
+	return newControlPlaneHandler(store, bearerToken)
+}
+
+func NewHostedControlPlaneHandler(ctx context.Context, remote *gcsObjectStore, object, bearerToken string) (http.Handler, error) {
+	store, err := cpOpenGCSStore(ctx, remote, object)
+	if err != nil {
+		return nil, err
+	}
+	return newControlPlaneHandler(store, bearerToken)
+}
+
+func newControlPlaneHandler(store *cpStore, bearerToken string) (http.Handler, error) {
 	if bearerToken == "" {
 		return nil, errors.New("control plane: a bearer token is required")
 	}
@@ -1835,10 +1888,6 @@ func NewControlPlaneHandler(statePath, bearerToken string) (http.Handler, error)
 		if bearerToken[i] <= 0x20 || bearerToken[i] >= 0x7f {
 			return nil, errors.New("control plane: the bearer token must be printable ASCII without spaces")
 		}
-	}
-	store, err := cpOpenStore(statePath)
-	if err != nil {
-		return nil, err
 	}
 	h := &ControlPlaneHandler{
 		store:        store,

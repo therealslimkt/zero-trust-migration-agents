@@ -1,0 +1,35 @@
+# syntax=docker/dockerfile:1.7
+
+FROM node:22-alpine AS studio-build
+WORKDIR /src/studio
+COPY studio/package.json studio/package-lock.json ./
+RUN npm ci
+COPY studio/ ./
+
+# Firebase web configuration identifies the public Firebase application. These
+# values are not server credentials and are intentionally compiled by Vite.
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_FIREBASE_APP_ID
+ENV VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY} \
+    VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN} \
+    VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID} \
+    VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
+RUN npm run build
+
+FROM golang:1.26-bookworm AS backend-build
+WORKDIR /src/studio-backend
+COPY studio-backend/go.mod studio-backend/go.sum ./
+RUN go mod download
+COPY studio-backend/ ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/mission-control .
+
+FROM gcr.io/distroless/static-debian12:nonroot
+WORKDIR /app
+COPY --from=backend-build /out/mission-control /app/mission-control
+COPY --from=studio-build /src/studio/dist /app/studio
+ENV MISSION_CONTROL_STUDIO_DIR=/app/studio
+EXPOSE 8080
+USER nonroot:nonroot
+ENTRYPOINT ["/app/mission-control"]
