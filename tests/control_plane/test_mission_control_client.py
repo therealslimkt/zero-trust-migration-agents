@@ -104,6 +104,67 @@ def test_client_uses_separate_tokens_and_closed_loopback_paths():
     )
 
 
+def test_terminal_frame_uses_closed_internal_admission_route():
+    opener = _Opener([_Response({"frameId": "frm_1234567890abcd"}, 201)])
+    client = MissionControlLocalClient(
+        "http://127.0.0.1:8080",
+        orchestration_token="orchestrator-token",
+        opener=opener,
+    )
+
+    frame_id = client.emit_terminal_frame(
+        run_id=RUN_ID,
+        source_id="jde",
+        timestamp="2026-08-27T22:00:00Z",
+        lane="source",
+        stream="stdout",
+        producer="legacy-jde-db",
+        tool="tailscale ssh",
+        line="read 4096 bytes",
+    )
+
+    assert frame_id == "frm_1234567890abcd"
+    request = opener.requests[0]
+    assert request.full_url == "http://127.0.0.1:8080/internal/v1/terminal"
+    assert request.get_header("Authorization") == "Bearer orchestrator-token"
+    assert json.loads(request.data) == {
+        "evidenceReferences": [],
+        "lane": "source",
+        "line": "read 4096 bytes",
+        "producer": "legacy-jde-db",
+        "runId": RUN_ID,
+        "schemaVersion": "1.0.0",
+        "severity": "info",
+        "sourceId": "jde",
+        "stream": "stdout",
+        "timestamp": "2026-08-27T22:00:00Z",
+        "tool": "tailscale ssh",
+    }
+
+
+@pytest.mark.parametrize("line", ["", "two\nlines", "x" * 4097])
+def test_terminal_frame_rejects_malformed_line_before_http(line):
+    opener = _Opener([_Response({"frameId": "frm_1234567890abcd"}, 201)])
+    client = MissionControlLocalClient(
+        "http://127.0.0.1:8080",
+        orchestration_token="orchestrator-token",
+        opener=opener,
+    )
+
+    with pytest.raises(MissionControlSyncError, match="^mission_control_request$"):
+        client.emit_terminal_frame(
+            run_id=RUN_ID,
+            source_id="jde",
+            timestamp="2026-08-27T22:00:00Z",
+            lane="source",
+            stream="stdout",
+            producer="legacy-jde-db",
+            tool="tailscale ssh",
+            line=line,
+        )
+    assert opener.requests == []
+
+
 @pytest.mark.parametrize(
     "url",
     [

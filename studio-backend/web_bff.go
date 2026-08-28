@@ -23,6 +23,7 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"io"
@@ -246,6 +247,9 @@ type WebBFFConfig struct {
 	CloudVerifierPrincipal string
 	DriverResearcher       WebDriverResearcher
 	DriverRegistry         WebDriverArtifactRegistry
+	// TerminalProducerToken is the separate local orchestrator credential for
+	// the non-browser /internal/v1/terminal admission route.
+	TerminalProducerToken string
 
 	// SyntheticDemoRunIDs is a deployment-owned allowlist of completed control-
 	// plane runs that may be considered for public demo publication. Browser
@@ -263,21 +267,23 @@ type WebBFFConfig struct {
 }
 
 type webBFFHandler struct {
-	verifier               WebIdentityVerifier
-	runs                   WebRunBackend
-	store                  *WebStateStore
-	artifacts              WebPublicationArtifactReader
-	liveDetails            WebLiveSourceDetailReader
-	cloudProber            WebCloudCapabilityProber
-	cloudVerifierPrincipal string
-	researcher             WebDriverResearcher
-	driverRegistry         WebDriverArtifactRegistry
-	syntheticRuns          map[string]struct{}
-	allowedOrigins         []string
-	now                    func() time.Time
-	runAsync               func(func()) bool
-	setupTTL               time.Duration
-	mux                    *http.ServeMux
+	verifier                WebIdentityVerifier
+	runs                    WebRunBackend
+	store                   *WebStateStore
+	artifacts               WebPublicationArtifactReader
+	liveDetails             WebLiveSourceDetailReader
+	cloudProber             WebCloudCapabilityProber
+	cloudVerifierPrincipal  string
+	researcher              WebDriverResearcher
+	driverRegistry          WebDriverArtifactRegistry
+	terminalProducerAuth    [sha256.Size]byte
+	terminalProducerEnabled bool
+	syntheticRuns           map[string]struct{}
+	allowedOrigins          []string
+	now                     func() time.Time
+	runAsync                func(func()) bool
+	setupTTL                time.Duration
+	mux                     *http.ServeMux
 }
 
 // NewWebBFFHandler builds the complete /api/web/v1 handler. The returned
@@ -309,22 +315,29 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 			return nil, errors.New("web bff: cloud verifier principal is required and must match the prober")
 		}
 	}
+	terminalProducerEnabled := cfg.TerminalProducerToken != ""
+	if terminalProducerEnabled && !validOrchestratorToken(cfg.TerminalProducerToken) {
+		return nil, errors.New("web bff: terminal producer token is invalid")
+	}
+	terminalProducerAuth := sha256.Sum256([]byte("Bearer " + cfg.TerminalProducerToken))
 	h := &webBFFHandler{
-		verifier:               cfg.Verifier,
-		runs:                   cfg.Runs,
-		store:                  cfg.Store,
-		artifacts:              cfg.Artifacts,
-		liveDetails:            cfg.LiveDetails,
-		cloudProber:            cfg.CloudProber,
-		cloudVerifierPrincipal: cloudVerifierPrincipal,
-		researcher:             cfg.DriverResearcher,
-		driverRegistry:         cfg.DriverRegistry,
-		syntheticRuns:          syntheticRuns,
-		allowedOrigins:         cfg.AllowedOrigins,
-		now:                    cfg.Now,
-		runAsync:               cfg.RunAsync,
-		setupTTL:               cfg.SetupTTL,
-		mux:                    http.NewServeMux(),
+		verifier:                cfg.Verifier,
+		runs:                    cfg.Runs,
+		store:                   cfg.Store,
+		artifacts:               cfg.Artifacts,
+		liveDetails:             cfg.LiveDetails,
+		cloudProber:             cfg.CloudProber,
+		cloudVerifierPrincipal:  cloudVerifierPrincipal,
+		researcher:              cfg.DriverResearcher,
+		driverRegistry:          cfg.DriverRegistry,
+		terminalProducerAuth:    terminalProducerAuth,
+		terminalProducerEnabled: terminalProducerEnabled,
+		syntheticRuns:           syntheticRuns,
+		allowedOrigins:          cfg.AllowedOrigins,
+		now:                     cfg.Now,
+		runAsync:                cfg.RunAsync,
+		setupTTL:                cfg.SetupTTL,
+		mux:                     http.NewServeMux(),
 	}
 	if len(h.allowedOrigins) == 0 {
 		h.allowedOrigins = allowedOrigins()
@@ -356,6 +369,7 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 	h.mux.HandleFunc("/api/web/v1/runs", h.handleRuns)
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}", h.handleRunByID)
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/sources/{source_id}", h.handleRunSource)
+	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/sources/{source_id}/terminal", h.handleRunSourceTerminal)
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/events", h.handleRunEvents)
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/approval", h.handleRunApproval)
 	h.mux.HandleFunc("/api/web/v1/cloud/connection", h.handleCloudConnection)
@@ -364,6 +378,7 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 	h.mux.HandleFunc("/api/web/v1/drivers/research", h.handleDriverResearchCreate)
 	h.mux.HandleFunc("/api/web/v1/drivers/research/{research_id}", h.handleDriverResearchStatus)
 	h.mux.HandleFunc("/api/web/v1/drivers/research/{research_id}/approval", h.handleDriverApproval)
+	h.mux.HandleFunc(webTerminalProducerPath, h.handleTerminalAdmission)
 	h.mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		webWriteProblem(w, cpErrNotFound)
 	})

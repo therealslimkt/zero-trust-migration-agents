@@ -72,5 +72,6 @@ Submission work begins after the real Mission Control path is complete, but
 its P0 evidence requirements are release gates rather than post-demo cleanup.
 In particular, the submission cannot claim Gemini 3.5+, Dataflow, BigQuery, a
 hosted backend, or durable cloud state until the exact deployed resources have
-been exercised and captured. Bonus work such as Veo is lower priority than the
-three-source end-to-end run, public documentation, and unedited live proof.
+been exercised and captured. Veo is out of scope: the terminal mirror uses
+exact typed runtime or immutable replay frames. The three-source end-to-end
+run, public documentation, and unedited live proof remain the priority.

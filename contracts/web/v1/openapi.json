@@ -102,6 +102,27 @@
         }
       }
     },
+    "/api/web/v1/runs/{run_id}/sources/{source_id}/terminal": {
+      "get": {
+        "operationId": "streamLiveSourceTerminal",
+        "description": "Authenticated, owner-scoped, resumable terminal SSE. Each response replays at most 500 admitted frames and then closes cleanly for exact cursor-based reconnection.",
+        "security": [{"identityToken": []}],
+        "parameters": [{"$ref": "#/components/parameters/RunId"}, {"$ref": "#/components/parameters/SourceId"}, {"$ref": "#/components/parameters/LastTerminalFrameId"}],
+        "responses": {
+          "200": {
+            "description": "Persisted secret-screened terminal frames in source-stream order",
+            "content": {
+              "text/event-stream": {
+                "schema": {"type": "string"},
+                "x-sse-event": "terminal.frame",
+                "x-sse-data-schema": {"$ref": "./schemas/operations.schema.json#/$defs/terminalFrame"}
+              }
+            }
+          },
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
     "/api/web/v1/runs/{run_id}/events": {
       "get": {
         "operationId": "streamLiveRunEvents",
@@ -212,7 +233,8 @@
       "RunId": {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^mig_[A-Za-z0-9]{12,64}$"}},
       "SourceId": {"name": "source_id", "in": "path", "required": true, "schema": {"type": "string", "enum": ["jde", "maxdb", "btrieve"]}},
       "ResearchId": {"name": "research_id", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^research_[A-Za-z0-9_-]{8,64}$"}},
-      "LastEventId": {"name": "Last-Event-ID", "in": "header", "required": false, "description": "Resume after the most recently processed live event.", "schema": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"}}
+      "LastEventId": {"name": "Last-Event-ID", "in": "header", "required": false, "description": "Resume after the most recently processed live event.", "schema": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"}},
+      "LastTerminalFrameId": {"name": "Last-Event-ID", "in": "header", "required": false, "description": "Resume strictly after the most recently processed frame in this source terminal stream.", "schema": {"type": "string", "pattern": "^frm_[A-Za-z0-9]{12,64}$"}}
     },
     "responses": {
       "Problem": {

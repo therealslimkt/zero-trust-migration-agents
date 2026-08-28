@@ -39,7 +39,11 @@ export interface TerminalWindowProps {
   /** Callback fired when the yellow minimize dot is clicked */
   onMinimize?: (minimized: boolean) => void;
   /** Callback fired when the green maximize dot is clicked */
-  onMaximize?: () => void;
+  onMaximize?: (maximized: boolean) => void;
+  /** Controlled maximized state */
+  isMaximized?: boolean;
+  /** Default maximized state for uncontrolled mode */
+  defaultMaximized?: boolean;
   /** Custom max-height for the scrollable terminal body */
   maxHeight?: string | number;
   /** Custom min-height for the terminal body */
@@ -74,6 +78,8 @@ export function TerminalWindow({
   onClose,
   onMinimize,
   onMaximize,
+  isMaximized: controlledMaximized,
+  defaultMaximized = false,
   maxHeight,
   minHeight,
   className = "",
@@ -81,7 +87,9 @@ export function TerminalWindow({
   children,
 }: TerminalWindowProps) {
   const [internalMinimized, setInternalMinimized] = useState(defaultMinimized);
+  const [internalMaximized, setInternalMaximized] = useState(defaultMaximized);
   const isMinimized = controlledMinimized !== undefined ? controlledMinimized : internalMinimized;
+  const isMaximized = controlledMaximized !== undefined ? controlledMaximized : internalMaximized;
   const prefersReducedMotion = useReducedMotion();
   const titleId = useId();
 
@@ -91,6 +99,12 @@ export function TerminalWindow({
     onMinimize?.(nextState);
   };
 
+  const handleToggleMaximize = () => {
+    const nextState = !isMaximized;
+    setInternalMaximized(nextState);
+    onMaximize?.(nextState);
+  };
+
   const formatDimension = (val?: string | number) =>
     typeof val === "number" ? `${val}px` : val;
 
@@ -98,6 +112,7 @@ export function TerminalWindow({
     <section
       role="region"
       aria-labelledby={titleId}
+      data-maximized={isMaximized}
       className={[
         "terminal-window",
         `terminal-window--${variant}`,
@@ -137,10 +152,11 @@ export function TerminalWindow({
               <button
                 type="button"
                 className="terminal-window__dot terminal-window__dot--green"
-                onClick={onMaximize}
+                onClick={handleToggleMaximize}
                 disabled={!onMaximize}
-                aria-label={onMaximize ? "Maximize window" : "Maximize unavailable"}
-                title="Maximize"
+                aria-pressed={onMaximize ? isMaximized : undefined}
+                aria-label={onMaximize ? (isMaximized ? "Restore window" : "Maximize window") : "Maximize unavailable"}
+                title={isMaximized ? "Restore" : "Maximize"}
               />
             </div>
           )}

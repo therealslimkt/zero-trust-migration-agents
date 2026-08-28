@@ -83,15 +83,25 @@
   border: 1px solid var(--pixel-border-bold);
   border-radius: var(--pixel-radius-sm);
   box-shadow: var(--pixel-shadow-sm);
-  color: var(--google-blue);
   transition: transform var(--duration-fast) var(--ease-tactical),
               border-color var(--duration-fast) var(--ease-tactical);
 }
 
+.brand-bolt {
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+  filter: drop-shadow(0 0 5px rgb(250 7 201 / 42%));
+}
+
+.brand-bolt__energy { fill: #fa07c9; opacity: 0.72; }
+.brand-bolt__shell { fill: #e2b0e8; }
+.brand-bolt__core { fill: #fa07c9; }
+
 .site-header__brand:hover .site-header__brand-icon {
   transform: scale(1.06);
-  border-color: var(--google-blue);
-  box-shadow: 0 0 10px var(--google-blue-glow);
+  border-color: #e2b0e8;
+  box-shadow: 0 0 12px rgb(250 7 201 / 36%);
 }
 
 .site-header__brand-text {

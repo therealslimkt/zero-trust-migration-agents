@@ -23,6 +23,9 @@ const (
 type WebSourceID string
 type WebRunState string
 type WebEvidenceKind string
+type WebTerminalLane string
+type WebTerminalStream string
+type WebTerminalSeverity string
 
 type WebNamedValue struct {
 	Name     string `json:"name"`
@@ -135,12 +138,13 @@ type WebDestinationReplay struct {
 }
 
 type WebSourceReplay struct {
-	SourceID    WebSourceID           `json:"sourceId"`
-	Hostname    string                `json:"hostname"`
-	DisplayName string                `json:"displayName"`
-	Source      WebSourceSystemReplay `json:"source"`
-	Compiler    WebCompilerReplay     `json:"compiler"`
-	Destination WebDestinationReplay  `json:"destination"`
+	SourceID       WebSourceID           `json:"sourceId"`
+	Hostname       string                `json:"hostname"`
+	DisplayName    string                `json:"displayName"`
+	Source         WebSourceSystemReplay `json:"source"`
+	Compiler       WebCompilerReplay     `json:"compiler"`
+	Destination    WebDestinationReplay  `json:"destination"`
+	TerminalFrames []WebTerminalFrame    `json:"terminalFrames"`
 }
 
 type WebReplayEvent struct {
@@ -280,6 +284,23 @@ type WebLiveRunEvent struct {
 	EventType          string                 `json:"eventType"`
 	State              WebRunState            `json:"state"`
 	Summary            string                 `json:"summary"`
+	EvidenceReferences []WebEvidenceReference `json:"evidenceReferences"`
+}
+
+type WebTerminalFrame struct {
+	SchemaVersion      string                 `json:"schemaVersion"`
+	FrameID            string                 `json:"frameId"`
+	RunID              string                 `json:"runId"`
+	SourceID           WebSourceID            `json:"sourceId"`
+	GlobalSequence     int64                  `json:"globalSequence"`
+	LaneSequence       int64                  `json:"laneSequence"`
+	Timestamp          string                 `json:"timestamp"`
+	Lane               WebTerminalLane        `json:"lane"`
+	Stream             WebTerminalStream      `json:"stream"`
+	Producer           string                 `json:"producer"`
+	Tool               string                 `json:"tool"`
+	Line               string                 `json:"line"`
+	Severity           WebTerminalSeverity    `json:"severity"`
 	EvidenceReferences []WebEvidenceReference `json:"evidenceReferences"`
 }
 

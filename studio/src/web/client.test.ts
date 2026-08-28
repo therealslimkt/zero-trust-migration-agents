@@ -36,3 +36,19 @@ test('live event fetch sends verified identity and resumable event header', asyn
   expect(request?.headers.get('Authorization')).toBe('Bearer verified-id-token')
   expect(request?.headers.get('Last-Event-ID')).toBe('evt_migrationcreated01')
 })
+
+test('terminal frame fetch is source-scoped, authenticated, and resumes from the validated frame cursor', async () => {
+  let request: Request | undefined
+  const fetchImpl: typeof fetch = async (input, init) => {
+    const target = String(input)
+    request = new Request(target.startsWith('/') ? `http://localhost${target}` : target, init)
+    return new Response('', { status: 200, headers: { 'Content-Type': 'text/event-stream' } })
+  }
+  const client = new LiveWebClient(async () => 'verified-id-token', { fetchImpl })
+  await client.openTerminalFrames('mig_liveTerminal001', 'jde', 'frm_terminalframe001')
+
+  expect(request?.url).toBe('http://localhost/api/web/v1/runs/mig_liveTerminal001/sources/jde/terminal')
+  expect(request?.headers.get('Authorization')).toBe('Bearer verified-id-token')
+  expect(request?.headers.get('Accept')).toBe('text/event-stream')
+  expect(request?.headers.get('Last-Event-ID')).toBe('frm_terminalframe001')
+})

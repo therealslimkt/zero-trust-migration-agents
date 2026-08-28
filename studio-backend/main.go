@@ -133,6 +133,7 @@ func newServerMuxWithSite(controlPlane, orchestrator, webBFF, site http.Handler)
 	}
 	if webBFF != nil {
 		mux.Handle("/api/web/v1/", webBFF)
+		mux.Handle(webTerminalProducerPath, webBFF)
 	}
 	if site != nil {
 		mux.Handle("/", site)
@@ -265,7 +266,8 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 		Artifacts: artifactStore, LiveDetails: artifactStore,
 		CloudProber: cloudProber, CloudVerifierPrincipal: cloudVerifierPrincipal,
 		DriverResearcher: driverResearcher, DriverRegistry: driverRegistry,
-		SyntheticDemoRunIDs: syntheticRunIDs,
+		SyntheticDemoRunIDs:   syntheticRunIDs,
+		TerminalProducerToken: os.Getenv(orchestratorTokenEnv),
 	})
 }
 

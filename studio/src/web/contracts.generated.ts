@@ -7,6 +7,9 @@ export const WEB_REQUIREMENTS_SHA256 = "37374d4fb13c4fd890e60c07b7d691fec0fe34ac
 export type ExperienceMode = "recorded_demo" | "live";
 export type DataClass = "synthetic_demo" | "private";
 export type SourceId = "jde" | "maxdb" | "btrieve";
+export type TerminalLane = "source" | "edge" | "compiler" | "destination";
+export type TerminalStream = "command" | "stdout" | "stderr" | "system" | "metric";
+export type TerminalSeverity = "debug" | "info" | "warning" | "error";
 export type RunState =
   | "created"
   | "inventorying"
@@ -146,6 +149,7 @@ export interface SourceReplay {
   readonly source: SourceSystemReplay;
   readonly compiler: CompilerReplay;
   readonly destination: DestinationReplay;
+  readonly terminalFrames: readonly TerminalFrame[];
 }
 
 export interface ReplayEvent {
@@ -286,6 +290,23 @@ export interface LiveRunEvent {
   readonly eventType: string;
   readonly state: RunState;
   readonly summary: string;
+  readonly evidenceReferences: readonly EvidenceReference[];
+}
+
+export interface TerminalFrame {
+  readonly schemaVersion: typeof WEB_SCHEMA_VERSION;
+  readonly frameId: string;
+  readonly runId: string;
+  readonly sourceId: SourceId;
+  readonly globalSequence: number;
+  readonly laneSequence: number;
+  readonly timestamp: string;
+  readonly lane: TerminalLane;
+  readonly stream: TerminalStream;
+  readonly producer: string;
+  readonly tool: string;
+  readonly line: string;
+  readonly severity: TerminalSeverity;
   readonly evidenceReferences: readonly EvidenceReference[];
 }
 

@@ -1,4 +1,4 @@
-import type { KeyboardEvent, ReactNode } from 'react'
+import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import type {
   CompilerAction,
   DeclarativeTransform,
@@ -9,7 +9,10 @@ import type {
   SchemaField,
   SourceReplay,
   SyntheticValue,
+  TerminalLane,
 } from '../../contracts.generated'
+import jetsonAsset from '../../assets/jetson/jetson-orin-super-pixel.png'
+import { TerminalActorLabels, TerminalFrameRenderer, type TerminalFeed } from '../../features/terminal'
 import { PixelIcon, TerminalWindow, type PixelIconName, type TerminalAccent } from '../../shared/ui'
 
 import { CodeValue, Metric, PageScaffold, StatePanel } from './PageScaffold'
@@ -22,6 +25,8 @@ const PANES: ReadonlyArray<{ readonly id: SourcePane; readonly label: string }> 
   { id: 'plan', label: 'Plan & diff' },
   { id: 'evidence', label: 'Evidence & timeline' },
 ]
+
+const EMPTY_TERMINAL_FEED: TerminalFeed = { mode: 'live', frames: [], connection: 'connecting' }
 
 function displayValue(value: SyntheticValue): string {
   if (value === null) return 'null'
@@ -273,18 +278,17 @@ function EvidencePaneContent({ replay, events }: { readonly replay: SourceReplay
   )
 }
 
-interface TechnologyChipProps {
-  readonly icon: PixelIconName
-  readonly label: string
-  readonly color?: 'google-blue' | 'google-red' | 'google-yellow' | 'google-green'
-}
-
-function TechnologyChip({ icon, label, color = 'google-blue' }: TechnologyChipProps) {
+function CompilerToolCards({ replay }: { readonly replay: SourceReplay }) {
+  const tools = Array.from(new Map(replay.compiler.actions.map((action) => [
+    `${action.agent}\u0000${action.tool}`,
+    { agent: action.agent, tool: action.tool },
+  ])).values())
   return (
-    <span className="source-technology-chip">
-      <PixelIcon name={icon} size="sm" color={color} ariaLabel="" />
-      {label}
-    </span>
+    <div className="source-tool-cards" aria-label="Captured compiler tools">
+      {tools.map((tool) => <span key={`${tool.agent}:${tool.tool}`}><strong>{tool.agent}</strong><small>{tool.tool}</small></span>)}
+      <span><strong>{replay.compiler.driver.coordinates}</strong><small>driver {replay.compiler.driver.version}</small></span>
+      {replay.compiler.beamTransformIds.map((transform) => <span key={transform}><strong>Apache Beam</strong><small>{transform}</small></span>)}
+    </div>
   )
 }
 
@@ -297,10 +301,16 @@ interface TerminalPaneProps {
   readonly icon: PixelIconName
   readonly accent: TerminalAccent
   readonly tools: ReactNode
+  readonly lane: TerminalLane
+  readonly terminal: TerminalFeed
+  readonly maximized: boolean
+  readonly obscured: boolean
+  readonly onMaximize: (maximized: boolean) => void
   readonly children: ReactNode
 }
 
-function TerminalPane({ id, activePane, number, title, breadcrumb, icon, accent, tools, children }: TerminalPaneProps) {
+function TerminalPane({ id, activePane, number, title, breadcrumb, icon, accent, tools, lane, terminal, maximized, obscured, onMaximize, children }: TerminalPaneProps) {
+  const latest = terminal.frames.at(-1)
   return (
     <section
       id={`source-panel-${id}`}
@@ -309,6 +319,9 @@ function TerminalPane({ id, activePane, number, title, breadcrumb, icon, accent,
       aria-labelledby={`source-tab-${id}`}
       data-active={activePane === id}
       data-tablet-visible={tabletVisible(activePane, id)}
+      data-maximized={maximized}
+      data-obscured={obscured}
+      data-stream-active={latest?.lane === lane}
     >
       <header className="source-pane__label"><span>{number}</span><h2>{title}</h2></header>
       <div className="source-pane__tools">{tools}</div>
@@ -321,13 +334,19 @@ function TerminalPane({ id, activePane, number, title, breadcrumb, icon, accent,
         scanlines
         cornerBrackets
         maxHeight="58vh"
-        minHeight="430px"
+        minHeight="480px"
         className="source-pane__terminal"
         bodyClassName="source-pane__terminal-body"
-        footer={<span>READ-ONLY MIRROR · EXACT RUN DATA</span>}
+        isMaximized={maximized}
+        onMaximize={onMaximize}
+        footer={<><span>READ-ONLY MIRROR · EXACT PRODUCER-ADMITTED FRAMES</span><span>{terminal.cursor ?? 'NO CURSOR'}</span></>}
       >
-        {children}
+        <TerminalFrameRenderer feed={terminal} lane={lane} label={title} />
       </TerminalWindow>
+      <details className="source-pane__details" open>
+        <summary>Inspect verified {id === 'source' ? 'source and schema' : id === 'plan' ? 'plan and diff' : 'evidence and timeline'} data</summary>
+        {children}
+      </details>
     </section>
   )
 }
@@ -355,11 +374,58 @@ function tabletVisible(active: SourcePane, pane: SourcePane): boolean {
   return pane !== 'evidence'
 }
 
-function ProgressOnlyPanes({ source, events, activePane }: { readonly source: LiveSourceResponse; readonly events: readonly LiveRunEvent[]; readonly activePane: SourcePane }) {
+interface PaneLayoutProps {
+  readonly terminal: TerminalFeed
+  readonly maximizedPane?: SourcePane
+  readonly onMaximizedPaneChange: (pane?: SourcePane) => void
+}
+
+function paneLayout(layout: PaneLayoutProps, pane: SourcePane) {
+  return {
+    terminal: layout.terminal,
+    maximized: layout.maximizedPane === pane,
+    obscured: layout.maximizedPane !== undefined && layout.maximizedPane !== pane,
+    onMaximize: (maximized: boolean) => layout.onMaximizedPaneChange(maximized ? pane : undefined),
+  }
+}
+
+function EdgeLane({ terminal }: { readonly terminal: TerminalFeed }) {
+  const [maximized, setMaximized] = useState(false)
+  const latest = terminal.frames.at(-1)
+  return (
+    <section className="source-edge-lane" data-stream-active={latest?.lane === 'edge'} data-maximized={maximized} aria-label="Jetson edge live terminal lane">
+      <div className="source-edge-lane__identity">
+        <img src={jetsonAsset} alt="Jetson Orin Super edge device" />
+        <div><span>JETSON EDGE LANE</span><strong>Private decode + protection boundary</strong><small>Only exact admitted frames are mirrored. Raw credentials and hidden reasoning are never rendered.</small></div>
+      </div>
+      <div className="source-edge-lane__actors"><TerminalActorLabels frames={terminal.frames} lane="edge" /></div>
+      <TerminalWindow
+        title="Jetson edge terminal mirror"
+        breadcrumb="edge/private-runtime"
+        accent="google-red"
+        icon={<PixelIcon name="cpu" size="sm" color="google-red" glow />}
+        variant="elevated"
+        className="source-edge-lane__terminal"
+        scanlines
+        cornerBrackets
+        minHeight={maximized ? '62vh' : '260px'}
+        maxHeight={maximized ? '72vh' : '380px'}
+        isMaximized={maximized}
+        onMaximize={setMaximized}
+        bodyClassName="source-pane__terminal-body"
+        footer={<><span>PRIVATE EDGE · EXACT SENT / RECEIVED FRAMES</span><span>{terminal.cursor ?? 'NO CURSOR'}</span></>}
+      >
+        <TerminalFrameRenderer feed={terminal} lane="edge" label="Jetson edge" />
+      </TerminalWindow>
+    </section>
+  )
+}
+
+function ProgressOnlyPanes({ source, events, activePane, terminal, maximizedPane, onMaximizedPaneChange }: { readonly source: LiveSourceResponse; readonly events: readonly LiveRunEvent[]; readonly activePane: SourcePane } & PaneLayoutProps) {
   const progress = source.progress
   return (
     <div className="source-three-pane">
-      <TerminalPane id="source" activePane={activePane} number="01" title="Source system / Google VM" breadcrumb={`${source.hostname}/${source.sourceId}`} icon="compute-engine" accent="google-blue" tools={<MissingCapture>Query capture unavailable for this run</MissingCapture>}>
+      <TerminalPane {...paneLayout({ terminal, maximizedPane, onMaximizedPaneChange }, 'source')} lane="source" id="source" activePane={activePane} number="01" title="Source system / Google VM" breadcrumb={`${source.hostname}/${source.sourceId}`} icon="compute-engine" accent="google-blue" tools={<MissingCapture>Query capture unavailable for this run</MissingCapture>}>
         <section className="source-pane__section">
           <h3>Authenticated source snapshot</h3>
           <dl className="protected-definition-grid">
@@ -371,7 +437,7 @@ function ProgressOnlyPanes({ source, events, activePane }: { readonly source: Li
           <p className="protected-muted">Schema and sample artifacts have not been captured for this run. The authenticated counters remain visible.</p>
         </section>
       </TerminalPane>
-      <TerminalPane id="plan" activePane={activePane} number="02" title="Agentic compiler middleware" breadcrumb={`compiler/${source.sourceId}/events`} icon="apache-beam" accent="google-yellow" tools={<><TechnologyChip icon="jdbc-jar" label="JDBC .jar" color="google-yellow" /><TechnologyChip icon="apache-beam" label="Apache Beam" color="google-yellow" /><TechnologyChip icon="gemini" label="Gemini" /></>}>
+      <TerminalPane {...paneLayout({ terminal, maximizedPane, onMaximizedPaneChange }, 'plan')} lane="compiler" id="plan" activePane={activePane} number="02" title="Agentic compiler middleware" breadcrumb={`compiler/${source.sourceId}/events`} icon="apache-beam" accent="google-yellow" tools={<MissingCapture>Compiler tool labels have not been captured for this run</MissingCapture>}>
         <section className="source-pane__section">
           <h3>Persisted plan state</h3>
           <p>Plan digest {progress.planDigest ? <CodeValue>{progress.planDigest}</CodeValue> : 'not published'}</p>
@@ -383,7 +449,7 @@ function ProgressOnlyPanes({ source, events, activePane }: { readonly source: Li
           <EventTimeline events={events} />
         </section>
       </TerminalPane>
-      <TerminalPane id="evidence" activePane={activePane} number="03" title="Google BigQuery" breadcrumb={`bigquery/${source.sourceId}/verified-writes`} icon="bigquery" accent="google-green" tools={<MissingCapture>Suggested query capture unavailable for this run</MissingCapture>}>
+      <TerminalPane {...paneLayout({ terminal, maximizedPane, onMaximizedPaneChange }, 'evidence')} lane="destination" id="evidence" activePane={activePane} number="03" title="Google BigQuery" breadcrumb={`bigquery/${source.sourceId}/verified-writes`} icon="bigquery" accent="google-green" tools={<MissingCapture>Suggested query capture unavailable for this run</MissingCapture>}>
         <section className="source-pane__section">
           <h3>Persisted source evidence</h3>
           <EvidenceList evidence={progress.evidenceReferences} />
@@ -400,13 +466,15 @@ function ProgressOnlyPanes({ source, events, activePane }: { readonly source: Li
 export interface SourceDetailPageProps {
   readonly source: ResourceState<LiveSourceResponse>
   readonly events?: readonly LiveRunEvent[]
+  readonly terminal?: TerminalFeed
   readonly activePane: SourcePane
   readonly onActivePaneChange: (pane: SourcePane) => void
   readonly onRetry?: () => void
   readonly onCopy?: (value: string) => void
 }
 
-export function SourceDetailPage({ source, events = [], activePane, onActivePaneChange, onRetry, onCopy }: SourceDetailPageProps) {
+export function SourceDetailPage({ source, events = [], terminal = EMPTY_TERMINAL_FEED, activePane, onActivePaneChange, onRetry, onCopy }: SourceDetailPageProps) {
+  const [maximizedPane, setMaximizedPane] = useState<SourcePane>()
   const ready = source.status === 'ready' ? source.data : undefined
   const replay = ready?.detail
   const relevantEvents = ready
@@ -472,20 +540,21 @@ export function SourceDetailPage({ source, events = [], activePane, onActivePane
           </div>
           <LiveNarration event={relevantEvents.at(-1)} />
           {!replay ? (
-            <ProgressOnlyPanes source={ready} events={relevantEvents} activePane={activePane} />
+            <ProgressOnlyPanes source={ready} events={relevantEvents} activePane={activePane} terminal={terminal} maximizedPane={maximizedPane} onMaximizedPaneChange={setMaximizedPane} />
           ) : (
               <div className="source-three-pane">
-                <TerminalPane id="source" activePane={activePane} number="01" title="Source system / Google VM" breadcrumb={`${replay.hostname}/${replay.sourceId}`} icon="compute-engine" accent="google-blue" tools={replay.source.exampleQueries.length ? <QueryList queries={replay.source.exampleQueries} onCopy={onCopy} /> : <MissingCapture>No read-only source queries were captured</MissingCapture>}>
+                <TerminalPane {...paneLayout({ terminal, maximizedPane, onMaximizedPaneChange: setMaximizedPane }, 'source')} lane="source" id="source" activePane={activePane} number="01" title="Source system / Google VM" breadcrumb={`${replay.hostname}/${replay.sourceId}`} icon="compute-engine" accent="google-blue" tools={replay.source.exampleQueries.length ? <QueryList queries={replay.source.exampleQueries} onCopy={onCopy} /> : <MissingCapture>No read-only source queries were captured</MissingCapture>}>
                   <SourcePaneContent replay={replay} onCopy={onCopy} />
                 </TerminalPane>
-                <TerminalPane id="plan" activePane={activePane} number="02" title="Agentic compiler middleware" breadcrumb={`compiler/${replay.sourceId}/translations`} icon="apache-beam" accent="google-yellow" tools={<><TechnologyChip icon="jdbc-jar" label={`${replay.compiler.driver.version} .jar`} color="google-yellow" /><TechnologyChip icon="apache-beam" label="Apache Beam" color="google-yellow" /><TechnologyChip icon="gemma" label="Local Gemma" color="google-green" /><TechnologyChip icon="gemini" label="Gemini" /></>}>
+                <TerminalPane {...paneLayout({ terminal, maximizedPane, onMaximizedPaneChange: setMaximizedPane }, 'plan')} lane="compiler" id="plan" activePane={activePane} number="02" title="Agentic compiler middleware" breadcrumb={`compiler/${replay.sourceId}/translations`} icon="apache-beam" accent="google-yellow" tools={<CompilerToolCards replay={replay} />}>
                   <PlanPaneContent replay={replay} />
                 </TerminalPane>
-                <TerminalPane id="evidence" activePane={activePane} number="03" title="Google BigQuery" breadcrumb={`${replay.destination.dataset}/${replay.destination.table}`} icon="bigquery" accent="google-green" tools={replay.destination.suggestedQueries.length ? <QueryList queries={replay.destination.suggestedQueries} onCopy={onCopy} /> : <MissingCapture>No destination query was captured</MissingCapture>}>
+                <TerminalPane {...paneLayout({ terminal, maximizedPane, onMaximizedPaneChange: setMaximizedPane }, 'evidence')} lane="destination" id="evidence" activePane={activePane} number="03" title="Google BigQuery" breadcrumb={`${replay.destination.dataset}/${replay.destination.table}`} icon="bigquery" accent="google-green" tools={replay.destination.suggestedQueries.length ? <QueryList queries={replay.destination.suggestedQueries} onCopy={onCopy} /> : <MissingCapture>No destination query was captured</MissingCapture>}>
                   <EvidencePaneContent replay={replay} events={relevantEvents} />
                 </TerminalPane>
               </div>
           )}
+          <EdgeLane terminal={terminal} />
         </>
       ) : null}
     </PageScaffold>

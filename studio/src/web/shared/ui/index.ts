@@ -14,6 +14,9 @@ export {
   type PixelIconSize,
 } from "./PixelIcon";
 
+// BrandBolt
+export { BrandBolt, type BrandBoltProps } from "./BrandBolt";
+
 // TerminalWindow
 export {
   TerminalWindow,

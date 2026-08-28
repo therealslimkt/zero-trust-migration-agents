@@ -24,6 +24,9 @@ _ARTIFACT_ID = re.compile(r"^art_[A-Za-z0-9._-]{8,128}$")
 _STATES = frozenset(
     {"inventorying", "redacting", "planning", "executing", "verifying", "completed"}
 )
+_TERMINAL_LANES = frozenset({"source", "edge", "compiler", "destination"})
+_TERMINAL_STREAMS = frozenset({"command", "stdout", "stderr", "system", "metric"})
+_TERMINAL_SEVERITIES = frozenset({"debug", "info", "warning", "error"})
 _HOSTS = {
     "jde": "legacy-jde-db",
     "maxdb": "legacy-maxdb",
@@ -130,7 +133,7 @@ class MissionControlLocalClient:
             response.close()
         except Exception:
             _reject("mission_control_unavailable")
-        if status not in {200, 202} or content_type != "application/json":
+        if status not in {200, 201, 202} or content_type != "application/json":
             _reject("mission_control_response")
         if len(encoded) > _MAX_RESPONSE:
             _reject("mission_control_response")
@@ -141,6 +144,63 @@ class MissionControlLocalClient:
         if type(decoded) is not dict:
             _reject("mission_control_response")
         return decoded
+
+    def emit_terminal_frame(
+        self,
+        *,
+        run_id: str,
+        source_id: str,
+        timestamp: str,
+        lane: str,
+        stream: str,
+        producer: str,
+        tool: str,
+        line: str,
+        severity: str = "info",
+    ) -> str:
+        """Admit one exact, single-line observable runtime frame."""
+
+        try:
+            require_run_id(run_id)
+        except (TypeError, ValueError):
+            _reject("mission_control_request")
+        if (
+            source_id not in SOURCE_ORDER
+            or lane not in _TERMINAL_LANES
+            or stream not in _TERMINAL_STREAMS
+            or severity not in _TERMINAL_SEVERITIES
+        ):
+            _reject("mission_control_request")
+        for value, limit in ((timestamp, 40), (producer, 120), (tool, 120), (line, 4096)):
+            if (
+                not isinstance(value, str)
+                or not value
+                or len(value) > limit
+                or any(ord(character) < 0x20 or ord(character) == 0x7F for character in value)
+            ):
+                _reject("mission_control_request")
+        response = self._request(
+            path="/internal/v1/terminal",
+            token=self.orchestration_token,
+            method="POST",
+            body={
+                "schemaVersion": "1.0.0",
+                "runId": run_id,
+                "sourceId": source_id,
+                "timestamp": timestamp,
+                "lane": lane,
+                "stream": stream,
+                "producer": producer,
+                "tool": tool,
+                "line": line,
+                "severity": severity,
+                "evidenceReferences": [],
+            },
+        )
+        frame_id = response.get("frameId")
+        if not isinstance(frame_id, str) or re.fullmatch(r"frm_[A-Za-z0-9]{12,64}", frame_id) is None:
+            _reject("mission_control_response")
+        return frame_id
 
     def create_portfolio(self, *, portfolio_name: str, requested_by: str) -> str:
         response = self._request(

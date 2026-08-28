@@ -12,6 +12,7 @@ import {
   type LiveRunEvent,
   type LiveSourceResponse,
   type SourceReplay,
+  type TerminalFrame,
 } from '../../contracts.generated'
 import { CloudSettingsPage } from './CloudSettingsPage'
 import { DashboardPage } from './DashboardPage'
@@ -171,6 +172,13 @@ const EVENTS: readonly LiveRunEvent[] = [{
   summary: 'Source migration reconciled',
   evidenceReferences: [EVIDENCE],
 }]
+
+const TERMINAL_FRAMES: readonly TerminalFrame[] = [
+  { schemaVersion: WEB_SCHEMA_VERSION, frameId: 'frm_sourceframe001', runId: 'run-owned-1', sourceId: 'jde', globalSequence: 1, laneSequence: 1, timestamp: '2026-08-27T10:00:00Z', lane: 'source', stream: 'command', producer: 'legacy-jde-db', tool: 'db2-cli', line: 'SELECT AN8 FROM F0101 FETCH FIRST 5 ROWS ONLY', severity: 'info', evidenceReferences: [] },
+  { schemaVersion: WEB_SCHEMA_VERSION, frameId: 'frm_compilerframe1', runId: 'run-owned-1', sourceId: 'jde', globalSequence: 2, laneSequence: 1, timestamp: '2026-08-27T10:00:01Z', lane: 'compiler', stream: 'system', producer: 'edge-decoder', tool: 'local-gemma', line: 'validated packed decimal field layout', severity: 'info', evidenceReferences: [EVIDENCE] },
+  { schemaVersion: WEB_SCHEMA_VERSION, frameId: 'frm_edgeframe00001', runId: 'run-owned-1', sourceId: 'jde', globalSequence: 3, laneSequence: 1, timestamp: '2026-08-27T10:00:02Z', lane: 'edge', stream: 'stdout', producer: 'jetson-orin-super', tool: 'local-gemma', line: 'protected metadata sent; raw row retained locally', severity: 'info', evidenceReferences: [EVIDENCE] },
+  { schemaVersion: WEB_SCHEMA_VERSION, frameId: 'frm_destframe00001', runId: 'run-owned-1', sourceId: 'jde', globalSequence: 4, laneSequence: 1, timestamp: '2026-08-27T10:00:03Z', lane: 'destination', stream: 'metric', producer: 'dataflow-job-1', tool: 'bigquery-writer', line: 'records_written=1 records_rejected=0', severity: 'info', evidenceReferences: [EVIDENCE] },
+]
 
 describe('DashboardPage', () => {
   it('renders exact owned identity and three-source semantics with keyboard-accessible actions', async () => {
@@ -366,6 +374,7 @@ describe('SourceDetailPage', () => {
       <SourceDetailPage
         source={{ status: 'ready', data: LIVE_SOURCE }}
         events={EVENTS}
+        terminal={{ mode: 'live', connection: 'live', frames: TERMINAL_FRAMES, cursor: 'frm_destframe00001' }}
         activePane="source"
         onActivePaneChange={selectPane}
         onCopy={copy}
@@ -383,6 +392,9 @@ describe('SourceDetailPage', () => {
     expect(screen.getByText('packed_decimal')).toBeVisible()
     expect(screen.getAllByText('Source migration reconciled')).toHaveLength(2)
     expect(screen.getByText('sha256:destination')).toBeVisible()
+    expect(screen.getByText('validated packed decimal field layout')).toBeVisible()
+    expect(screen.getByText('protected metadata sent; raw row retained locally')).toBeVisible()
+    expect(screen.getAllByText('jetson-orin-super')).toHaveLength(2)
 
     await user.click(screen.getByRole('tab', { name: 'Evidence & timeline' }))
     expect(selectPane).toHaveBeenCalledWith('evidence')
@@ -391,6 +403,12 @@ describe('SourceDetailPage', () => {
     expect(selectPane).toHaveBeenCalledWith('plan')
     await user.click(screen.getByRole('button', { name: 'Copy raw hex' }))
     expect(copy).toHaveBeenCalledWith('f1f2f3c4')
+
+    const sourcePanel = screen.getByRole('tabpanel', { name: 'Source & schema' })
+    await user.click(within(sourcePanel).getByRole('button', { name: 'Maximize window' }))
+    expect(sourcePanel).toHaveAttribute('data-maximized', 'true')
+    await user.click(within(sourcePanel).getByRole('button', { name: 'Restore window' }))
+    expect(sourcePanel).toHaveAttribute('data-maximized', 'false')
   })
 
   it('shows all three truthful progress panes without fabricating missing captured artifacts', () => {

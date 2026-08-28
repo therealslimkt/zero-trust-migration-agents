@@ -5,6 +5,14 @@ import { describe, expect, it, vi } from "vitest";
 import { SiteHeader } from "./SiteHeader";
 
 describe("SiteHeader", () => {
+  it("uses the canonical Sparky bolt by default", () => {
+    const { container } = render(<SiteHeader />);
+
+    expect(screen.getByRole("link", { name: "SPARKY home" })).toBeInTheDocument();
+    expect(container.querySelector(".brand-bolt__shell")).toHaveAttribute("d");
+    expect(container.querySelector(".brand-bolt__core")).toHaveAttribute("d");
+  });
+
   it("shows Google Cloud setup to authenticated users and routes through the application", async () => {
     const user = userEvent.setup();
     const navigate = vi.fn();

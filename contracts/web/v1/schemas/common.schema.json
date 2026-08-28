@@ -20,6 +20,7 @@
     "demoId": {"type": "string", "pattern": "^demo_[A-Za-z0-9_-]{8,64}$"},
     "artifactId": {"type": "string", "pattern": "^art_[A-Za-z0-9._-]{8,128}$"},
     "eventId": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"},
+    "terminalFrameId": {"type": "string", "pattern": "^frm_[A-Za-z0-9]{12,64}$"},
     "dateTime": {"type": "string", "format": "date-time"},
     "syntheticValue": {"type": ["string", "number", "boolean", "null"]},
     "namedValue": {
@@ -58,6 +59,31 @@
         "artifactId": {"$ref": "#/$defs/artifactId"},
         "kind": {"$ref": "#/$defs/evidenceKind"},
         "digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "terminalFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "frameId", "runId", "sourceId", "globalSequence",
+        "laneSequence", "timestamp", "lane", "stream", "producer", "tool",
+        "line", "severity", "evidenceReferences"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "#/$defs/schemaVersion"},
+        "frameId": {"$ref": "#/$defs/terminalFrameId"},
+        "runId": {"$ref": "#/$defs/runId"},
+        "sourceId": {"$ref": "#/$defs/sourceId"},
+        "globalSequence": {"type": "integer", "minimum": 1},
+        "laneSequence": {"type": "integer", "minimum": 1},
+        "timestamp": {"$ref": "#/$defs/dateTime"},
+        "lane": {"type": "string", "enum": ["source", "edge", "compiler", "destination"]},
+        "stream": {"type": "string", "enum": ["command", "stdout", "stderr", "system", "metric"]},
+        "producer": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "tool": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "line": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
+        "severity": {"type": "string", "enum": ["debug", "info", "warning", "error"]},
+        "evidenceReferences": {"type": "array", "maxItems": 50, "items": {"$ref": "#/$defs/evidenceReference"}}
       }
     },
     "reconciliation": {

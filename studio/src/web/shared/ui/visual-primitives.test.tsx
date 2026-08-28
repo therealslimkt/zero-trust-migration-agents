@@ -148,4 +148,25 @@ describe("TerminalWindow", () => {
     });
     expect(onMinimize).toHaveBeenLastCalledWith(false);
   });
+
+  it("toggles maximize and restore while keeping close unavailable", async () => {
+    const user = userEvent.setup();
+    const onMaximize = vi.fn();
+    render(
+      <TerminalWindow title="Live lane" onMaximize={onMaximize}>
+        <p>Exact producer output</p>
+      </TerminalWindow>,
+    );
+
+    expect(screen.getByRole("button", { name: "Close unavailable" })).toBeDisabled();
+    const maximize = screen.getByRole("button", { name: "Maximize window" });
+    expect(maximize).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(maximize);
+    expect(onMaximize).toHaveBeenLastCalledWith(true);
+    expect(screen.getByRole("button", { name: "Restore window" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Restore window" }));
+    expect(onMaximize).toHaveBeenLastCalledWith(false);
+  });
 });

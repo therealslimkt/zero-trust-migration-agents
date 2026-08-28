@@ -1,7 +1,9 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 
-import type { DemoManifest, SourceId } from "../../contracts.generated";
+import jetsonAsset from "../../assets/jetson/jetson-orin-super-pixel.png";
+import type { CompilerAction, DemoManifest, SourceId, TerminalFrame, TerminalLane } from "../../contracts.generated";
+import { TerminalActorLabels, TerminalFrameRenderer, type TerminalFeed } from "../../features/terminal";
 import { PixelIcon, ReplayBadge, StatusBeacon, TerminalWindow } from "../../shared/ui";
 import "./recorded-replay.css";
 
@@ -12,6 +14,7 @@ export interface RecordedReplayPageProps {
 
 const sourceOrder: readonly SourceId[] = ["jde", "maxdb", "btrieve"];
 type ReplayPane = "source" | "compiler" | "destination";
+type ReplayLane = ReplayPane | "edge";
 
 function shortDigest(value: string): string {
   return value.length > 22 ? `${value.slice(0, 12)}…${value.slice(-8)}` : value;
@@ -22,6 +25,14 @@ function formatTime(value: string): string {
   return Number.isNaN(date.valueOf()) ? value : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
+function replayTools(actions: readonly CompilerAction[]) {
+  return Array.from(new Map(actions.map((action) => [`${action.agent}\u0000${action.tool}`, { agent: action.agent, tool: action.tool }])).values());
+}
+
+function laneFeed(feed: TerminalFeed, lane: TerminalLane, label: string) {
+  return <TerminalFrameRenderer feed={feed} lane={lane} label={label} />;
+}
+
 export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps) {
   const reducedMotion = useReducedMotion();
   const [selectedSource, setSelectedSource] = useState<SourceId>(manifest.sources[0]?.sourceId ?? "jde");
@@ -29,6 +40,7 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
   const [playing, setPlaying] = useState(false);
   const [practiceDecision, setPracticeDecision] = useState<"approve" | "reject">();
   const [activePane, setActivePane] = useState<ReplayPane>("source");
+  const [maximizedLane, setMaximizedLane] = useState<ReplayLane>();
   const orderedEvents = useMemo(() => [...manifest.events].sort((a, b) => a.sequence - b.sequence), [manifest.events]);
   const gateIndex = orderedEvents.findIndex((event) => event.sequence === manifest.practiceApproval.pauseAfterSequence);
   const source = manifest.sources.find((candidate) => candidate.sourceId === selectedSource) ?? manifest.sources[0];
@@ -58,6 +70,18 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
 
   const visibleEventIDs = new Set(orderedEvents.slice(0, cursor + 1).map((event) => event.eventId));
   const visibleActions = source.compiler.actions.filter((action) => visibleEventIDs.has(action.eventId));
+  const activeTimestamp = activeEvent ? Date.parse(activeEvent.timestamp) : Number.NEGATIVE_INFINITY;
+  // Older published bundles remain honest: absence means no transcript, not a
+  // synthesized one. The canonical contract makes this field required.
+  const immutableTerminalFrames = (source as typeof source & { readonly terminalFrames?: readonly TerminalFrame[] }).terminalFrames ?? [];
+  const terminalFrames = immutableTerminalFrames.filter((frame) => Date.parse(frame.timestamp) <= activeTimestamp);
+  const terminalFeed: TerminalFeed = {
+    mode: "replay",
+    connection: "offline",
+    frames: terminalFrames,
+    cursor: terminalFrames.at(-1)?.frameId,
+  };
+  const tools = replayTools(visibleActions);
   const atPracticeGate = practiceDecision === undefined && gateIndex >= 0 && cursor === gateIndex;
   const selectCursor = (next: number) => {
     setPlaying(false);
@@ -125,8 +149,12 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
           exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -5 }}
           transition={{ duration: reducedMotion ? 0 : 0.24 }}
         >
-          <div className="replay-pane" data-pane="source" data-active={activePane === "source"} data-tablet-visible={activePane !== "destination"}>
-          <TerminalWindow title="Legacy source" breadcrumb={`${source.hostname}/${source.source.databaseFamily}`} accent="google-blue" scanlines cornerBrackets>
+          <div className="replay-pane" data-pane="source" data-active={activePane === "source"} data-tablet-visible={activePane !== "destination"} data-maximized={maximizedLane === "source"} data-obscured={maximizedLane !== undefined && maximizedLane !== "source"}>
+          <div className="replay-terminal-card"><span>READ-ONLY SOURCE QUERY</span>{source.source.exampleQueries.length ? <code>{source.source.exampleQueries[0]}</code> : <small>No source query was captured.</small>}</div>
+          <TerminalWindow title="Legacy source" breadcrumb={`${source.hostname}/${source.source.databaseFamily}`} accent="google-blue" scanlines cornerBrackets className="replay-live-terminal" minHeight="420px" maxHeight="58vh" isMaximized={maximizedLane === "source"} onMaximize={(maximized) => setMaximizedLane(maximized ? "source" : undefined)} footer={<><span>IMMUTABLE REPLAY · EXACT TERMINAL FRAMES</span><span>{terminalFeed.cursor ?? "NO CURSOR"}</span></>}>
+            {laneFeed(terminalFeed, "source", "Recorded legacy source")}
+          </TerminalWindow>
+          <details className="replay-verified-details" open><summary>Inspect source profile, schema, and samples</summary>
             <div className="replay-pane-heading"><span>SOURCE PROFILE</span><strong>{source.source.databaseVersion}</strong></div>
             <dl className="replay-definition-list">
               <div><dt>Database</dt><dd>{source.source.databaseFamily}</dd></div>
@@ -146,11 +174,15 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
                 {sample.decodedFields.map((field) => <div key={field.name}><span>{field.name}</span><code>{String(field.value)}</code></div>)}
               </div>)}
             </> : null}
-          </TerminalWindow>
+          </details>
           </div>
 
-          <div className="replay-pane" data-pane="compiler" data-active={activePane === "compiler"} data-tablet-visible>
-          <TerminalWindow title="Agent compiler" breadcrumb="Gemma → Gemini 3.7 Flash → Beam" accent="google-yellow" scanlines cornerBrackets>
+          <div className="replay-pane" data-pane="compiler" data-active={activePane === "compiler"} data-tablet-visible data-maximized={maximizedLane === "compiler"} data-obscured={maximizedLane !== undefined && maximizedLane !== "compiler"}>
+          <div className="replay-tool-cards" aria-label="Recorded compiler tool labels">{tools.length ? tools.map((tool) => <span key={`${tool.agent}:${tool.tool}`}><strong>{tool.agent}</strong><small>{tool.tool}</small></span>) : <small>No compiler tool action is visible at this replay position.</small>}</div>
+          <TerminalWindow title="Agent compiler" breadcrumb="recorded/compiler/actions" accent="google-yellow" scanlines cornerBrackets className="replay-live-terminal" minHeight="420px" maxHeight="58vh" isMaximized={maximizedLane === "compiler"} onMaximize={(maximized) => setMaximizedLane(maximized ? "compiler" : undefined)} footer={<><span>IMMUTABLE REPLAY · EXACT TERMINAL FRAMES</span><span>{terminalFeed.cursor ?? "NO CURSOR"}</span></>}>
+            {laneFeed(terminalFeed, "compiler", "Recorded agent compiler")}
+          </TerminalWindow>
+          <details className="replay-verified-details" open><summary>Inspect compiler actions and declarative plan</summary>
             <div className="replay-pane-heading"><span>RECORDED ACTIONS</span><strong>{visibleActions.length}/{source.compiler.actions.length}</strong></div>
             <ol className="replay-timeline">
               {visibleActions.map((action) => (
@@ -164,11 +196,15 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
             <div className="replay-transforms">
               {source.compiler.transforms.map((transform) => <div key={`${transform.sequence}-${transform.sourceField}`}><span>{String(transform.sequence).padStart(2, "0")}</span><code>{transform.operation}</code><strong>{transform.sourceField} → {transform.targetField}</strong></div>)}
             </div>
-          </TerminalWindow>
+          </details>
           </div>
 
-          <div className="replay-pane" data-pane="destination" data-active={activePane === "destination"} data-tablet-visible={activePane !== "source"}>
-          <TerminalWindow title="Verified destination" breadcrumb={`${source.destination.dataset}/${source.destination.table}`} accent="google-green" scanlines cornerBrackets>
+          <div className="replay-pane" data-pane="destination" data-active={activePane === "destination"} data-tablet-visible={activePane !== "source"} data-maximized={maximizedLane === "destination"} data-obscured={maximizedLane !== undefined && maximizedLane !== "destination"}>
+          <div className="replay-terminal-card"><span>BIGQUERY QUERY</span>{source.destination.suggestedQueries.length ? <code>{source.destination.suggestedQueries[0]}</code> : <small>No destination query was captured.</small>}</div>
+          <TerminalWindow title="Verified destination" breadcrumb={`${source.destination.dataset}/${source.destination.table}`} accent="google-green" scanlines cornerBrackets className="replay-live-terminal" minHeight="420px" maxHeight="58vh" isMaximized={maximizedLane === "destination"} onMaximize={(maximized) => setMaximizedLane(maximized ? "destination" : undefined)} footer={<><span>IMMUTABLE REPLAY · EXACT TERMINAL FRAMES</span><span>{terminalFeed.cursor ?? "NO CURSOR"}</span></>}>
+            {laneFeed(terminalFeed, "destination", "Recorded BigQuery destination")}
+          </TerminalWindow>
+          <details className="replay-verified-details" open><summary>Inspect landed rows and reconciliation evidence</summary>
             <div className="replay-pane-heading"><span>BIGQUERY EVIDENCE</span><StatusBeacon status="active" mode="steady" label="MATCHED" size="xs" /></div>
             <dl className="replay-reconciliation">
               <div><dt>Read</dt><dd>{source.destination.reconciliation.recordsRead.toLocaleString()}</dd></div>
@@ -189,10 +225,21 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
                 <div key={`${reference.kind}-${reference.artifactId}`}><span>{reference.kind}</span><code title={reference.digest}>{reference.artifactId} · {shortDigest(reference.digest)}</code></div>
               ))}
             </div>
-          </TerminalWindow>
+          </details>
           </div>
         </motion.section>
       </AnimatePresence>
+
+      <section className="replay-edge-lane" data-maximized={maximizedLane === "edge"} aria-label="Recorded Jetson edge terminal lane">
+        <div className="replay-edge-lane__identity">
+          <img src={jetsonAsset} alt="Jetson Orin Super edge device" />
+          <div><span>JETSON EDGE LANE</span><strong>Immutable private-runtime transcript</strong><small>Frames advance only with the recorded event cursor.</small></div>
+        </div>
+        <TerminalActorLabels frames={terminalFrames} lane="edge" />
+        <TerminalWindow title="Recorded Jetson edge" breadcrumb="edge/private-runtime" accent="google-red" scanlines cornerBrackets className="replay-live-terminal replay-edge-lane__terminal" minHeight={maximizedLane === "edge" ? "60vh" : "240px"} maxHeight={maximizedLane === "edge" ? "70vh" : "360px"} isMaximized={maximizedLane === "edge"} onMaximize={(maximized) => setMaximizedLane(maximized ? "edge" : undefined)} footer={<><span>IMMUTABLE REPLAY · EXACT SENT / RECEIVED FRAMES</span><span>{terminalFeed.cursor ?? "NO CURSOR"}</span></>}>
+          {laneFeed(terminalFeed, "edge", "Recorded Jetson edge")}
+        </TerminalWindow>
+      </section>
 
       {atPracticeGate ? <section className="replay-practice-gate" role="dialog" aria-labelledby="practice-gate-title" aria-describedby="practice-gate-prompt">
         <span>PRACTICE DECISION · LOCAL ONLY</span>

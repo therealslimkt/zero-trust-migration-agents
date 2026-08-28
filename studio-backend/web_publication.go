@@ -110,8 +110,10 @@ func DemoManifestDigest(manifest DemoManifest) (string, error) {
 // bundles.
 func ValidateDemoManifestForPublication(manifest DemoManifest) error {
 	validator := webManifestValidator{
-		evidenceByID: make(map[string]WebEvidenceReference),
-		eventIDs:     make(map[string]struct{}),
+		evidenceByID:             make(map[string]WebEvidenceReference),
+		eventIDs:                 make(map[string]struct{}),
+		terminalFrameIDs:         make(map[string]struct{}),
+		terminalFramesBySequence: make(map[int64]WebTerminalFrame),
 	}
 	validator.validate(manifest)
 	if len(validator.codes) == 0 {
@@ -121,9 +123,11 @@ func ValidateDemoManifestForPublication(manifest DemoManifest) error {
 }
 
 type webManifestValidator struct {
-	codes        []string
-	evidenceByID map[string]WebEvidenceReference
-	eventIDs     map[string]struct{}
+	codes                    []string
+	evidenceByID             map[string]WebEvidenceReference
+	eventIDs                 map[string]struct{}
+	terminalFrameIDs         map[string]struct{}
+	terminalFramesBySequence map[int64]WebTerminalFrame
 }
 
 func (v *webManifestValidator) add(code string) {
@@ -295,6 +299,7 @@ func (v *webManifestValidator) validateSources(manifest DemoManifest) {
 		if len(source.Destination.Schema) == 0 || len(source.Destination.Rows) == 0 || len(source.Destination.SuggestedQueries) == 0 {
 			v.add("destination_detail_incomplete")
 		}
+		v.validateTerminalFrames(manifest.SourceRunID, source)
 		reconciliation := source.Destination.Reconciliation
 		aggregateRead += reconciliation.RecordsRead
 		aggregateWritten += reconciliation.RecordsWritten
@@ -303,11 +308,81 @@ func (v *webManifestValidator) validateSources(manifest DemoManifest) {
 	if len(seen) != len(webCanonicalSourceHostnames) {
 		v.add("source_set_invalid")
 	}
+	v.validateTerminalTimeline()
 	if manifest.Reconciliation.RecordsRead != aggregateRead ||
 		manifest.Reconciliation.RecordsWritten != aggregateWritten ||
 		manifest.Reconciliation.RecordsRejected != aggregateRejected ||
 		manifest.Reconciliation.OutputRows != aggregateWritten {
 		v.add("portfolio_reconciliation_invalid")
+	}
+}
+
+func (v *webManifestValidator) validateTerminalFrames(runID string, source WebSourceReplay) {
+	if len(source.TerminalFrames) < 1 || len(source.TerminalFrames) > webMaxSourceTerminalFrames {
+		v.add("terminal_frames_missing")
+		return
+	}
+	laneSequences := make(map[WebTerminalLane]int64)
+	var previousGlobal int64
+	var previousTimestamp time.Time
+	for _, frame := range source.TerminalFrames {
+		input := WebTerminalFrameAdmission{
+			RunID: frame.RunID, SourceID: frame.SourceID, Timestamp: frame.Timestamp,
+			Lane: frame.Lane, Stream: frame.Stream, Producer: frame.Producer, Tool: frame.Tool,
+			Line: frame.Line, Severity: frame.Severity, EvidenceReferences: frame.EvidenceReferences,
+		}
+		if frame.SchemaVersion != WebSchemaVersion || !webTerminalFrameIDPattern.MatchString(frame.FrameID) {
+			v.add("terminal_frame_invalid")
+		}
+		if suppressed, valid := webValidateTerminalAdmission(input); suppressed || !valid {
+			v.add("terminal_frame_invalid")
+		}
+		if frame.RunID != runID || frame.SourceID != source.SourceID {
+			v.add("terminal_frame_scope_invalid")
+		}
+		if frame.GlobalSequence <= previousGlobal {
+			v.add("terminal_frame_sequence_invalid")
+		}
+		previousGlobal = frame.GlobalSequence
+		laneSequences[frame.Lane]++
+		if frame.LaneSequence != laneSequences[frame.Lane] {
+			v.add("terminal_frame_sequence_invalid")
+		}
+		stamp, ok := cpParseStamp(frame.Timestamp)
+		if !ok || (!previousTimestamp.IsZero() && stamp.Before(previousTimestamp)) {
+			v.add("terminal_frame_timestamp_invalid")
+		} else {
+			previousTimestamp = stamp
+		}
+		if _, duplicate := v.terminalFrameIDs[frame.FrameID]; duplicate {
+			v.add("terminal_frame_duplicate")
+		}
+		v.terminalFrameIDs[frame.FrameID] = struct{}{}
+		if _, duplicate := v.terminalFramesBySequence[frame.GlobalSequence]; duplicate || frame.GlobalSequence < 1 {
+			v.add("terminal_frame_sequence_invalid")
+		} else {
+			v.terminalFramesBySequence[frame.GlobalSequence] = frame
+		}
+		for _, reference := range frame.EvidenceReferences {
+			v.validateReference(reference)
+		}
+	}
+}
+
+func (v *webManifestValidator) validateTerminalTimeline() {
+	var previousTimestamp time.Time
+	for sequence := int64(1); sequence <= int64(len(v.terminalFramesBySequence)); sequence++ {
+		frame, ok := v.terminalFramesBySequence[sequence]
+		if !ok {
+			v.add("terminal_frame_sequence_invalid")
+			continue
+		}
+		stamp, ok := cpParseStamp(frame.Timestamp)
+		if !ok || (!previousTimestamp.IsZero() && stamp.Before(previousTimestamp)) {
+			v.add("terminal_frame_timestamp_invalid")
+			continue
+		}
+		previousTimestamp = stamp
 	}
 }
 

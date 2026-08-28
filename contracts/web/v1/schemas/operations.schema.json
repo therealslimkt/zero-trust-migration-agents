@@ -197,6 +197,7 @@
         {"not": {"required": ["sourceId"]}, "properties": {"eventType": {"enum": ["migration.created", "portfolio.awaiting_approval", "portfolio.approved", "portfolio.rejected", "migration.completed", "migration.failed", "migration.cancelled"]}}}
       ]
     },
+    "terminalFrame": {"$ref": "common.schema.json#/$defs/terminalFrame"},
     "liveApprovalRequest": {
       "type": "object",
       "additionalProperties": false,

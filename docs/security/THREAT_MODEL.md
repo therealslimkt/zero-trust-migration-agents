@@ -3,7 +3,7 @@
 Scope: the execution sandbox (`sandbox_mcp.py`, `tools/mcp_sandbox.py`), its
 Cloud Run deployment (`deploy_sandbox.sh`, `cloudbuild.sandbox.yaml`), the
 legacy VM fleet bootstrap (`setup_vms.sh`, `configure_zero_trust.sh`), the
-Mission Control WebSocket/HTTP backend (`studio-backend/`), and the approval
+Mission Control REST/SSE backend (`studio-backend/`), and the approval
 policy layer (`ztm_security/approval.py`).
 
 ## Prior state (Milestone 0 finding)
@@ -25,7 +25,7 @@ did not remove the `exec()` code path itself.
 | Cloud Run invoker principal (`SANDBOX_INVOKER_MEMBER`) | Allowed to call the sandbox HTTP/MCP endpoint | `deploy_sandbox.sh` fails closed if unset, then replaces the service's IAM policy with a single-member `roles/run.invoker` binding. No `allUsers`/`allAuthenticatedUsers` path exists. |
 | Legacy VM service account (`VM_SERVICE_ACCOUNT`) | Runs on each `legacy-*` Compute Engine instance | `setup_vms.sh` fails closed if unset; `configure_zero_trust.sh` additionally verifies the `legacy-db-sa` identity exists before rewiring any VM. |
 | VM instance identity (metadata token) | Retrieves the Tailscale auth key at boot | The startup script exchanges the VM's own instance identity token for the secret via the Secret Manager API. The auth key value never appears in Compute Engine metadata, gcloud command history, or the deployment script's environment beyond the VM's own boot-time process. |
-| Mission Control browser client | Talks to `studio-backend` over HTTP and WebSocket | Origin is checked against `MISSION_CONTROL_ALLOWED_ORIGINS` (default: localhost dev origins only) for both the `/api/status` CORS path and the `/ws` upgrade. Unlisted or missing origins are denied, not defaulted to allow. |
+| Mission Control browser client | Uses authenticated REST and bounded SSE through `/api/web/v1/` | State-changing browser requests apply the exact `MISSION_CONTROL_ALLOWED_ORIGINS` allowlist (default: localhost development origins only). The legacy `/api/status` CORS path and `/ws` upgrade are unmounted and cannot authorize a browser. |
 | Plan approver (`ApprovalRecord.approver`) | Authorizes a specific migration plan to proceed past this milestone's validation gate | Binds approver, plan digest, timestamp, and portfolio run ID together; `authorize_run` denies on any mismatch and denies non-overridable categories unconditionally. |
 
 ## Failure modes and how they now fail closed
@@ -53,10 +53,10 @@ did not remove the `exec()` code path itself.
    `configure_zero_trust.sh` now verifies `legacy-db-sa` exists via
    `gcloud iam service-accounts describe` before deleting any external IP
    access config or reassigning any VM's service account.
-5. **Browser origin spoofing.** `studio-backend` denies any WebSocket
-   upgrade or `/api/status` POST whose `Origin` header is absent or not in
-   the configured allowlist, rather than reflecting the caller's origin or
-   allowing all origins as the prior implementation did.
+5. **Browser origin spoofing.** The browser BFF applies its allowlist to
+   state-changing requests and emits closed problem responses for disallowed
+   origins. The legacy `/api/status` and `/ws` routes are unmounted, so they
+   cannot be used as an alternate CORS or upgrade path.
 6. **Approval reuse or scope creep.** `authorize_run` requires the
    `ApprovalRecord.plan_digest` and `portfolio_run_id` to exactly match the
    plan and run being authorized. An approval signed for one plan cannot be

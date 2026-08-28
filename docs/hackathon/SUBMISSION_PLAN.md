@@ -332,7 +332,11 @@ it into introductions or a recitation of the full technology list.
 ### Direct dependencies to disclose/audit
 
 - Python: Antigravity SDK, `jsonschema`, `python-dotenv`, `requests`, and test/runtime transitive licenses.
-- Go: Gorilla WebSocket.
+- Go: standard-library `net/http` REST handlers and bounded SSE for the active
+  browser transport. `github.com/gorilla/websocket` remains a legacy source
+  dependency outside the mounted route graph; disclose it during the final
+  license audit and remove it only in a separately verified cleanup. Do not
+  describe `/ws` or `/api/status` as active judge-facing endpoints.
 - Frontend: React, HeroUI, Motion, Vite, TypeScript, Tailwind CSS, PostCSS, Autoprefixer, and Oxlint.
 - Runtime/infrastructure: Tailscale, Ollama/Gemma, Docker/nginx, Apache Beam/Dataflow if retained, and Google Cloud services/SDKs.
 
@@ -358,10 +362,9 @@ Individual/Hobbyist prize and the core Fortified Enterprise Fleet prize.
 2. **Public technical write-up (+0.2):** publish after the factual demo is
    frozen. State that it was created for entering this hackathon.
 3. **LinkedIn/X post (+0.2):** include `#AllThingsAgenticHackathon` exactly.
-4. **Veo (+0.2 if genuinely integrated):** stretch only. Do not use Veo merely
-   to decorate the marketing video and claim a product integration. Add it
-   only if it performs a real, visible product function after every P0 gate is
-   complete.
+4. **Veo:** deliberately excluded. Exact typed terminal frames and immutable
+   recorded-run evidence are core product behavior; generated video would make
+   that proof less direct, not more useful.
 
 Core completion outranks bonus model stuffing.
 

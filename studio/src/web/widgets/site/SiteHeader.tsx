@@ -1,6 +1,6 @@
 import { useId, useState, type MouseEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { PixelIcon, ThemeToggle, type PixelIconName, type ThemeMode } from "../../shared/ui/index";
+import { BrandBolt, PixelIcon, ThemeToggle, type PixelIconName, type ThemeMode } from "../../shared/ui/index";
 import "./site-widgets.css";
 
 export type SiteNavMode = "recorded_demo" | "live" | "public";
@@ -53,7 +53,7 @@ function isPublishedReplay(demo?: PublishedDemoDescriptor): demo is PublishedDem
 export function SiteHeader({
   activeRoute = "/",
   onNavigate,
-  brandTitle = "MIGRATION CONTROL",
+  brandTitle = "SPARKY",
   tagline = "GOVERNED DATA MOVEMENT",
   mode = "public",
   authStatus = "unconfigured",
@@ -109,7 +109,7 @@ export function SiteHeader({
       <header role="banner" className={`site-header ${className}`.trim()}>
         <div className="site-header__container">
           <a href="/" className="site-header__brand" onClick={(event) => navigate(event, "/")} aria-label={`${brandTitle} home`}>
-            <span className="site-header__brand-icon"><PixelIcon name="shield-check" size="md" color="google-blue" glow /></span>
+            <span className="site-header__brand-icon"><BrandBolt title="Sparky" /></span>
             <span className="site-header__brand-text"><span className="site-header__brand-title">{brandTitle}</span><span className="site-header__brand-tag">{tagline}{mode === "recorded_demo" ? " · REPLAY" : ""}</span></span>
           </a>
           <nav className="site-header__nav" aria-label="Main navigation"><ul className="site-header__nav-list">{navItems.map((item) => <li key={item.id}>{navLink(item)}</li>)}</ul></nav>

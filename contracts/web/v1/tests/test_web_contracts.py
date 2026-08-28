@@ -120,6 +120,27 @@ class WebSchemaTests(unittest.TestCase):
             ["pending_upload", "retrieving", "verified"],
         )
 
+    def test_terminal_frame_is_closed_typed_and_safe_single_line(self):
+        common = load_json(SCHEMAS / "common.schema.json")
+        terminal = common["$defs"]["terminalFrame"]
+        self.assertIs(terminal["additionalProperties"], False)
+        self.assertEqual(
+            set(terminal["required"]),
+            {
+                "schemaVersion", "frameId", "runId", "sourceId", "globalSequence",
+                "laneSequence", "timestamp", "lane", "stream", "producer", "tool",
+                "line", "severity", "evidenceReferences",
+            },
+        )
+        self.assertEqual(terminal["properties"]["lane"]["enum"], ["source", "edge", "compiler", "destination"])
+        self.assertEqual(terminal["properties"]["stream"]["enum"], ["command", "stdout", "stderr", "system", "metric"])
+        self.assertEqual(terminal["properties"]["severity"]["enum"], ["debug", "info", "warning", "error"])
+        self.assertEqual(terminal["properties"]["line"]["maxLength"], 4096)
+        self.assertIn("\\u001F", terminal["properties"]["line"]["pattern"])
+        source = load_json(SCHEMAS / "demo-manifest.schema.json")["$defs"]["sourceReplay"]
+        self.assertIn("terminalFrames", source["required"])
+        self.assertEqual(source["properties"]["terminalFrames"]["minItems"], 1)
+
 
 class WebOpenAPITests(unittest.TestCase):
     def setUp(self):
@@ -177,6 +198,18 @@ class WebOpenAPITests(unittest.TestCase):
         stream = paths["/api/web/v1/runs/{run_id}/events"]["get"]
         parameter_refs = {parameter["$ref"] for parameter in stream["parameters"]}
         self.assertIn("#/components/parameters/LastEventId", parameter_refs)
+
+    def test_terminal_stream_is_authenticated_resumable_and_typed(self):
+        path = "/api/web/v1/runs/{run_id}/sources/{source_id}/terminal"
+        stream = self.document["paths"][path]["get"]
+        self.assertEqual(stream["security"], [{"identityToken": []}])
+        self.assertEqual(
+            {parameter["$ref"] for parameter in stream["parameters"]},
+            {"#/components/parameters/RunId", "#/components/parameters/SourceId", "#/components/parameters/LastTerminalFrameId"},
+        )
+        sse = stream["responses"]["200"]["content"]["text/event-stream"]
+        self.assertEqual(sse["x-sse-event"], "terminal.frame")
+        self.assertEqual(sse["x-sse-data-schema"]["$ref"], "./schemas/operations.schema.json#/$defs/terminalFrame")
 
     def test_publication_body_cap_is_eight_mib(self):
         publication = self.document["paths"]["/api/web/v1/demo-publications"]["post"]

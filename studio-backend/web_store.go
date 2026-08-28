@@ -36,16 +36,19 @@ import (
 const (
 	webSnapshotVersion = 3
 
-	webMaxStoredPublications = 100
-	webMaxStoredOwnerships   = 1000
-	webMaxStoredTrusted      = 1000
-	webMaxStoredSetups       = 1000
-	webMaxStoredResearch     = 1000
-	webMaxOwnerOwnerships    = 100
-	webMaxOwnerTrusted       = 100
-	webMaxOwnerSetups        = 100
-	webMaxOwnerResearch      = 100
-	webMaxMissingCaps        = 100
+	webMaxStoredPublications   = 100
+	webMaxStoredOwnerships     = 1000
+	webMaxStoredTrusted        = 1000
+	webMaxStoredSetups         = 1000
+	webMaxStoredResearch       = 1000
+	webMaxStoredTerminalFrames = 10000
+	webMaxRunTerminalFrames    = 3000
+	webMaxSourceTerminalFrames = 1000
+	webMaxOwnerOwnerships      = 100
+	webMaxOwnerTrusted         = 100
+	webMaxOwnerSetups          = 100
+	webMaxOwnerResearch        = 100
+	webMaxMissingCaps          = 100
 )
 
 // Cloud setup lifecycle states persisted by the store. The wire connection
@@ -197,6 +200,7 @@ type webSnapshot struct {
 	TrustedPublications []*webTrustedPublicationRecord `json:"trustedPublications"`
 	CloudSetups         []*WebCloudSetupRecord         `json:"cloudSetups"`
 	DriverResearch      []*WebDriverResearchRecord     `json:"driverResearch"`
+	TerminalFrames      []*WebTerminalFrame            `json:"terminalFrames"`
 }
 
 func webEmptySnapshot() *webSnapshot {
@@ -208,6 +212,7 @@ func webEmptySnapshot() *webSnapshot {
 		TrustedPublications: []*webTrustedPublicationRecord{},
 		CloudSetups:         []*WebCloudSetupRecord{},
 		DriverResearch:      []*WebDriverResearchRecord{},
+		TerminalFrames:      []*WebTerminalFrame{},
 	}
 }
 
@@ -337,6 +342,9 @@ func webDecodeSnapshot(raw []byte) (*webSnapshot, error) {
 	if snap.DriverResearch == nil {
 		snap.DriverResearch = []*WebDriverResearchRecord{}
 	}
+	if snap.TerminalFrames == nil {
+		snap.TerminalFrames = []*WebTerminalFrame{}
+	}
 	if err := webValidateStoreSnapshot(&snap); err != nil {
 		return nil, err
 	}
@@ -407,6 +415,9 @@ func (s *WebStateStore) cloneLocked() (*webSnapshot, error) {
 	}
 	if next.DriverResearch == nil {
 		next.DriverResearch = []*WebDriverResearchRecord{}
+	}
+	if next.TerminalFrames == nil {
+		next.TerminalFrames = []*WebTerminalFrame{}
 	}
 	return next, nil
 }
@@ -1318,6 +1329,9 @@ func webValidateStoreSnapshot(snap *webSnapshot) error {
 		if _, ok := cpParseStamp(record.CreatedAt); !ok {
 			return webCorrupt("malformed ownership timestamp")
 		}
+	}
+	if err := webValidateTerminalSnapshot(snap.TerminalFrames, runIDs); err != nil {
+		return err
 	}
 
 	if len(snap.TrustedPublications) > webMaxStoredTrusted {

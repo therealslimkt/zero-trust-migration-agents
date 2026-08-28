@@ -111,7 +111,7 @@
   /* ==========================================================================
      4. Typography & High Density Data Font Stacks
      ========================================================================== */
-  --font-mono-tactical: "SFMono-Regular", "JetBrains Mono", "IBM Plex Mono", Menlo, Consolas, monospace;
+  --font-mono-tactical: "Geist Mono Variable", "GeistMono-Medium", "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
   --font-sans-mission: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-pixel: "SFMono-Regular", "Courier New", Courier, monospace;
 

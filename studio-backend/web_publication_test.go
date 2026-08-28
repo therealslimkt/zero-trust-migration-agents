@@ -46,6 +46,7 @@ func webTestManifest(t *testing.T) DemoManifest {
 		}
 	}
 	source := func(id WebSourceID, hostname, displayName, rawHex, table, digit string) WebSourceReplay {
+		globalSequence := map[WebSourceID]int64{"jde": 1, "maxdb": 2, "btrieve": 3}[id]
 		return WebSourceReplay{
 			SourceID: id, Hostname: hostname, DisplayName: displayName,
 			Source: WebSourceSystemReplay{
@@ -87,6 +88,13 @@ func webTestManifest(t *testing.T) DemoManifest {
 				Reconciliation: reconciliation(digit), DataflowEvidence: evidence[3], BigQueryEvidence: evidence[4],
 				SuggestedQueries: []string{"SELECT * FROM legacy_migration." + table + " LIMIT 10"},
 			},
+			TerminalFrames: []WebTerminalFrame{{
+				SchemaVersion: WebSchemaVersion, FrameID: fmt.Sprintf("frm_recordedframe%02d", globalSequence),
+				RunID: "mig_recordedDemo001", SourceID: id, GlobalSequence: globalSequence, LaneSequence: 1,
+				Timestamp: "2026-08-27T08:00:01Z", Lane: "source", Stream: "stdout",
+				Producer: "recorded-migration-worker", Tool: "source-reader", Line: "Read one synthetic source row.",
+				Severity: "info", EvidenceReferences: []WebEvidenceReference{evidence[0]},
+			}},
 		}
 	}
 	manifest := DemoManifest{
@@ -163,7 +171,7 @@ func TestDemoManifestDigestIsDeterministicAndOmitsOnlyItsOwnField(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	const golden = "sha256:878f0e62200d375f2d2ab23b1579a21de4045fe8a835c8e993343714f7d2ae41"
+	const golden = "sha256:b9f5b56fba4dafccdb31b99ce60593d24fb9dea16e060d858b86cad124da25ce"
 	if first != golden {
 		t.Fatalf("digest = %s, want golden %s", first, golden)
 	}

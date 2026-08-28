@@ -24,3 +24,13 @@ Platform bearer token; the live approval request intentionally has no actor
 field because the BFF derives that identity from verified claims. Live-run
 creation likewise accepts no owner or requester field; ownership in every run
 response is injected from the verified session by the BFF.
+
+Each live source has a separate authenticated terminal stream at
+`/api/web/v1/runs/{run_id}/sources/{source_id}/terminal`. Its SSE event name is
+`terminal.frame`; `Last-Event-ID` is a `frm_...` frame ID and resumes strictly
+after that exact frame within the selected source stream. Responses replay at
+most 500 persisted frames and close cleanly. Global sequences are contiguous
+per run, while lane sequences are contiguous per `(run, source, lane)`.
+Terminal lines are stored and replayed byte-for-byte only after trusted
+producer admission rejects unsafe text, credential material, and hidden
+reasoning. Browsers have no terminal ingestion operation.

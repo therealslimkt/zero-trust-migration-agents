@@ -135,6 +135,14 @@ export class LiveWebClient {
     return response;
   }
 
+  async openTerminalFrames(runId: string, sourceId: SourceId, lastFrameId?: string, signal?: AbortSignal): Promise<Response> {
+    const headers = new Headers({ Accept: "text/event-stream" });
+    if (lastFrameId !== undefined) headers.set("Last-Event-ID", lastFrameId);
+    const response = await this.#response(`/api/web/v1/runs/${segment(runId)}/sources/${segment(sourceId)}/terminal`, { headers, signal });
+    if (!response.ok) await decode<never>(response);
+    return response;
+  }
+
   decideRun(runId: string, request: LiveApprovalRequest): Promise<LiveApprovalResponse> {
     return this.#request(`/api/web/v1/runs/${segment(runId)}/approval`, { method: "POST", body: JSON.stringify(request) });
   }

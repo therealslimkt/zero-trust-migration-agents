@@ -25,7 +25,11 @@ production data, or raw PII.
 - The active frontend uses timers and random values and is a simulation, not
   acceptable final evidence.
 - `main.py` is the current Gemini/Antigravity orchestration prototype.
-- `studio-backend/main.go` exposes the current status and WebSocket backend.
+- At this baseline checkpoint, `studio-backend/main.go` still contained the
+  legacy status/WebSocket implementation. It is superseded: the current mux
+  explicitly leaves `/api/status` and `/ws` unmounted, while the supported
+  browser surface is REST plus bounded SSE. See
+  [`docs/GOLANG_MISSION_CONTROL_ARCHITECTURE.md`](../GOLANG_MISSION_CONTROL_ARCHITECTURE.md).
 - `studio/src/studio/` and `studio/src/orchestrator/` are checkpointed WIP and
   are not wired into the active application.
 
