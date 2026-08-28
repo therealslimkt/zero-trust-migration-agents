@@ -1,46 +1,38 @@
-# Golang Mission Control Architecture
+# Go Mission Control architecture
 
-## Overview
-The Mission Control backend acts as the critical high-throughput conduit between the Python-based AI Agent Fleet (Zero-Trust Migration Agents) and the React/Vite Studio UI ("The Matrix View").
+## Purpose
 
-## Architecture Diagram
+Mission Control is the trusted browser-facing control plane between the migration runtime and the React studio. It exposes bounded REST resources and authenticated Server-Sent Events (SSE); it does not expose agent chain-of-thought, raw secrets, or an unbounded process log.
+
+## Request and event flow
+
 ```mermaid
-flowchart TD
-    subgraph AI_Fleet [Python Agent Fleet]
-        O[Orchestrator]
-        R[Researcher]
-        RE[Reverse-Engineer]
-        P[Pipeline Agent]
-    end
-
-    subgraph Go_Backend [Golang Mission Control]
-        REST[REST API /api/status]
-        Hub[WebSocket Hub / Broadcaster]
-        WS[WebSocket Endpoint /ws]
-    end
-
-    subgraph Frontend [React Studio UI]
-        Dashboard[The Matrix View]
-    end
-
-    O -- POST Status Updates --> REST
-    R -- POST Research --> REST
-    RE -- POST Code Gen --> REST
-    P -- POST Execution --> REST
-
-    REST -- Internal Channel --> Hub
-    Hub -- Broadcasts JSON --> WS
-    WS -- Persistent WS Connection --> Dashboard
+flowchart LR
+    Runtime[Migration runtime] -->|validated state and evidence| CP[Go control plane]
+    CP -->|durable migration state| Store[(JSON state store)]
+    Browser[React studio] -->|REST /api/web/v1| BFF[Go browser BFF]
+    BFF -->|scoped control-plane reads| CP
+    CP -->|bounded SSE replay and Last-Event-ID resume| BFF
+    BFF -->|authenticated JSON and SSE| Browser
 ```
 
-## Why Golang over FastAPI?
-While Python's FastAPI is excellent for standard REST APIs and supports WebSockets, this specific use case demands extreme concurrency and low memory overhead:
+The control-plane API is mounted at `/api/v1/migrations`. The browser uses the separate `/api/web/v1` BFF surface. Live run events are streamed from `/api/web/v1/runs/{run_id}/events`; reconnecting clients resume with a validated `Last-Event-ID` cursor.
 
-1. **High-Frequency Streaming**: The AI agents generate a massive volume of token-by-token thought processes, tool execution logs, and hex-dump parsing events.
-2. **Goroutines vs Asyncio**: Golang's native goroutines provide a highly efficient, preemptively scheduled concurrency model. A Go WebSocket server can handle tens of thousands of concurrent connections (or very high-throughput single connections) with a fraction of the memory footprint of Python's `asyncio` event loop.
-3. **Microservice Separation**: By decoupling the UI state management from the heavy AI processing loops, we ensure the UI remains perfectly responsive even if the Python AI Orchestrator is blocking on a synchronous LLM call or heavy regex/EBCDIC decoding.
+## Design properties
 
-## Implementation Details
-- **Framework**: Standard library `net/http` combined with `github.com/gorilla/websocket` for rock-solid WebSocket handling.
-- **REST Endpoint**: A simple `POST /api/status` route accepts JSON payloads from `main.py` containing agent name, status, and message.
-- **Broadcaster Hub**: A central Go `chan` (channel) receives incoming REST payloads and fans them out to all connected WebSocket clients, ensuring the Studio UI updates in real time.
+- **Durable truth:** snapshots and persisted events drive the UI. The browser does not infer missing migration state.
+- **Bounded replay:** each SSE response is capped, ends cleanly, and can be resumed from the last processed event.
+- **Typed vocabulary:** event types, run identifiers, source identifiers, and evidence references are validated before admission.
+- **Server-side authorization:** the BFF scopes live runs, approvals, cloud setup, and demo publication to the authenticated principal.
+- **Safe observability:** summaries and evidence references are emitted. Private reasoning, credentials, and raw unapproved data are not browser payloads.
+- **Responsive separation:** the Go service remains independent of synchronous model and data-processing work in the migration runtime.
+
+## Implementation
+
+- Go standard-library `net/http` handlers serve REST and SSE.
+- `studio-backend/control_plane.go` implements the migration control plane and durable event replay.
+- `studio-backend/web_bff.go` and `studio-backend/web_runs.go` implement the authenticated browser contract.
+- `contracts/web/v1/openapi.json` is the canonical web API contract used by generated Go and TypeScript types.
+- The React client uses `fetch` for SSE so it can send authorization and `Last-Event-ID` headers explicitly.
+
+The live terminal mirror is a separate, typed, bounded stream. It carries exact producer-admitted command/stdout/stderr lines after secrets are suppressed at the producer; it is not a WebSocket substitute for application state and never carries hidden model reasoning.

@@ -61,3 +61,16 @@ differ from that concept.
 
 ## Post-Hackathon / Access Unlocked
 *   **[PENDING] Migrate to Gemini 3.5 Pro:** The `gemini-2.5-pro` model is currently serving as our production fallback on Vertex AI while our `ztm-agent-9049c3` project awaits preview access to `gemini-3.5-pro`. Once Google Cloud grants access in Model Garden, update `main.py` and `local_gemma_agent.py` to target the 3.5 generation for enhanced planning and orchestration.
+
+## Submission gate
+
+The authoritative checklist, architecture-diagram draft, hosted judge plan,
+truthful disclosure notes, and timed four-minute video script are maintained in
+[the submission plan](../docs/hackathon/SUBMISSION_PLAN.md).
+
+Submission work begins after the real Mission Control path is complete, but
+its P0 evidence requirements are release gates rather than post-demo cleanup.
+In particular, the submission cannot claim Gemini 3.5+, Dataflow, BigQuery, a
+hosted backend, or durable cloud state until the exact deployed resources have
+been exercised and captured. Bonus work such as Veo is lower priority than the
+three-source end-to-end run, public documentation, and unedited live proof.

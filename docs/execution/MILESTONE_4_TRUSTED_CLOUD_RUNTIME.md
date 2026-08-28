@@ -76,7 +76,7 @@ dedicated subnetwork must have Private Google Access, and the runtime must use
 a digest-pinned Artifact Registry SDK image. Render schemas locally with:
 
 ```text
-python scripts/render_m4_bigquery_schemas.py \
+python -m scripts.render_m4_bigquery_schemas \
   --snapshot /owner-only/prepared.json \
   --digest sha256:<approved-portfolio-digest> \
   --dataset legacy_migration \

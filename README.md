@@ -31,14 +31,16 @@ python3 -m venv venv
 venv/bin/pip install -r requirements.txt -r requirements-dev.txt
 cd studio && npm install && cd ..
 
-venv/bin/python -m pytest -q
+venv/bin/python -m scripts.verify_python_gate
 (cd studio-backend && go test ./... && go test -race ./... && go vet ./...)
 (cd studio && npm run build && npm run lint && node src/mission-control/model.test.ts)
 ```
 
-These gates use local fakes for Google Cloud adapters and do not create cloud
-resources. The Dataflow image/spec build, IAM, APIs, buckets, tables, and live
-jobs remain a separate deployment/cost approval.
+The Python gate runs the complete suite first and stops on failure; it runs the
+focused M4 suite and prints `PYTHON TEST GATE PASSED` only after the complete
+suite succeeds. These gates use local fakes for Google Cloud adapters and do
+not create cloud resources. The Dataflow image/spec build, IAM, APIs, buckets,
+tables, and live jobs remain a separate deployment/cost approval.
 
 ## Run the real three-lane approval flow
 
@@ -67,7 +69,7 @@ live portfolio. This command stops at the approval boundary and writes the
 protected snapshot with mode `0600`:
 
 ```bash
-venv/bin/python scripts/verify_m3_control_plane.py plan \
+venv/bin/python -m scripts.verify_m3_control_plane plan \
   --snapshot /private/tmp/ztm-prepared.json \
   --project '<gcp-project>' \
   --location us \
@@ -86,15 +88,15 @@ Before a live M4 canary, render the exact approved target schemas and pre-create
 the three target tables plus `migration_audit`:
 
 ```bash
-venv/bin/python scripts/render_m4_bigquery_schemas.py \
+venv/bin/python -m scripts.render_m4_bigquery_schemas \
   --snapshot /private/tmp/ztm-prepared.json \
   --digest 'sha256:<approved-digest>' \
   --dataset legacy_migration \
   --output-dir /private/tmp/ztm-bigquery-schemas
 ```
 
-`scripts/run_m4_cloud.py --help` lists the explicit bucket, Flex spec, worker
-identity, private subnetwork, digest-pinned SDK image, and proof-output
+`venv/bin/python -m scripts.run_m4_cloud --help` lists the explicit bucket,
+Flex spec, worker identity, private subnetwork, digest-pinned SDK image, and proof-output
 arguments. Pass `--mission-control-url http://127.0.0.1:8080` to consume the
 durable UI-recorded approval and publish Dataflow, BigQuery, reconciliation,
 and audit evidence back to the three lanes. Successful proof contains only
