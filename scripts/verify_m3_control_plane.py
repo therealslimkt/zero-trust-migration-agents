@@ -156,8 +156,12 @@ async def _plan(args: argparse.Namespace) -> dict[str, object]:
     _write_exclusive(args.snapshot, canonical_json_bytes(prepared.as_document()))
     if mission_control is not None:
         plans = {str(plan["sourceId"]): plan for plan in prepared.plans}
+        summaries_by_source = {
+            str(summary["sourceId"]): summary for summary in summaries
+        }
         for source_id in SOURCE_ORDER:
             edge = artifacts[source_id]
+            summary = summaries_by_source[source_id]
             manifest = edge.source_manifest
             report = edge.redaction_report
             plan = plans[source_id]
@@ -165,6 +169,47 @@ async def _plan(args: argparse.Namespace) -> dict[str, object]:
             manifest_digest = document_digest(manifest)
             report_digest = str(report["reportDigest"])
             plan_digest = str(plan["planDigest"])
+            mission_control.emit_terminal_frame(
+                run_id=run_id,
+                source_id=source_id,
+                timestamp=_now(),
+                lane="source",
+                stream="stdout",
+                producer=str(summary["hostname"]),
+                tool="tailscale-ssh/read",
+                line=(
+                    f"source={source_id} bytes={summary['byteCount']} "
+                    f"records={record_count} digest={summary['sourceDigest']}"
+                ),
+            )
+            mission_control.emit_terminal_frame(
+                run_id=run_id,
+                source_id=source_id,
+                timestamp=_now(),
+                lane="edge",
+                stream="metric",
+                producer="jetson-orin-super",
+                tool="local-gemma/protect",
+                line=(
+                    f"source={source_id} protected_findings="
+                    f"{summary['protectedFindingCount']} unresolved_findings="
+                    f"{summary['unresolvedFindingCount']} batch="
+                    f"{summary['recordBatchId']}"
+                ),
+            )
+            mission_control.emit_terminal_frame(
+                run_id=run_id,
+                source_id=source_id,
+                timestamp=_now(),
+                lane="compiler",
+                stream="stdout",
+                producer="agentic-compiler",
+                tool="gemini-plan-compiler",
+                line=(
+                    f"source={source_id} model={prepared.model} "
+                    f"plan_digest={plan_digest}"
+                ),
+            )
             mission_control.advance_source(
                 run_id=run_id, source_id=source_id, state="inventorying"
             )

@@ -310,6 +310,10 @@ class _MissionControlRecorder:
     def advance_source(self, **kwargs):
         self.calls.append(kwargs)
 
+    def emit_terminal_frame(self, **kwargs):
+        self.calls.append(kwargs)
+        return "frm_0123456789ab"
+
 
 def test_mission_control_sync_is_retry_aware_and_carries_all_cloud_evidence():
     prepared = _prepared()
@@ -343,3 +347,34 @@ def test_mission_control_sync_is_retry_aware_and_carries_all_cloud_evidence():
     already_complete = _MissionControlRecorder("completed")
     cli._sync_cloud_evidence(already_complete, result)
     assert already_complete.calls == []
+
+
+def test_cloud_terminal_frames_use_exact_job_table_and_reconciliation_values():
+    prepared = _prepared()
+    approval = cli._approval(
+        prepared=prepared,
+        digest=prepared.portfolio_digest,
+        approver="portfolio-reviewer",
+        approved_at=APPROVED_AT,
+    )
+    execution = cli.execute_portfolio(
+        prepared=prepared,
+        approval=approval,
+        policy_categories=frozenset(),
+    )
+    result = _cloud_result(prepared, execution)
+    recorder = _MissionControlRecorder("completed")
+
+    cli._emit_cloud_terminal_frames(recorder, result)
+
+    assert len(recorder.calls) == 6
+    for source, (dataflow, bigquery) in zip(
+        result.sources, zip(recorder.calls[::2], recorder.calls[1::2])
+    ):
+        assert dataflow["lane"] == "compiler"
+        assert source.job_id in dataflow["line"]
+        assert source.bundle_digest in dataflow["line"]
+        assert bigquery["lane"] == "destination"
+        assert source.table_spec in bigquery["line"]
+        assert str(source.record_count) in bigquery["line"]
+        assert source.output_digest in bigquery["line"]

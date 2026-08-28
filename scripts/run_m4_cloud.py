@@ -80,6 +80,12 @@ class GoogleClients:
 ClientFactory = Callable[..., GoogleClients]
 
 
+def _now() -> str:
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="milliseconds").replace(
+        "+00:00", "Z"
+    )
+
+
 def official_client_factory(*, project: str, region: str) -> GoogleClients:
     """Construct the three official clients at the last responsible moment.
 
@@ -391,6 +397,7 @@ def run(
         )
         if mission_control is not None:
             _sync_cloud_evidence(mission_control, cloud_result)
+            _emit_cloud_terminal_frames(mission_control, cloud_result)
         _commit_output(descriptor, canonical_json_bytes(proof))
         committed = True
         return proof
@@ -459,6 +466,40 @@ def _sync_cloud_evidence(
                 ),
                 secondary_digest=result.audit_digest,
             )
+
+
+def _emit_cloud_terminal_frames(
+    client: MissionControlLocalClient, result: CloudPortfolioResult
+) -> None:
+    """Publish only exact identifiers and counters returned by cloud execution."""
+
+    for source in result.sources:
+        client.emit_terminal_frame(
+            run_id=result.run_id,
+            source_id=source.source_id,
+            timestamp=_now(),
+            lane="compiler",
+            stream="system",
+            producer="google-dataflow",
+            tool="apache-beam/job",
+            line=(
+                f"job={source.job_id} name={source.job_name} "
+                f"state={source.terminal_state} bundle={source.bundle_digest}"
+            ),
+        )
+        client.emit_terminal_frame(
+            run_id=result.run_id,
+            source_id=source.source_id,
+            timestamp=_now(),
+            lane="destination",
+            stream="metric",
+            producer="google-bigquery",
+            tool="verified-table-write",
+            line=(
+                f"table={source.table_spec} rows={source.record_count} "
+                f"output_digest={source.output_digest}"
+            ),
+        )
 
 
 def _parser() -> argparse.ArgumentParser:

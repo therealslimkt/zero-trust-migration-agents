@@ -6,8 +6,11 @@ Dataflow is **not enabled** in the recorded inventory. There are no current
 Dataflow jobs and no migration BigQuery datasets. Consequently, there is no
 production Dataflow terminal producer to demonstrate today.
 
-The flow below is a **planned** implementation contract. It explains what a
-future verified run must publish before a dashboard can show terminal progress.
+The terminal transport is implemented. The M3 verifier publishes its observed
+source, edge-protection, and compiler identifiers and counters; the M4 runner
+publishes the exact Dataflow job and verified BigQuery result identifiers it
+receives when cloud execution is enabled. The Dataflow execution itself remains
+planned until the project prerequisites above are explicitly enabled.
 
 ```mermaid
 sequenceDiagram
