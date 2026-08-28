@@ -6,6 +6,38 @@
  */
 
 export const PIXEL_ICON_PATHS = {
+  "apache-beam":
+    "M1 1h6v14H1V1zm2 2v4h2V3H3zm0 6v4h2V9H3zm5-7h2v2H8V2zm2 2h2v2h-2V4zm2 2h3v2h-3V6zm-2 4h5v2h-5v-2zm-2 2h2v2H8v-2z",
+  "artifact-registry":
+    "M7 0h2v2h4v2h2v8h-2v2H9v2H7v-2H3v-2H1V4h2V2h4V0zM4 4h8v2H4V4zm0 3v5h3V7H4zm5 0v5h3V7H9zM5 8h1v2H5V8zm5 0h1v2h-1V8z",
+  bigquery:
+    "M4 0h7v2h2v2h2v7h-2v2h-2v2H4v-2H2v-2H0V4h2V2h2V0zm0 3v9h7v-1h2V4h-2V3H4zm1 6h1v2H5V9zm2-3h1v5H7V6zm2 1h1v4H9V7zm2 5h2v2h-2v-2zm2 2h2v2h-2v-2z",
+  btrieve:
+    "M3 1h9v1h2v12h-2v1H3v-1H1V2h2V1zm2 2v10h5v-1h2V9h-2V7h2V4h-2V3H5zm2 2h3v2H7V5zm0 4h3v2H7V9z",
+  "cloud-run":
+    "M3 0h10v2h2v4h-2v2h-2V6h2V2H3v4h2v2H3V6H1V2h2V0zm4 4h2v8h3v2H9v2H7v-2H4v-2h3V4zm-2 5h2v2H5V9zm4 0h2v2H9V9z",
+  "compute-engine":
+    "M4 0h8v2h2v2h2v8h-2v2h-2v2H4v-2H2v-2H0V4h2V2h2V0zm0 3v10h8V3H4zm2 2h4v4H6V5zm1 1v2h2V6H7zm-2 5h6v1H5v-1z",
+  dataflow:
+    "M0 2h4v4H0V2zm1 1v2h2V3H1zm0 7h4v4H1v-4zm1 1v2h2v-2H2zM6 6h4v4H6V6zm1 1v2h2V7H7zm5-5h4v4h-4V2zm1 1v2h2V3h-2zm-1 7h4v4h-4v-4zm1 1v2h2v-2h-2zM4 4h2v1H4V4zm6 0h2v1h-2V4zM4 11h2v1H4v-1zm6 0h2v1h-2v-1z",
+  db2:
+    "M3 1h10v1h2v3h-2v8h-2v2H3v-2H1V5h1V2h1V1zm1 2v2h8V3H4zM3 7h10V6H3v1zm0 3h7V8H3v2zm0 3h8v-2H3v2zm8-5h2v1h-2V8zm0 2h2v1h-2v-1z",
+  gemini:
+    "M7 0h2v3h2v2h2v2h3v2h-3v2h-2v2H9v3H7v-3H5v-2H3V9H0V7h3V5h2V3h2V0zm0 5v2H5v2h2v2h2V9h2V7H9V5H7z",
+  gemma:
+    "M3 1h10v2h2v4h-2v2h-2v2H9v2H7v-2H5V9H3V7H1V3h2V1zm1 2v3h3V3H4zm5 0v3h3V3H9zM3 7l4 4V7H3zm6 0v4l4-4H9z",
+  "google-cloud":
+    "M6 2h5v2h2v2h2v6h-2v2H3v-1H1v-2H0V8h2V6h2V4h2V2zm0 3v2H4v2H2v2h2v1h8v-1h1V8h-2V6H9V5H6z",
+  "identity-platform":
+    "M2 1h12v7c0 4-3 6-6 8-3-2-6-4-6-8V1zm2 2v5c0 2 2 4 4 5 2-1 4-3 4-5V3H4zm3 1h2v3H7V4zM5 8h6v3H5V8zm2 1v1h2V9H7z",
+  "jdbc-jar":
+    "M4 0h7v2H4V0zM3 2h9v2H3V2zM2 4h11v10H2V4zm2 2v6h7V6H4zm2 1h3v1H6V7zm0 2h4v1H6V9zm7-4h2v2h-2V5zm0 4h2v2h-2V9zm1-2h2v2h-2V7z",
+  maxdb:
+    "M3 1h10v1h2v12h-2v1H3v-1H1V2h2V1zm1 2v3h2V4h1v2h2V4h1v2h2V3H4zm0 5v2h8V8H4zm0 4v1h8v-1H4z",
+  tailscale:
+    "M1 1h4v4H1V1zm5 0h4v4H6V1zm5 0h4v4h-4V1zM1 6h4v4H1V6zm5 0h4v4H6V6zm5 0h4v4h-4V6zM1 11h4v4H1v-4zm5 0h4v4H6v-4zm5 0h4v4h-4v-4zM2 2v2h2V2H2zm5 5v2h2V7H7zm5 5v2h2v-2h-2z",
+  "vertex-ai":
+    "M5 0h6v2h2v2h2v8h-2v2h-2v2H5v-2H3v-2H1V4h2V2h2V0zm1 3v3H3v4h3v3h4v-3h3V6h-3V3H6zm1 2h2v2h2v2H9v2H7V9H5V7h2V5z",
   terminal:
     "M1 2h14v12H1V2zm1 1v10h12V3H2zm2 2h2v1H4V5zm2 1h2v1H6V6zm-2 1h2v1H4V7zm5 3h4v1H9v-1z",
   "shield-check":

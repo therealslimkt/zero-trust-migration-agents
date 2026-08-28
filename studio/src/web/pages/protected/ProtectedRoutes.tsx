@@ -39,7 +39,10 @@ function queryState<T>(query: { readonly isPending: boolean; readonly isError: b
   if (query.isPending) return { status: 'loading', connection: 'live' }
   if (query.isError) return { status: 'error', connection: navigator.onLine ? 'reconnecting' : 'offline', message: message(query.error) }
   if (query.data === undefined || empty?.(query.data)) return { status: 'empty', connection: 'live' }
-  return { status: 'ready', data: query.data, connection: query.isFetching ? 'reconnecting' : 'live', stale: query.isFetching, lastUpdatedAt: new Date(query.dataUpdatedAt).toISOString() }
+  // A routine background refetch is not a connection failure. Keeping the
+  // last authenticated snapshot visible prevents the freshness banner from
+  // entering/leaving the layout every polling interval.
+  return { status: 'ready', data: query.data, connection: 'live', lastUpdatedAt: new Date(query.dataUpdatedAt).toISOString() }
 }
 
 export function DashboardRoute() {
@@ -84,7 +87,6 @@ function useRunEvents(client: LiveWebClient, runId?: string) {
     const connect = async () => {
       while (active) {
         try {
-          setConnection('reconnecting')
           const response = await client.openRunEvents(runId, lastEventId.current, abort.signal)
           if (!response.body) throw new Error('The event stream has no response body.')
           setConnection('live')

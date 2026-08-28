@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react'
+import type { KeyboardEvent, ReactNode } from 'react'
 import type {
   CompilerAction,
   DeclarativeTransform,
@@ -10,6 +10,7 @@ import type {
   SourceReplay,
   SyntheticValue,
 } from '../../contracts.generated'
+import { PixelIcon, TerminalWindow, type PixelIconName, type TerminalAccent } from '../../shared/ui'
 
 import { CodeValue, Metric, PageScaffold, StatePanel } from './PageScaffold'
 import type { ResourceState } from './state'
@@ -128,11 +129,6 @@ function SourcePaneContent({ replay, onCopy }: { readonly replay: SourceReplay; 
           </div>
         )}
       </section>
-      <section className="source-pane__section">
-        <h3>Read-only example queries</h3>
-        <QueryList queries={replay.source.exampleQueries} onCopy={onCopy} />
-        <p className="protected-muted">The browser does not open an arbitrary source shell.</p>
-      </section>
     </>
   )
 }
@@ -239,7 +235,7 @@ function EventTimeline({ events }: { readonly events: readonly LiveRunEvent[] })
   )
 }
 
-function EvidencePaneContent({ replay, events, onCopy }: { readonly replay: SourceReplay; readonly events: readonly LiveRunEvent[]; readonly onCopy?: (value: string) => void }) {
+function EvidencePaneContent({ replay, events }: { readonly replay: SourceReplay; readonly events: readonly LiveRunEvent[] }) {
   const destination = replay.destination
   const reconciliation = destination.reconciliation
   return (
@@ -273,11 +269,84 @@ function EvidencePaneContent({ replay, events, onCopy }: { readonly replay: Sour
         <h3>Persisted event timeline</h3>
         <EventTimeline events={events} />
       </section>
-      <section className="source-pane__section">
-        <h3>Suggested BigQuery SQL</h3>
-        <QueryList queries={destination.suggestedQueries} onCopy={onCopy} />
-      </section>
     </>
+  )
+}
+
+interface TechnologyChipProps {
+  readonly icon: PixelIconName
+  readonly label: string
+  readonly color?: 'google-blue' | 'google-red' | 'google-yellow' | 'google-green'
+}
+
+function TechnologyChip({ icon, label, color = 'google-blue' }: TechnologyChipProps) {
+  return (
+    <span className="source-technology-chip">
+      <PixelIcon name={icon} size="sm" color={color} ariaLabel="" />
+      {label}
+    </span>
+  )
+}
+
+interface TerminalPaneProps {
+  readonly id: SourcePane
+  readonly activePane: SourcePane
+  readonly number: string
+  readonly title: string
+  readonly breadcrumb: string
+  readonly icon: PixelIconName
+  readonly accent: TerminalAccent
+  readonly tools: ReactNode
+  readonly children: ReactNode
+}
+
+function TerminalPane({ id, activePane, number, title, breadcrumb, icon, accent, tools, children }: TerminalPaneProps) {
+  return (
+    <section
+      id={`source-panel-${id}`}
+      className={`source-pane source-pane--${id}`}
+      role="tabpanel"
+      aria-labelledby={`source-tab-${id}`}
+      data-active={activePane === id}
+      data-tablet-visible={tabletVisible(activePane, id)}
+    >
+      <header className="source-pane__label"><span>{number}</span><h2>{title}</h2></header>
+      <div className="source-pane__tools">{tools}</div>
+      <TerminalWindow
+        title={`${title} mirror`}
+        breadcrumb={breadcrumb}
+        accent={accent}
+        icon={<PixelIcon name={icon} size="sm" color={accent} glow />}
+        variant="elevated"
+        scanlines
+        cornerBrackets
+        maxHeight="58vh"
+        minHeight="430px"
+        className="source-pane__terminal"
+        bodyClassName="source-pane__terminal-body"
+        footer={<span>READ-ONLY MIRROR · EXACT RUN DATA</span>}
+      >
+        {children}
+      </TerminalWindow>
+    </section>
+  )
+}
+
+function MissingCapture({ children }: { readonly children: ReactNode }) {
+  return <p className="source-capture-note"><PixelIcon name="shield-check" size="xs" color="muted" />{children}</p>
+}
+
+function LiveNarration({ event }: { readonly event?: LiveRunEvent }) {
+  if (!event) return null
+  return (
+    <aside className="source-live-narration" aria-live="polite">
+      <PixelIcon name="gemini" size="md" color="google-blue" glow />
+      <div>
+        <span>LIVE RUN NARRATION · EVENT {event.sequence}</span>
+        <strong>{event.summary}</strong>
+        <small>{event.eventType} · {event.state}</small>
+      </div>
+    </aside>
   )
 }
 
@@ -290,8 +359,7 @@ function ProgressOnlyPanes({ source, events, activePane }: { readonly source: Li
   const progress = source.progress
   return (
     <div className="source-three-pane">
-      <section id="source-panel-source" className="source-pane source-pane--source" role="tabpanel" aria-labelledby="source-tab-source" data-active={activePane === 'source'} data-tablet-visible={tabletVisible(activePane, 'source')}>
-        <header><span>01</span><h2>Source system / Google VM</h2></header>
+      <TerminalPane id="source" activePane={activePane} number="01" title="Source system / Google VM" breadcrumb={`${source.hostname}/${source.sourceId}`} icon="compute-engine" accent="google-blue" tools={<MissingCapture>Query capture unavailable for this run</MissingCapture>}>
         <section className="source-pane__section">
           <h3>Authenticated source snapshot</h3>
           <dl className="protected-definition-grid">
@@ -302,31 +370,29 @@ function ProgressOnlyPanes({ source, events, activePane }: { readonly source: Li
           </dl>
           <p className="protected-muted">Schema and sample artifacts have not been captured for this run. The authenticated counters remain visible.</p>
         </section>
-      </section>
-      <section id="source-panel-plan" className="source-pane source-pane--plan" role="tabpanel" aria-labelledby="source-tab-plan" data-active={activePane === 'plan'} data-tablet-visible={tabletVisible(activePane, 'plan')}>
-        <header><span>02</span><h2>Agentic compiler middleware</h2></header>
+      </TerminalPane>
+      <TerminalPane id="plan" activePane={activePane} number="02" title="Agentic compiler middleware" breadcrumb={`compiler/${source.sourceId}/events`} icon="apache-beam" accent="google-yellow" tools={<><TechnologyChip icon="jdbc-jar" label="JDBC .jar" color="google-yellow" /><TechnologyChip icon="apache-beam" label="Apache Beam" color="google-yellow" /><TechnologyChip icon="gemini" label="Gemini" /></>}>
         <section className="source-pane__section">
           <h3>Persisted plan state</h3>
           <p>Plan digest {progress.planDigest ? <CodeValue>{progress.planDigest}</CodeValue> : 'not published'}</p>
           <p className="protected-muted">Compiler actions and transform artifacts were not captured as source-detail data for this run.</p>
           <EvidenceList evidence={progress.evidenceReferences} />
         </section>
-      </section>
-      <section id="source-panel-evidence" className="source-pane source-pane--evidence" role="tabpanel" aria-labelledby="source-tab-evidence" data-active={activePane === 'evidence'} data-tablet-visible={tabletVisible(activePane, 'evidence')}>
-        <header><span>03</span><h2>BigQuery evidence</h2></header>
+        <section className="source-pane__section">
+          <h3>Live translation event feed</h3>
+          <EventTimeline events={events} />
+        </section>
+      </TerminalPane>
+      <TerminalPane id="evidence" activePane={activePane} number="03" title="Google BigQuery" breadcrumb={`bigquery/${source.sourceId}/verified-writes`} icon="bigquery" accent="google-green" tools={<MissingCapture>Suggested query capture unavailable for this run</MissingCapture>}>
         <section className="source-pane__section">
           <h3>Persisted source evidence</h3>
           <EvidenceList evidence={progress.evidenceReferences} />
         </section>
         <section className="source-pane__section">
-          <h3>Persisted event timeline</h3>
-          <EventTimeline events={events} />
-        </section>
-        <section className="source-pane__section">
           <h3>Destination status</h3>
           <p>{progress.recordsWritten > 0 ? `${progress.recordsWritten.toLocaleString()} records reported written.` : 'No verified destination writes have been reported.'}</p>
         </section>
-      </section>
+      </TerminalPane>
     </div>
   )
 }
@@ -404,22 +470,20 @@ export function SourceDetailPage({ source, events = [], activePane, onActivePane
                   </button>
                 ))}
           </div>
+          <LiveNarration event={relevantEvents.at(-1)} />
           {!replay ? (
             <ProgressOnlyPanes source={ready} events={relevantEvents} activePane={activePane} />
           ) : (
               <div className="source-three-pane">
-                <section id="source-panel-source" className="source-pane source-pane--source" role="tabpanel" aria-labelledby="source-tab-source" data-active={activePane === 'source'} data-tablet-visible={tabletVisible(activePane, 'source')}>
-                  <header><span>01</span><h2>Source system / Google VM</h2></header>
+                <TerminalPane id="source" activePane={activePane} number="01" title="Source system / Google VM" breadcrumb={`${replay.hostname}/${replay.sourceId}`} icon="compute-engine" accent="google-blue" tools={replay.source.exampleQueries.length ? <QueryList queries={replay.source.exampleQueries} onCopy={onCopy} /> : <MissingCapture>No read-only source queries were captured</MissingCapture>}>
                   <SourcePaneContent replay={replay} onCopy={onCopy} />
-                </section>
-                <section id="source-panel-plan" className="source-pane source-pane--plan" role="tabpanel" aria-labelledby="source-tab-plan" data-active={activePane === 'plan'} data-tablet-visible={tabletVisible(activePane, 'plan')}>
-                  <header><span>02</span><h2>Agentic compiler middleware</h2></header>
+                </TerminalPane>
+                <TerminalPane id="plan" activePane={activePane} number="02" title="Agentic compiler middleware" breadcrumb={`compiler/${replay.sourceId}/translations`} icon="apache-beam" accent="google-yellow" tools={<><TechnologyChip icon="jdbc-jar" label={`${replay.compiler.driver.version} .jar`} color="google-yellow" /><TechnologyChip icon="apache-beam" label="Apache Beam" color="google-yellow" /><TechnologyChip icon="gemma" label="Local Gemma" color="google-green" /><TechnologyChip icon="gemini" label="Gemini" /></>}>
                   <PlanPaneContent replay={replay} />
-                </section>
-                <section id="source-panel-evidence" className="source-pane source-pane--evidence" role="tabpanel" aria-labelledby="source-tab-evidence" data-active={activePane === 'evidence'} data-tablet-visible={tabletVisible(activePane, 'evidence')}>
-                  <header><span>03</span><h2>BigQuery evidence</h2></header>
-                  <EvidencePaneContent replay={replay} events={relevantEvents} onCopy={onCopy} />
-                </section>
+                </TerminalPane>
+                <TerminalPane id="evidence" activePane={activePane} number="03" title="Google BigQuery" breadcrumb={`${replay.destination.dataset}/${replay.destination.table}`} icon="bigquery" accent="google-green" tools={replay.destination.suggestedQueries.length ? <QueryList queries={replay.destination.suggestedQueries} onCopy={onCopy} /> : <MissingCapture>No destination query was captured</MissingCapture>}>
+                  <EvidencePaneContent replay={replay} events={relevantEvents} />
+                </TerminalPane>
               </div>
           )}
         </>

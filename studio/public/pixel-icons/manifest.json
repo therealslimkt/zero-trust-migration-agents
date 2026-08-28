@@ -16,9 +16,29 @@
       "symbol": "pixel-alert-triangle"
     },
     {
+      "name": "apache-beam",
+      "file": "icons/apache-beam.svg",
+      "symbol": "pixel-apache-beam"
+    },
+    {
+      "name": "artifact-registry",
+      "file": "icons/artifact-registry.svg",
+      "symbol": "pixel-artifact-registry"
+    },
+    {
+      "name": "bigquery",
+      "file": "icons/bigquery.svg",
+      "symbol": "pixel-bigquery"
+    },
+    {
       "name": "branch",
       "file": "icons/branch.svg",
       "symbol": "pixel-branch"
+    },
+    {
+      "name": "btrieve",
+      "file": "icons/btrieve.svg",
+      "symbol": "pixel-btrieve"
     },
     {
       "name": "bug",
@@ -29,6 +49,16 @@
       "name": "check-pixel",
       "file": "icons/check-pixel.svg",
       "symbol": "pixel-check-pixel"
+    },
+    {
+      "name": "cloud-run",
+      "file": "icons/cloud-run.svg",
+      "symbol": "pixel-cloud-run"
+    },
+    {
+      "name": "compute-engine",
+      "file": "icons/compute-engine.svg",
+      "symbol": "pixel-compute-engine"
     },
     {
       "name": "cpu",
@@ -46,6 +76,41 @@
       "symbol": "pixel-database"
     },
     {
+      "name": "dataflow",
+      "file": "icons/dataflow.svg",
+      "symbol": "pixel-dataflow"
+    },
+    {
+      "name": "db2",
+      "file": "icons/db2.svg",
+      "symbol": "pixel-db2"
+    },
+    {
+      "name": "gemini",
+      "file": "icons/gemini.svg",
+      "symbol": "pixel-gemini"
+    },
+    {
+      "name": "gemma",
+      "file": "icons/gemma.svg",
+      "symbol": "pixel-gemma"
+    },
+    {
+      "name": "google-cloud",
+      "file": "icons/google-cloud.svg",
+      "symbol": "pixel-google-cloud"
+    },
+    {
+      "name": "identity-platform",
+      "file": "icons/identity-platform.svg",
+      "symbol": "pixel-identity-platform"
+    },
+    {
+      "name": "jdbc-jar",
+      "file": "icons/jdbc-jar.svg",
+      "symbol": "pixel-jdbc-jar"
+    },
+    {
       "name": "key",
       "file": "icons/key.svg",
       "symbol": "pixel-key"
@@ -54,6 +119,11 @@
       "name": "lock",
       "file": "icons/lock.svg",
       "symbol": "pixel-lock"
+    },
+    {
+      "name": "maxdb",
+      "file": "icons/maxdb.svg",
+      "symbol": "pixel-maxdb"
     },
     {
       "name": "moon",
@@ -101,9 +171,19 @@
       "symbol": "pixel-sun"
     },
     {
+      "name": "tailscale",
+      "file": "icons/tailscale.svg",
+      "symbol": "pixel-tailscale"
+    },
+    {
       "name": "terminal",
       "file": "icons/terminal.svg",
       "symbol": "pixel-terminal"
+    },
+    {
+      "name": "vertex-ai",
+      "file": "icons/vertex-ai.svg",
+      "symbol": "pixel-vertex-ai"
     }
   ]
 }

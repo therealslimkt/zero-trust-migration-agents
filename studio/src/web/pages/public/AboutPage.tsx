@@ -1,5 +1,5 @@
 import type { MouseEvent } from "react";
-import { PixelIcon, StatusBeacon, TerminalWindow, type ThemeMode } from "../../shared/ui/index";
+import { PixelIcon, StatusBeacon, TerminalWindow, type PixelIconName, type ThemeMode } from "../../shared/ui/index";
 import { SiteFooter } from "../../widgets/site/SiteFooter";
 import { SiteHeader, type PublishedDemoDescriptor, type SiteAuthStatus } from "../../widgets/site/SiteHeader";
 import "./public-pages.css";
@@ -45,6 +45,52 @@ const architecturePrinciples = [
   ["Honest replay", "Public playback is labelled as an exact synthetic recorded replay only when an owner publishes its descriptor."],
 ] as const;
 
+const architectureStages: ReadonlyArray<{
+  readonly number: string;
+  readonly title: string;
+  readonly detail: string;
+  readonly technologies: ReadonlyArray<{ readonly name: string; readonly icon: PixelIconName; readonly color: "google-blue" | "google-red" | "google-yellow" | "google-green" }>;
+}> = [
+  {
+    number: "01", title: "Private source edge", detail: "Legacy bytes remain on the Google VM and cross the Tailscale private path only as governed records and evidence.",
+    technologies: [
+      { name: "Compute Engine", icon: "compute-engine", color: "google-blue" },
+      { name: "Tailscale", icon: "tailscale", color: "google-blue" },
+      { name: "IBM Db2 for i", icon: "db2", color: "google-blue" },
+      { name: "SAP MaxDB", icon: "maxdb", color: "google-red" },
+      { name: "Btrieve", icon: "btrieve", color: "google-green" },
+    ],
+  },
+  {
+    number: "02", title: "Agentic compiler", detail: "Local Gemma protects source context; Gemini on Vertex plans declarative transforms against exact driver provenance.",
+    technologies: [
+      { name: "JDBC / JAR", icon: "jdbc-jar", color: "google-red" },
+      { name: "Gemma", icon: "gemma", color: "google-blue" },
+      { name: "Gemini", icon: "gemini", color: "google-yellow" },
+      { name: "Vertex AI", icon: "vertex-ai", color: "google-blue" },
+      { name: "Artifact Registry", icon: "artifact-registry", color: "google-red" },
+    ],
+  },
+  {
+    number: "03", title: "Trusted execution", detail: "The approved plan becomes an Apache Beam pipeline; Dataflow executes only after the portfolio gate records a decision.",
+    technologies: [
+      { name: "Apache Beam", icon: "apache-beam", color: "google-yellow" },
+      { name: "Dataflow", icon: "dataflow", color: "google-blue" },
+      { name: "Cloud Run", icon: "cloud-run", color: "google-green" },
+      { name: "Identity Platform", icon: "identity-platform", color: "google-blue" },
+    ],
+  },
+  {
+    number: "04", title: "Verified destination", detail: "BigQuery rows are presented only beside their reconciliation, job, table, and audit evidence from the exact run.",
+    technologies: [
+      { name: "BigQuery", icon: "bigquery", color: "google-blue" },
+      { name: "Google Cloud", icon: "google-cloud", color: "google-green" },
+      { name: "Approval", icon: "shield-check", color: "google-yellow" },
+      { name: "Evidence", icon: "radar", color: "google-green" },
+    ],
+  },
+];
+
 /** Architecture narrative with owner-supplied creators and submission facts only. */
 export function AboutPage({
   onNavigate,
@@ -80,6 +126,21 @@ export function AboutPage({
             <h1 id="about-title" className="about-hero-box__title">A visual story for governed migration</h1>
             <p className="about-hero-box__subtitle">This experience explains the application’s intended trust boundaries and makes clear which public details have actually been provided. It does not claim a connected cloud environment, execution result, or release state on its own.</p>
             <div className="about-tags-row"><span className="telemetry-tag"><PixelIcon name="sparkle" size="xs" color="google-yellow" /><span>GEMINI 3.7 FLASH</span></span><span className="telemetry-tag"><PixelIcon name="shield-check" size="xs" color="google-blue" /><span>OWNER-SUPPLIED STATE</span></span><span className="telemetry-tag"><PixelIcon name="rewind" size="xs" color="google-green" /><span>EXACT REPLAY WHEN PUBLISHED</span></span></div>
+          </section>
+
+          <section className="about-story-card about-system-map" aria-labelledby="system-map-heading">
+            <div className="about-story-card__header"><PixelIcon name="branch" size="md" color="google-blue" glow /><div><span className="section-head__eyebrow">RUNTIME ARCHITECTURE</span><h2 id="system-map-heading" className="about-story-card__title">One governed path from private bytes to verified rows</h2></div></div>
+            <div className="about-system-map__rail" aria-label="Migration technology architecture">
+              {architectureStages.map((stage, index) => <div className="about-system-map__segment" key={stage.number}>
+                <article className="about-system-stage">
+                  <header><span>{stage.number}</span><h3>{stage.title}</h3></header>
+                  <p>{stage.detail}</p>
+                  <ul>{stage.technologies.map((technology) => <li key={technology.name}><span className={`about-tech-icon about-tech-icon--${technology.color}`}><PixelIcon name={technology.icon} size="sm" color={technology.color} /></span><span>{technology.name}</span></li>)}</ul>
+                </article>
+                {index < architectureStages.length - 1 ? <div className="about-system-map__connector" aria-hidden="true"><span /><PixelIcon name="play" size="xs" color="google-yellow" /></div> : null}
+              </div>)}
+            </div>
+            <div className="about-trust-spine"><PixelIcon name="identity-platform" color="google-blue" /><strong>Identity-derived ownership</strong><span>→</span><PixelIcon name="shield-check" color="google-yellow" /><strong>Portfolio approval</strong><span>→</span><PixelIcon name="radar" color="google-green" /><strong>Immutable evidence</strong></div>
           </section>
 
           <section className="about-story-card" aria-labelledby="principles-heading">
