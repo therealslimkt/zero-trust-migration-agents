@@ -175,6 +175,7 @@ func TestHandleStatusPost_DeniesUnlistedOriginRegardlessOfRemoteAddr(t *testing.
 
 func TestConfiguredControlPlaneIsDisabledOrFailsClosed(t *testing.T) {
 	t.Setenv("MISSION_CONTROL_STATE_PATH", "")
+	t.Setenv("MISSION_CONTROL_FIRESTORE_PROJECT_ID", "")
 	t.Setenv("MISSION_CONTROL_API_TOKEN", "")
 	handler, err := configuredControlPlane()
 	if err != nil || handler != nil {
@@ -190,6 +191,12 @@ func TestConfiguredControlPlaneIsDisabledOrFailsClosed(t *testing.T) {
 	t.Setenv("MISSION_CONTROL_API_TOKEN", "token")
 	if _, err := configuredControlPlane(); !errors.Is(err, errControlPlaneConfiguration) {
 		t.Fatalf("partial token-only configuration error = %v", err)
+	}
+
+	t.Setenv("MISSION_CONTROL_STATE_PATH", filepath.Join(t.TempDir(), "state.json"))
+	t.Setenv("MISSION_CONTROL_FIRESTORE_PROJECT_ID", "hosted-project")
+	if _, err := configuredControlPlane(); !errors.Is(err, errControlPlaneConfiguration) {
+		t.Fatalf("local-plus-Firestore configuration error = %v", err)
 	}
 }
 

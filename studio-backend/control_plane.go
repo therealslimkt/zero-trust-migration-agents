@@ -912,7 +912,7 @@ type cpStore struct {
 	mu           sync.Mutex
 	path         string
 	dir          string
-	remote       *gcsObjectStore
+	remote       hostedObjectStore
 	remoteObject string
 	generation   int64
 	snap         *cpSnapshot
@@ -963,7 +963,7 @@ func cpOpenStore(statePath string) (*cpStore, error) {
 	return s, nil
 }
 
-func cpOpenGCSStore(ctx context.Context, remote *gcsObjectStore, object string) (*cpStore, error) {
+func cpOpenHostedStore(ctx context.Context, remote hostedObjectStore, object string) (*cpStore, error) {
 	if remote == nil {
 		return nil, errors.New("control plane: hosted state is required")
 	}
@@ -1018,7 +1018,7 @@ func (s *cpStore) persist(snap *cpSnapshot) (bool, error) {
 		return false, err
 	}
 	if s.remote != nil {
-		ctx, cancel := gcsOperationContext()
+		ctx, cancel := hostedOperationContext()
 		defer cancel()
 		generation, err := s.remote.write(ctx, s.remoteObject, data, s.generation, false)
 		if err != nil {
@@ -1872,8 +1872,8 @@ func NewControlPlaneHandler(statePath, bearerToken string) (http.Handler, error)
 	return newControlPlaneHandler(store, bearerToken)
 }
 
-func NewHostedControlPlaneHandler(ctx context.Context, remote *gcsObjectStore, object, bearerToken string) (http.Handler, error) {
-	store, err := cpOpenGCSStore(ctx, remote, object)
+func NewHostedControlPlaneHandler(ctx context.Context, remote hostedObjectStore, object, bearerToken string) (http.Handler, error) {
+	store, err := cpOpenHostedStore(ctx, remote, object)
 	if err != nil {
 		return nil, err
 	}

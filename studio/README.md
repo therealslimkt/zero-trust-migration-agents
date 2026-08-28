@@ -28,7 +28,7 @@ cloud access keys to a `VITE_*` setting. Public recorded replays do not require
 authentication. The production owner/admin designation and the future
 self-service BYO-cloud switch remain deployment-controlled release gates.
 
-For the combined Cloud Run image, durable Cloud Storage state, invitation
+For the combined Cloud Run image, durable Firestore state, invitation
 policy, and deployment sequence, see
 [`cloud_architecture/HOSTED_DRAFT.md`](../cloud_architecture/HOSTED_DRAFT.md).
 

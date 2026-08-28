@@ -59,6 +59,7 @@ func TestServerMuxMountsWebBFFOnlyUnderWebPrefix(t *testing.T) {
 func TestConfiguredWebBFFRequiresCompleteConfiguration(t *testing.T) {
 	t.Setenv("MISSION_CONTROL_LOCAL_DEMO", "")
 	t.Setenv("MISSION_CONTROL_WEB_STATE_PATH", "")
+	t.Setenv("MISSION_CONTROL_FIRESTORE_PROJECT_ID", "")
 	t.Setenv("MISSION_CONTROL_FIREBASE_PROJECT_ID", "")
 	handler, err := configuredWebBFF(nil)
 	if err != nil || handler != nil {

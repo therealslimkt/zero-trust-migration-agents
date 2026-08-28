@@ -224,7 +224,7 @@ type WebStateStore struct {
 	dir           string
 	bundleDir     string
 	bundleRel     string
-	remote        *gcsObjectStore
+	remote        hostedObjectStore
 	remoteObject  string
 	generation    int64
 	syncDirectory func(string) error
@@ -292,7 +292,7 @@ func OpenWebStateStore(statePath string) (*WebStateStore, error) {
 	return s, nil
 }
 
-func OpenHostedWebStateStore(ctx context.Context, remote *gcsObjectStore, object string) (*WebStateStore, error) {
+func OpenHostedWebStateStore(ctx context.Context, remote hostedObjectStore, object string) (*WebStateStore, error) {
 	if remote == nil || strings.TrimSpace(object) == "" {
 		return nil, errors.New("web store: hosted state configuration is required")
 	}
@@ -388,7 +388,7 @@ func (s *WebStateStore) persist(snap *webSnapshot) (bool, error) {
 		return false, err
 	}
 	if s.remote != nil {
-		ctx, cancel := gcsOperationContext()
+		ctx, cancel := hostedOperationContext()
 		defer cancel()
 		generation, err := s.remote.write(ctx, s.remoteObject, data, s.generation, false)
 		if err != nil {
@@ -621,7 +621,7 @@ func (s *WebStateStore) readAndValidatePublication(record *WebPublicationRecord)
 		if record.ManifestPath != expected || filepath.Clean(record.ManifestPath) != record.ManifestPath {
 			return nil, errWebStoreCorrupt
 		}
-		ctx, cancel := gcsOperationContext()
+		ctx, cancel := hostedOperationContext()
 		defer cancel()
 		body, _, err := s.remote.read(ctx, filepath.ToSlash(record.ManifestPath), WebMaxPublicationBytes)
 		if err != nil || len(body) == 0 || webBodySHA256(body) != record.ManifestSHA256 {
@@ -677,13 +677,13 @@ func (s *WebStateStore) ensurePublicationBody(record *WebPublicationRecord, body
 		if record.ManifestPath != expected || filepath.Clean(record.ManifestPath) != record.ManifestPath {
 			return errWebStoreInvalid
 		}
-		ctx, cancel := gcsOperationContext()
+		ctx, cancel := hostedOperationContext()
 		defer cancel()
 		_, err := s.remote.write(ctx, filepath.ToSlash(record.ManifestPath), body, 0, true)
 		if err == nil {
 			return nil
 		}
-		if !errors.Is(err, errGCSConflict) {
+		if !errors.Is(err, errHostedConflict) {
 			return errWebStoreCorrupt
 		}
 		existing, readErr := s.readAndValidatePublication(record)

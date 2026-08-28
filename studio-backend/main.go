@@ -117,24 +117,30 @@ func configuredListenAddress() (string, error) {
 
 func configuredControlPlane() (http.Handler, error) {
 	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_STATE_PATH"))
-	hostedBucket := strings.TrimSpace(os.Getenv("MISSION_CONTROL_GCS_STATE_BUCKET"))
-	hostedPrefix := strings.TrimSpace(os.Getenv("MISSION_CONTROL_GCS_STATE_PREFIX"))
+	firestoreProject := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIRESTORE_PROJECT_ID"))
+	firestoreDatabase := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIRESTORE_DATABASE_ID"))
+	firestoreNamespace := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIRESTORE_NAMESPACE"))
 	bearerToken := os.Getenv("MISSION_CONTROL_API_TOKEN")
-	if statePath == "" && hostedBucket == "" && bearerToken == "" {
+	if statePath == "" && firestoreProject == "" && bearerToken == "" {
 		return nil, nil
 	}
-	if bearerToken == "" || (statePath == "") == (hostedBucket == "") {
+	if bearerToken == "" || (statePath == "") == (firestoreProject == "") {
 		return nil, errControlPlaneConfiguration
 	}
-	if hostedBucket != "" {
-		if hostedPrefix == "" {
-			hostedPrefix = "hosted-draft"
+	if firestoreProject != "" {
+		if firestoreDatabase == "" {
+			firestoreDatabase = "(default)"
 		}
-		remote, err := newGCSObjectStore(context.Background(), hostedBucket, hostedPrefix)
+		if firestoreNamespace == "" {
+			firestoreNamespace = "hosted_draft"
+		}
+		ctx, cancel := hostedOperationContext()
+		defer cancel()
+		remote, err := newFirestoreObjectStore(ctx, firestoreProject, firestoreDatabase, firestoreNamespace)
 		if err != nil {
 			return nil, errControlPlaneConfiguration
 		}
-		return NewHostedControlPlaneHandler(context.Background(), remote, "control-plane.json", bearerToken)
+		return NewHostedControlPlaneHandler(ctx, remote, "control-plane.json", bearerToken)
 	}
 	return NewControlPlaneHandler(statePath, bearerToken)
 }
@@ -179,14 +185,15 @@ func configuredStudioSite() (http.Handler, error) {
 
 func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 	statePath := strings.TrimSpace(os.Getenv("MISSION_CONTROL_WEB_STATE_PATH"))
-	hostedBucket := strings.TrimSpace(os.Getenv("MISSION_CONTROL_GCS_STATE_BUCKET"))
-	hostedPrefix := strings.TrimSpace(os.Getenv("MISSION_CONTROL_GCS_STATE_PREFIX"))
+	firestoreProject := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIRESTORE_PROJECT_ID"))
+	firestoreDatabase := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIRESTORE_DATABASE_ID"))
+	firestoreNamespace := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIRESTORE_NAMESPACE"))
 	projectID := strings.TrimSpace(os.Getenv("MISSION_CONTROL_FIREBASE_PROJECT_ID"))
 	localDemo := localDemoEnabled()
-	if statePath == "" && hostedBucket == "" && projectID == "" && !localDemo {
+	if statePath == "" && firestoreProject == "" && projectID == "" && !localDemo {
 		return nil, nil
 	}
-	if (!localDemo && projectID == "") || (statePath == "") == (hostedBucket == "") || (localDemo && hostedBucket != "") {
+	if (!localDemo && projectID == "") || (statePath == "") == (firestoreProject == "") || (localDemo && firestoreProject != "") {
 		return nil, errWebBFFConfiguration
 	}
 	cpHandler, ok := controlPlane.(*ControlPlaneHandler)
@@ -194,6 +201,11 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 		return nil, errWebBFFConfiguration
 	}
 	ctx := context.Background()
+	if !localDemo {
+		var cancel context.CancelFunc
+		ctx, cancel = hostedOperationContext()
+		defer cancel()
+	}
 	var err error
 	var verifier WebIdentityVerifier
 	var accessPolicy *WebAccessPolicy
@@ -218,11 +230,14 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 		}
 	}
 	var store *WebStateStore
-	if hostedBucket != "" {
-		if hostedPrefix == "" {
-			hostedPrefix = "hosted-draft"
+	if firestoreProject != "" {
+		if firestoreDatabase == "" {
+			firestoreDatabase = "(default)"
 		}
-		remote, remoteErr := newGCSObjectStore(ctx, hostedBucket, hostedPrefix)
+		if firestoreNamespace == "" {
+			firestoreNamespace = "hosted_draft"
+		}
+		remote, remoteErr := newFirestoreObjectStore(ctx, firestoreProject, firestoreDatabase, firestoreNamespace)
 		if remoteErr != nil {
 			return nil, errWebBFFConfiguration
 		}
