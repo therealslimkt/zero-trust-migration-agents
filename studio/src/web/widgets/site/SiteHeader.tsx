@@ -1,6 +1,6 @@
 import { useId, useState, type MouseEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { PixelIcon, ThemeToggle, type ThemeMode } from "../../shared/ui/index";
+import { PixelIcon, ThemeToggle, type PixelIconName, type ThemeMode } from "../../shared/ui/index";
 import "./site-widgets.css";
 
 export type SiteNavMode = "recorded_demo" | "live" | "public";
@@ -19,7 +19,7 @@ export interface NavItem {
   readonly id: string;
   readonly label: string;
   readonly route: string;
-  readonly icon?: "shield-check" | "play" | "radar" | "satellite" | "sparkle" | "terminal";
+  readonly icon?: PixelIconName;
 }
 
 export interface SiteHeaderProps {
@@ -40,6 +40,7 @@ export interface SiteHeaderProps {
   loginRoute?: string;
   aboutRoute?: string;
   dashboardRoute?: string;
+  cloudSettingsRoute?: string;
   skipTargetId?: string;
   className?: string;
 }
@@ -67,6 +68,7 @@ export function SiteHeader({
   loginRoute = "/login",
   aboutRoute = "/about",
   dashboardRoute,
+  cloudSettingsRoute,
   skipTargetId = "main-content",
   className = "",
 }: SiteHeaderProps) {
@@ -75,10 +77,12 @@ export function SiteHeader({
   const drawerId = useId();
   const replayAvailable = isPublishedReplay(demo);
   const canSignIn = authStatus === "anonymous" && Boolean(onSignInClick);
+  const signedInCloudSettingsRoute = authStatus === "authenticated" ? (cloudSettingsRoute ?? "/settings/cloud") : undefined;
   const navItems: readonly NavItem[] = [
     { id: "home", label: "Overview", route: "/", icon: "shield-check" },
     ...(replayAvailable ? [{ id: "replay", label: "Recorded replay", route: demo.route, icon: "play" as const }] : []),
     ...(dashboardRoute ? [{ id: "dashboard", label: "Mission control", route: dashboardRoute, icon: "satellite" as const }] : []),
+    ...(signedInCloudSettingsRoute ? [{ id: "cloud", label: "Google Cloud", route: signedInCloudSettingsRoute, icon: "google-cloud" as const }] : []),
     ...(aboutRoute ? [{ id: "about", label: "About", route: aboutRoute, icon: "radar" as const }] : []),
   ];
 
