@@ -83,9 +83,12 @@ export function useTerminalFrameStream(client: LiveWebClient, runId?: string, so
               boundary = buffer.indexOf('\n\n')
             }
           }
+          // A clean end means the bounded SSE replay completed successfully.
+          // Keep the UI connected while the next cursor-based poll is queued;
+          // only transport failures transition to reconnecting/offline.
           if (active) setFeed((current) => current.streamKey === streamKey
-            ? { ...current, connection: 'reconnecting' }
-            : { ...INITIAL_FEED, streamKey, connection: 'reconnecting' })
+            ? { ...current, connection: 'live' }
+            : { ...INITIAL_FEED, streamKey, connection: 'live' })
         } catch {
           if (!active || abort.signal.aborted) return
           setFeed((current) => current.streamKey === streamKey

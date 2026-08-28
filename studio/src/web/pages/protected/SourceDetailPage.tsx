@@ -322,6 +322,7 @@ function TerminalPane({ id, activePane, number, title, breadcrumb, icon, accent,
       data-maximized={maximized}
       data-obscured={obscured}
       data-stream-active={latest?.lane === lane}
+      data-lane={lane}
     >
       <header className="source-pane__label"><span>{number}</span><h2>{title}</h2></header>
       <div className="source-pane__tools">{tools}</div>
@@ -339,6 +340,7 @@ function TerminalPane({ id, activePane, number, title, breadcrumb, icon, accent,
         bodyClassName="source-pane__terminal-body"
         isMaximized={maximized}
         onMaximize={onMaximize}
+        badge={<span className="source-terminal-connection" data-state={terminal.connection}><i />{terminal.connection === 'live' ? 'CONNECTED' : terminal.connection.toUpperCase()}</span>}
         footer={<><span>READ-ONLY MIRROR · EXACT PRODUCER-ADMITTED FRAMES</span><span>{terminal.cursor ?? 'NO CURSOR'}</span></>}
       >
         <TerminalFrameRenderer feed={terminal} lane={lane} label={title} />
@@ -393,7 +395,7 @@ function EdgeLane({ terminal }: { readonly terminal: TerminalFeed }) {
   const [maximized, setMaximized] = useState(false)
   const latest = terminal.frames.at(-1)
   return (
-    <section className="source-edge-lane" data-stream-active={latest?.lane === 'edge'} data-maximized={maximized} aria-label="Jetson edge live terminal lane">
+    <section className="source-edge-lane" data-lane="edge" data-stream-active={latest?.lane === 'edge'} data-maximized={maximized} aria-label="Jetson edge live terminal lane">
       <div className="source-edge-lane__identity">
         <img src={jetsonAsset} alt="Jetson Orin Super edge device" />
         <div><span>JETSON EDGE LANE</span><strong>Private decode + protection boundary</strong><small>Only exact admitted frames are mirrored. Raw credentials and hidden reasoning are never rendered.</small></div>
@@ -412,6 +414,7 @@ function EdgeLane({ terminal }: { readonly terminal: TerminalFeed }) {
         maxHeight={maximized ? '72vh' : '380px'}
         isMaximized={maximized}
         onMaximize={setMaximized}
+        badge={<span className="source-terminal-connection" data-state={terminal.connection}><i />{terminal.connection === 'live' ? 'CONNECTED' : terminal.connection.toUpperCase()}</span>}
         bodyClassName="source-pane__terminal-body"
         footer={<><span>PRIVATE EDGE · EXACT SENT / RECEIVED FRAMES</span><span>{terminal.cursor ?? 'NO CURSOR'}</span></>}
       >

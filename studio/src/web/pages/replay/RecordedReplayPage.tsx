@@ -149,7 +149,7 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
           exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -5 }}
           transition={{ duration: reducedMotion ? 0 : 0.24 }}
         >
-          <div className="replay-pane" data-pane="source" data-active={activePane === "source"} data-tablet-visible={activePane !== "destination"} data-maximized={maximizedLane === "source"} data-obscured={maximizedLane !== undefined && maximizedLane !== "source"}>
+          <div className="replay-pane" data-pane="source" data-lane="source" data-active={activePane === "source"} data-tablet-visible={activePane !== "destination"} data-maximized={maximizedLane === "source"} data-obscured={maximizedLane !== undefined && maximizedLane !== "source"}>
           <div className="replay-terminal-card"><span>READ-ONLY SOURCE QUERY</span>{source.source.exampleQueries.length ? <code>{source.source.exampleQueries[0]}</code> : <small>No source query was captured.</small>}</div>
           <TerminalWindow title="Legacy source" breadcrumb={`${source.hostname}/${source.source.databaseFamily}`} accent="google-blue" scanlines cornerBrackets className="replay-live-terminal" minHeight="420px" maxHeight="58vh" isMaximized={maximizedLane === "source"} onMaximize={(maximized) => setMaximizedLane(maximized ? "source" : undefined)} footer={<><span>IMMUTABLE REPLAY · EXACT TERMINAL FRAMES</span><span>{terminalFeed.cursor ?? "NO CURSOR"}</span></>}>
             {laneFeed(terminalFeed, "source", "Recorded legacy source")}
@@ -177,7 +177,7 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
           </details>
           </div>
 
-          <div className="replay-pane" data-pane="compiler" data-active={activePane === "compiler"} data-tablet-visible data-maximized={maximizedLane === "compiler"} data-obscured={maximizedLane !== undefined && maximizedLane !== "compiler"}>
+          <div className="replay-pane" data-pane="compiler" data-lane="compiler" data-active={activePane === "compiler"} data-tablet-visible data-maximized={maximizedLane === "compiler"} data-obscured={maximizedLane !== undefined && maximizedLane !== "compiler"}>
           <div className="replay-tool-cards" aria-label="Recorded compiler tool labels">{tools.length ? tools.map((tool) => <span key={`${tool.agent}:${tool.tool}`}><strong>{tool.agent}</strong><small>{tool.tool}</small></span>) : <small>No compiler tool action is visible at this replay position.</small>}</div>
           <TerminalWindow title="Agent compiler" breadcrumb="recorded/compiler/actions" accent="google-yellow" scanlines cornerBrackets className="replay-live-terminal" minHeight="420px" maxHeight="58vh" isMaximized={maximizedLane === "compiler"} onMaximize={(maximized) => setMaximizedLane(maximized ? "compiler" : undefined)} footer={<><span>IMMUTABLE REPLAY · EXACT TERMINAL FRAMES</span><span>{terminalFeed.cursor ?? "NO CURSOR"}</span></>}>
             {laneFeed(terminalFeed, "compiler", "Recorded agent compiler")}
@@ -199,7 +199,7 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
           </details>
           </div>
 
-          <div className="replay-pane" data-pane="destination" data-active={activePane === "destination"} data-tablet-visible={activePane !== "source"} data-maximized={maximizedLane === "destination"} data-obscured={maximizedLane !== undefined && maximizedLane !== "destination"}>
+          <div className="replay-pane" data-pane="destination" data-lane="destination" data-active={activePane === "destination"} data-tablet-visible={activePane !== "source"} data-maximized={maximizedLane === "destination"} data-obscured={maximizedLane !== undefined && maximizedLane !== "destination"}>
           <div className="replay-terminal-card"><span>BIGQUERY QUERY</span>{source.destination.suggestedQueries.length ? <code>{source.destination.suggestedQueries[0]}</code> : <small>No destination query was captured.</small>}</div>
           <TerminalWindow title="Verified destination" breadcrumb={`${source.destination.dataset}/${source.destination.table}`} accent="google-green" scanlines cornerBrackets className="replay-live-terminal" minHeight="420px" maxHeight="58vh" isMaximized={maximizedLane === "destination"} onMaximize={(maximized) => setMaximizedLane(maximized ? "destination" : undefined)} footer={<><span>IMMUTABLE REPLAY · EXACT TERMINAL FRAMES</span><span>{terminalFeed.cursor ?? "NO CURSOR"}</span></>}>
             {laneFeed(terminalFeed, "destination", "Recorded BigQuery destination")}
@@ -230,7 +230,7 @@ export function RecordedReplayPage({ manifest, onExit }: RecordedReplayPageProps
         </motion.section>
       </AnimatePresence>
 
-      <section className="replay-edge-lane" data-maximized={maximizedLane === "edge"} aria-label="Recorded Jetson edge terminal lane">
+      <section className="replay-edge-lane" data-lane="edge" data-maximized={maximizedLane === "edge"} aria-label="Recorded Jetson edge terminal lane">
         <div className="replay-edge-lane__identity">
           <img src={jetsonAsset} alt="Jetson Orin Super edge device" />
           <div><span>JETSON EDGE LANE</span><strong>Immutable private-runtime transcript</strong><small>Frames advance only with the recorded event cursor.</small></div>
