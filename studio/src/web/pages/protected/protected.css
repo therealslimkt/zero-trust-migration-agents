@@ -316,18 +316,21 @@
 .source-reconciliation__metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .source-reconciliation p { overflow-wrap: anywhere; }
 
-.source-edge-lane { --terminal-accent: #ea4335; --terminal-accent-light: #f28b82; --terminal-accent-soft: rgba(234,67,53,.11); position: relative; display: grid; grid-template-columns: minmax(230px, .48fr) minmax(240px, .52fr) minmax(0, 2fr); gap: 14px; align-items: stretch; margin-top: 28px; padding: 14px; border: 1px solid rgba(234, 67, 53, .45); background: linear-gradient(115deg, rgba(234, 67, 53, .10), rgba(8,12,20,.96) 45%, transparent); }
-.source-edge-lane::before { position: absolute; top: -29px; left: 50%; width: 2px; height: 28px; background: linear-gradient(#34a853, #ea4335); content: ""; box-shadow: 0 0 8px rgba(52,168,83,.6); }
-.source-edge-lane::after { position: absolute; top: -5px; left: calc(50% - 4px); width: 0; height: 0; border-inline: 5px solid transparent; border-top: 7px solid #ea4335; content: ""; }
+.source-edge-lane { --terminal-accent: #e2b0e8; --terminal-accent-light: #fa07c9; --terminal-accent-soft: rgba(250,7,201,.12); --terminal-text: #a78bfa; --terminal-heading: #f3e8ff; position: relative; display: grid; grid-template-columns: minmax(300px, .55fr) minmax(240px, .45fr) minmax(0, 2fr); gap: 14px; align-items: stretch; margin-top: 28px; padding: 14px; border: 1px solid rgba(226,176,232,.48); background: linear-gradient(115deg, rgba(250,7,201,.08), rgba(30,27,75,.62) 45%, transparent); }
+.source-edge-lane::before { position: absolute; top: -29px; left: 50%; width: 2px; height: 28px; background: linear-gradient(#34a853, #e2b0e8); content: ""; box-shadow: 0 0 8px rgba(226,176,232,.65); }
+.source-edge-lane::after { position: absolute; top: -5px; left: calc(50% - 4px); width: 0; height: 0; border-inline: 5px solid transparent; border-top: 7px solid #e2b0e8; content: ""; }
 .source-edge-lane[data-maximized="true"] { grid-template-columns: minmax(220px, .3fr) minmax(240px, .4fr) minmax(0, 2.3fr); }
-.source-edge-lane__identity { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 12px; align-items: center; min-width: 0; }
-.source-edge-lane__identity img { width: 128px; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; object-fit: contain; filter: drop-shadow(0 8px 0 rgba(0,0,0,.32)); }
+.source-edge-lane__identity { display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 12px; align-items: center; min-width: 0; }
+.source-edge-lane__identity img { width: 192px; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; object-fit: contain; filter: drop-shadow(0 8px 0 rgba(0,0,0,.32)); }
 .source-edge-lane__identity div { display: grid; gap: 5px; min-width: 0; }
-.source-edge-lane__identity span { color: var(--google-red-light, #f28b82); font: 800 .62rem var(--font-mono-tactical, monospace); letter-spacing: .11em; }
+.source-edge-lane__identity span { color: #fa07c9; font: 800 .62rem var(--font-mono-tactical, monospace); letter-spacing: .11em; }
 .source-edge-lane__identity strong { color: var(--pixel-text-primary, #edf2f9); font-size: .82rem; }
 .source-edge-lane__identity small { color: var(--pixel-text-muted, #6b82a3); line-height: 1.45; }
 .source-edge-lane__actors { display: grid; align-content: center; min-width: 0; }
-.source-edge-lane__terminal { min-width: 0; border-top: 3px solid var(--terminal-accent); background: #080c14; box-shadow: 0 12px 34px rgba(0,0,0,.32), 0 0 18px var(--terminal-accent-soft); }
+.source-edge-lane__terminal { min-width: 0; border-top: 3px solid #e2b0e8; background: #1e1b4b; box-shadow: 0 12px 34px rgba(0,0,0,.32), 0 0 20px rgba(250,7,201,.14); }
+.source-edge-lane__terminal .terminal-window__header,
+.source-edge-lane__terminal .terminal-window__footer { border-color: rgba(226,176,232,.25); background: #17143d; }
+.source-edge-lane__terminal .source-pane__terminal-body { color: #a78bfa; background: radial-gradient(circle at 50% 0, rgba(250,7,201,.10), transparent 42%), #1e1b4b; }
 
 @keyframes source-lane-signal {
   0%, 100% { border-color: var(--pixel-border-muted, #243247); box-shadow: 0 0 0 rgba(66, 133, 244, 0); }
