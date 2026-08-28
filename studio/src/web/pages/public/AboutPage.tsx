@@ -91,6 +91,44 @@ const architectureStages: ReadonlyArray<{
   },
 ];
 
+type FleetColor = "google-blue" | "google-red" | "google-yellow" | "google-green";
+
+const fleetAgents: ReadonlyArray<{
+  readonly codename: string;
+  readonly role: string;
+  readonly icon: PixelIconName;
+  readonly color: FleetColor;
+  readonly status: "operational" | "hardening";
+  readonly mission: string;
+  readonly boundary: string;
+}> = [
+  { codename: "ATLAS", role: "Fleet marshal", icon: "branch", color: "google-blue", status: "operational", mission: "Routes typed work, resumes durable runs, and keeps every specialist inside the approved migration state machine.", boundary: "Go control plane · may delegate and cancel · may never approve its own plan" },
+  { codename: "JETTY", role: "Privacy guardian", icon: "cpu", color: "google-green", status: "operational", mission: "Decodes and protects source context on the Jetson edge before governed metadata can leave the private path.", boundary: "Jetson Orin · local Gemma · deterministic redaction · raw PII stays local" },
+  { codename: "RUNE", role: "JDE archivist", icon: "db2", color: "google-blue", status: "operational", mission: "Interprets IBM Db2 for i, EBCDIC, packed decimal, and source-specific extraction evidence.", boundary: "Read-only source adapter · emits records and provenance, never destination writes" },
+  { codename: "MARA", role: "MaxDB cartographer", icon: "maxdb", color: "google-red", status: "operational", mission: "Maps SAP MaxDB schemas and preserves binary and character semantics through the compiler handoff.", boundary: "Read-only source adapter · schema and type evidence" },
+  { codename: "BRIX", role: "Btrieve archaeologist", icon: "btrieve", color: "google-green", status: "operational", mission: "Reconstructs record layouts and indexing semantics from legacy Btrieve estates.", boundary: "Read-only source adapter · record-layout evidence" },
+  { codename: "MAVEN", role: "Driver librarian", icon: "artifact-registry", color: "google-red", status: "operational", mission: "Researches, verifies, and immutably publishes exact driver artifacts for reproducible compilation.", boundary: "Async Go worker · Vertex research · Artifact Registry provenance" },
+  { codename: "PRISMA", role: "Transform architect", icon: "gemini", color: "google-yellow", status: "operational", mission: "Uses Gemini to propose declarative mappings from protected metadata and exact driver capabilities.", boundary: "Plan-only authority · cannot approve, execute, or mutate source data" },
+  { codename: "VALE", role: "Policy auditor", icon: "shield-check", color: "google-blue", status: "operational", mission: "Applies deterministic validation to plans, evidence references, and approval preconditions.", boundary: "Fail-closed policy checks · no generative override" },
+  { codename: "STEWARD", role: "Human governor", icon: "identity-platform", color: "google-yellow", status: "operational", mission: "Reviews the sealed portfolio digest and makes the one decision agents are not allowed to make.", boundary: "Identity-bound HITL approval · exact digest · immutable decision evidence" },
+  { codename: "FLOW + LEDGER", role: "Execution and reconciliation", icon: "dataflow", color: "google-green", status: "hardening", mission: "Turns an approved Beam plan into Dataflow work, then proves BigQuery rows against jobs, tables, and audit evidence.", boundary: "Execute only after approval · publish only after reconciliation" },
+];
+
+const enterpriseControls: ReadonlyArray<{
+  readonly name: string;
+  readonly icon: PixelIconName;
+  readonly now: string;
+  readonly next: string;
+}> = [
+  { name: "Agent Registry", icon: "artifact-registry", now: "Versioned specialist contracts and immutable driver artifacts", next: "Queryable catalog, capabilities, owners, and rollout policy" },
+  { name: "Agent Runtime", icon: "cloud-run", now: "Durable Go orchestration with resumable typed commands", next: "Isolated workers, leases, quotas, and regional placement" },
+  { name: "Memory Bank", icon: "database", now: "Atomic run snapshots and append-only evidence events", next: "Weeks-long scoped context with retention and sovereignty policy" },
+  { name: "Agent Identity", icon: "identity-platform", now: "User identity and server-side credential boundaries", next: "Per-agent workload identity and least-privilege tool grants" },
+  { name: "Agent Gateway", icon: "tailscale", now: "Private Tailscale path and authenticated control-plane APIs", next: "Central tool policy, egress controls, rate limits, and revocation" },
+  { name: "Model Armor", icon: "shield-check", now: "Protected metadata, schema validation, and fail-closed gates", next: "Prompt and response inspection with explicit policy evidence" },
+  { name: "Observability", icon: "radar", now: "Persisted events, exact terminal streams, and run evidence", next: "Fleet-wide OpenTelemetry traces, SLOs, and delegation views" },
+];
+
 /** Architecture narrative with owner-supplied creators and submission facts only. */
 export function AboutPage({
   onNavigate,
@@ -141,6 +179,39 @@ export function AboutPage({
               </div>)}
             </div>
             <div className="about-trust-spine"><PixelIcon name="identity-platform" color="google-blue" /><strong>Identity-derived ownership</strong><span>→</span><PixelIcon name="shield-check" color="google-yellow" /><strong>Portfolio approval</strong><span>→</span><PixelIcon name="radar" color="google-green" /><strong>Immutable evidence</strong></div>
+          </section>
+
+          <section className="about-story-card about-fleet" aria-labelledby="fleet-heading">
+            <div className="about-story-card__header"><PixelIcon name="satellite" size="md" color="google-yellow" glow /><div><span className="section-head__eyebrow">FORTIFIED ENTERPRISE FLEET</span><h2 id="fleet-heading" className="about-story-card__title">Specialists with names, contracts, and bounded authority</h2></div></div>
+            <p className="about-story-card__text">This is not a swarm of interchangeable chatbots. Atlas routes a typed task to the specialist whose tools and authority match it; every handoff returns evidence to the same durable run.</p>
+            <article className="about-fleet-command">
+              <span className="about-fleet-command__icon"><PixelIcon name="branch" size="lg" color="google-blue" glow /></span>
+              <div><span>ATLAS · GO CONTROL PLANE</span><strong>One fleet marshal, no invisible autonomy</strong><p>Dispatch, timeout, retry, cancellation, approval, and replay all remain observable at the run boundary.</p></div>
+              <StatusBeacon status="active" label="DURABLE ROUTER" mode="pulsing" size="xs" />
+            </article>
+            <div className="about-agent-loop" aria-label="Governed agent workflow">
+              {[
+                ["01", "GOAL"], ["02", "TYPED DISPATCH"], ["03", "TOOL + EVIDENCE"], ["04", "HUMAN GATE"], ["05", "EXECUTE"], ["06", "RECONCILE"],
+              ].map(([number, label], index) => <div className="about-agent-loop__step" key={number}><span>{number}</span><strong>{label}</strong>{index < 5 ? <i aria-hidden="true">→</i> : null}</div>)}
+            </div>
+            <div className="about-fleet-grid">
+              {fleetAgents.map((agent) => <article className="about-agent-card" data-status={agent.status} key={agent.codename}>
+                <header><span className={`about-tech-icon about-tech-icon--${agent.color}`}><PixelIcon name={agent.icon} size="sm" color={agent.color} /></span><div><span>{agent.codename}</span><h3>{agent.role}</h3></div><em>{agent.status === "operational" ? "CORE" : "HARDENING"}</em></header>
+                <p>{agent.mission}</p>
+                <footer><PixelIcon name="lock" size="xs" color={agent.color} /><span>{agent.boundary}</span></footer>
+              </article>)}
+            </div>
+          </section>
+
+          <section className="about-story-card" aria-labelledby="platform-heading">
+            <div className="about-story-card__header"><PixelIcon name="server" size="md" color="google-green" glow /><div><span className="section-head__eyebrow">ENTERPRISE CONTROL PLANE</span><h2 id="platform-heading" className="about-story-card__title">A foundation that can become an institutional agent platform</h2></div></div>
+            <p className="about-story-card__text">Each control names the working foundation in this repository and the explicit hardening step required for a production fleet. “Next” items are architectural targets, not demo claims.</p>
+            <div className="about-platform-grid">
+              {enterpriseControls.map((control) => <article className="about-platform-card" key={control.name}>
+                <header><PixelIcon name={control.icon} size="sm" color="google-blue" /><h3>{control.name}</h3></header>
+                <dl><div><dt>NOW</dt><dd>{control.now}</dd></div><div><dt>NEXT</dt><dd>{control.next}</dd></div></dl>
+              </article>)}
+            </div>
           </section>
 
           <section className="about-story-card" aria-labelledby="principles-heading">

@@ -1,5 +1,10 @@
 # Production Gemini Agent Graph Architecture
 
+> The expanded personified fleet, Go control-plane mapping, enterprise platform
+> services, task envelope, and failure semantics are maintained in
+> [ENTERPRISE_AGENT_FLEET.md](ENTERPRISE_AGENT_FLEET.md). This document remains
+> the concise Gemini planning-graph view.
+
 ## 1. Overview & Operational Model
 
 The Zero-Trust Migration Fleet executes autonomous schema discovery, reverse-engineering, and migration planning for legacy enterprise databases into Google Cloud BigQuery. The runtime fleet processes a single migration portfolio containing three parallel legacy sources:

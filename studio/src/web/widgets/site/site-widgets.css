@@ -91,11 +91,11 @@
   width: 24px;
   height: 24px;
   overflow: visible;
-  filter: drop-shadow(0 0 5px rgb(250 7 201 / 42%));
+  filter: drop-shadow(0 0 6px rgb(226 176 232 / 68%)) drop-shadow(0 0 2px rgb(250 7 201 / 24%));
 }
 
-.brand-bolt__energy { fill: #fa07c9; opacity: 0.72; }
-.brand-bolt__shell { fill: #e2b0e8; }
+.brand-bolt__energy { fill: #e2b0e8; opacity: 0.64; }
+.brand-bolt__shell { fill: #e2b0e8; stroke: #e2b0e8; stroke-linejoin: round; stroke-width: 1.25; }
 .brand-bolt__core { fill: #fa07c9; }
 
 .site-header__brand:hover .site-header__brand-icon {
