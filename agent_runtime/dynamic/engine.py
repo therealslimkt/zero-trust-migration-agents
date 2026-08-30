@@ -92,20 +92,24 @@ async def _invoke(
     attempt = 0
     next_call_kind: str | None = None
     while True:
-        if not await context.budget.consume():
-            return None, "agent_call_budget_exhausted"
-        context.usage.model_calls += 1
-        if next_call_kind == "transient":
-            context.usage.transient_retries += 1
-        elif next_call_kind == "schema":
-            context.usage.schema_repairs += 1
-        next_call_kind = None
-        attempt += 1
-        current = dataclasses.replace(
-            invocation, attempt=attempt, repair_attempt=repair_attempt
-        )
         try:
             async with context.semaphore:
+                # A queued branch owns neither a call-budget unit nor a model
+                # call.  Keep accounting inside the concurrency slot, directly
+                # adjacent to runner entry, so timeout cancellation cannot
+                # report calls that never crossed the runner boundary.
+                if not await context.budget.consume():
+                    return None, "agent_call_budget_exhausted"
+                context.usage.model_calls += 1
+                if next_call_kind == "transient":
+                    context.usage.transient_retries += 1
+                elif next_call_kind == "schema":
+                    context.usage.schema_repairs += 1
+                next_call_kind = None
+                attempt += 1
+                current = dataclasses.replace(
+                    invocation, attempt=attempt, repair_attempt=repair_attempt
+                )
                 response = await context.runner.invoke(current)
             if not isinstance(response, AgentResponse):
                 raise SchemaOutputError("response_type")

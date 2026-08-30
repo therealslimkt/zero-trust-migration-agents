@@ -478,6 +478,46 @@ def test_wall_timeout_cancels_live_branches():
     assert cancelled == 4
 
 
+def test_timeout_does_not_count_or_orphan_workers_queued_behind_semaphore():
+    entered = 0
+    cancelled = 0
+
+    async def never_finishes(_invocation):
+        nonlocal entered, cancelled
+        entered += 1
+        try:
+            await asyncio.Event().wait()
+        finally:
+            cancelled += 1
+
+    runner = RecordingRunner(never_finishes)
+    limits = DynamicLimits(max_concurrency=4, wall_time_seconds=0.01)
+
+    async def scenario():
+        with pytest.raises(DynamicWorkflowTimedOut) as caught:
+            await DynamicWorkflowEngine(
+                runner=runner, limits=limits
+            ).run_source_fanout([source(index) for index in range(7)])
+        current = asyncio.current_task()
+        pending = [
+            task
+            for task in asyncio.all_tasks()
+            if task is not current and not task.done()
+        ]
+        return caught.value, pending
+
+    timeout, pending = run(scenario())
+    assert pending == []
+    assert entered == 4
+    assert cancelled == 4
+    assert runner.max_active == 4
+    assert timeout.usage.model_calls == entered
+    assert timeout.usage.agent_calls == entered
+    # All seven logical branches were scheduled, but three were cancelled
+    # while waiting for a concurrency slot and never consumed call budget.
+    assert timeout.usage.logical_invocations == 7
+
+
 def test_sleep_exception_cancels_and_awaits_all_top_level_siblings():
     class CoordinatedSleep:
         def __init__(self, width):
