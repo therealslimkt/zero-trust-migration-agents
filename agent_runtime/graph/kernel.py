@@ -360,12 +360,26 @@ class CatalogGraphKernel:
             (CatalogProbeKind.ACCESS, self._callbacks.access),
         )
         pending = [(kind, callback) for kind, callback in callbacks if kind not in existing]
-        results = await asyncio.gather(
-            *(
-                callback(self._operation(state.run_id, f"catalog_{kind.value}"))
-                for kind, callback in pending
-            )
-        )
+        tasks: dict[CatalogProbeKind, asyncio.Task[CatalogProbe]] = {}
+        try:
+            async with asyncio.TaskGroup() as group:
+                for kind, callback in pending:
+                    tasks[kind] = group.create_task(
+                        callback(
+                            self._operation(
+                                state.run_id, f"catalog_{kind.value}"
+                            )
+                        ),
+                        name=f"catalog_{kind.value}",
+                    )
+        except* Exception as errors:
+            # TaskGroup has cancelled and awaited every sibling at this point.
+            # Preserve the callback's original exception API when one probe
+            # failed; concurrent independent failures remain an ExceptionGroup.
+            if len(errors.exceptions) == 1:
+                raise errors.exceptions[0]
+            raise
+        results = [tasks[kind].result() for kind, _ in pending]
         # Persist in graph order, never completion order, for byte-stable replay.
         for (kind, _), result in zip(pending, results):
             if result.kind is not kind:

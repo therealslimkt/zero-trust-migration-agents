@@ -122,6 +122,62 @@ def test_catalog_probes_are_concurrent_then_joined_in_stable_graph_order():
     assert [event.sequence for event in state.events] == list(range(1, 9))
 
 
+def test_probe_failure_cancels_and_awaits_all_siblings_before_returning():
+    store = Store()
+    started = 0
+    all_started = asyncio.Event()
+    task_refs = []
+    post_failure_effects = []
+
+    async def validate(operation_id):
+        return None
+
+    async def enter_probe():
+        nonlocal started
+        task_refs.append(asyncio.current_task())
+        started += 1
+        if started == 3:
+            all_started.set()
+        await all_started.wait()
+
+    async def fail(operation_id):
+        await enter_probe()
+        raise RuntimeError("metadata_probe_failed")
+
+    def sibling(kind):
+        async def wait_for_cancellation(operation_id):
+            await enter_probe()
+            await asyncio.sleep(60)
+            post_failure_effects.append(kind.value)
+            return CatalogProbe(kind=kind)
+
+        return wait_for_cancellation
+
+    callbacks = CatalogCallbacks(
+        validate_intent=validate,
+        metadata=fail,
+        vector=sibling(CatalogProbeKind.VECTOR),
+        access=sibling(CatalogProbeKind.ACCESS),
+    )
+
+    async def exercise():
+        with pytest.raises(RuntimeError, match="metadata_probe_failed"):
+            await CatalogGraphKernel(store=store, callbacks=callbacks).run(
+                tenant_id="tenant_AAA", run_id="run_PROBEFAIL001"
+            )
+        # If cancellation were fire-and-forget, this yield would expose either
+        # a still-pending task or a late mutation after the kernel returned.
+        await asyncio.sleep(0)
+        assert len(task_refs) == 3
+        assert all(task.done() for task in task_refs)
+        assert all(
+            task.cancelled() for task in task_refs if task.get_name() != "catalog_metadata"
+        )
+        assert post_failure_effects == []
+
+    run(exercise())
+
+
 @pytest.mark.parametrize("kill_after_sequence", range(1, 9))
 def test_kill_after_every_commit_fast_forwards_without_duplicate_effects(kill_after_sequence):
     store = Store()
