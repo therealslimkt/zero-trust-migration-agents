@@ -391,9 +391,11 @@ Milestone 2 was assembled on `agent/v2-m2-integration` from isolated lanes:
 - `75f5661` — cancel and await failed catalog probe siblings
 - `7bca1af` — count only entered dynamic model calls
 - `3102a28` — document the Milestone 2 runtime and execution gate
+- `87ebf20` — add the mandatory detailed Milestone 2 delivery report
 
-Final delivery-report and merge identifiers are recorded in the final committed
-copy after the milestone merge: `PENDING_FINAL_MERGE`.
+Milestone 2 was merged into local `main` as `b0a24f8` (`merge: deliver
+enterprise fleet milestone 2`). The report metadata was finalized immediately
+after that merge and before the remote push.
 
 ## Known limitations and deliberately deferred work
 
