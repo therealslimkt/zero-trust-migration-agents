@@ -186,6 +186,10 @@ def test_transient_retry_recovers_with_bounded_exponential_backoff():
     )
 
     assert result.usage.agent_calls == 3
+    assert result.usage.model_calls == 3
+    assert result.usage.logical_invocations == 1
+    assert result.usage.transient_retries == 2
+    assert result.usage.schema_repairs == 0
     assert [call.attempt for call in runner.invocations] == [1, 2, 3]
     assert sleeps == [0.25, 0.5]
 
@@ -203,6 +207,7 @@ def test_transient_retry_exhaustion_blocks_aggregate():
         )
 
     assert caught.value.result.usage.agent_calls == 3
+    assert caught.value.result.usage.transient_retries == 2
     assert caught.value.result.outcomes[0].error_code == "transient_retries_exhausted"
     assert "secret provider detail" not in repr(caught.value)
 
@@ -227,6 +232,9 @@ def test_three_schema_repairs_allow_success_on_fourth_call():
     )
 
     assert result.usage.agent_calls == 4
+    assert result.usage.logical_invocations == 1
+    assert result.usage.transient_retries == 0
+    assert result.usage.schema_repairs == 3
     assert [call.repair_attempt for call in runner.invocations] == [0, 1, 2, 3]
 
 
@@ -242,6 +250,7 @@ def test_schema_repair_exhaustion_blocks_aggregate():
         )
 
     assert caught.value.result.usage.agent_calls == 4
+    assert caught.value.result.usage.schema_repairs == 3
     assert caught.value.result.outcomes[0].error_code == "schema_repairs_exhausted"
 
 
@@ -378,6 +387,42 @@ def test_agent_call_budget_blocks_incomplete_research_tree_at_thirty():
     assert not all(root.complete for root in caught.value.result.outcomes)
 
 
+def test_per_root_quota_prevents_flaky_branch_from_starving_healthy_siblings():
+    async def first_is_flaky(invocation):
+        if invocation.invocation_id == "source_1":
+            raise TransientInvocationError("retry forever")
+        return response(invocation)
+
+    runner = RecordingRunner(first_is_flaky)
+    limits = DynamicLimits(max_agent_calls=7, max_transient_retries=3)
+    with pytest.raises(DynamicWorkflowBlocked) as caught:
+        run(
+            DynamicWorkflowEngine(
+                runner=runner, limits=limits, sleep=_no_sleep
+            ).run_source_fanout([source(index) for index in range(7)])
+        )
+
+    result = caught.value.result
+    assert result.usage.model_calls == 7
+    assert result.usage.logical_invocations == 7
+    # No retry crossed the model boundary because source_1 had spent its fair
+    # one-call quota; all six healthy roots retained their own first call.
+    assert result.usage.transient_retries == 0
+    assert [outcome.complete for outcome in result.outcomes] == [
+        False,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    ]
+    assert result.outcomes[0].error_code == "agent_call_budget_exhausted"
+    assert [call.invocation_id for call in runner.invocations] == [
+        f"source_{index}" for index in range(1, 8)
+    ]
+
+
 def test_incomplete_branch_blocks_aggregate_while_siblings_remain_observable():
     async def incomplete_second(invocation):
         return response(invocation, complete=invocation.invocation_id != "source_2")
@@ -410,15 +455,132 @@ def test_wall_timeout_cancels_live_branches():
 
     runner = RecordingRunner(never_finishes)
     limits = DynamicLimits(wall_time_seconds=0.01)
-    with pytest.raises(DynamicWorkflowTimedOut) as caught:
-        run(
-            DynamicWorkflowEngine(runner=runner, limits=limits).run_source_fanout(
+    async def scenario():
+        with pytest.raises(DynamicWorkflowTimedOut) as caught:
+            await DynamicWorkflowEngine(
+                runner=runner, limits=limits
+            ).run_source_fanout(
                 [source(index) for index in range(4)]
             )
-        )
+        current = asyncio.current_task()
+        pending = [
+            task
+            for task in asyncio.all_tasks()
+            if task is not current and not task.done()
+        ]
+        return caught.value, pending
 
-    assert caught.value.usage.agent_calls == 4
+    timeout, pending = run(scenario())
+    assert pending == []
+    assert timeout.usage.agent_calls == 4
+    assert timeout.usage.model_calls == 4
+    assert timeout.usage.logical_invocations == 4
     assert cancelled == 4
+
+
+def test_sleep_exception_cancels_and_awaits_all_top_level_siblings():
+    class CoordinatedSleep:
+        def __init__(self, width):
+            self.width = width
+            self.started = 0
+            self.gate = asyncio.Event()
+            self.cancelled = 0
+
+        async def __call__(self, _delay):
+            index = self.started
+            self.started += 1
+            if self.started == self.width:
+                self.gate.set()
+            await self.gate.wait()
+            if index == 0:
+                await asyncio.sleep(0)
+                raise RuntimeError("sleep infrastructure failed")
+            try:
+                await asyncio.Event().wait()
+            finally:
+                self.cancelled += 1
+
+    async def transient(_invocation):
+        raise TransientInvocationError("retry")
+
+    sleeper = CoordinatedSleep(4)
+    runner = RecordingRunner(transient)
+    async def scenario():
+        with pytest.raises(RuntimeError, match="sleep infrastructure failed"):
+            await DynamicWorkflowEngine(
+                runner=runner, sleep=sleeper
+            ).run_source_fanout(
+                [source(index) for index in range(4)]
+            )
+        current = asyncio.current_task()
+        return [
+            task
+            for task in asyncio.all_tasks()
+            if task is not current and not task.done()
+        ]
+
+    assert run(scenario()) == []
+    assert sleeper.started == 4
+    assert sleeper.cancelled == 3
+    assert runner.active == 0
+
+
+def test_sleep_exception_cancels_and_awaits_recursive_siblings():
+    class ChildSleep:
+        def __init__(self):
+            self.started = 0
+            self.gate = asyncio.Event()
+            self.cancelled = 0
+
+        async def __call__(self, _delay):
+            index = self.started
+            self.started += 1
+            if self.started == 3:
+                self.gate.set()
+            await self.gate.wait()
+            if index == 0:
+                raise RuntimeError("recursive sleep failed")
+            try:
+                await asyncio.Event().wait()
+            finally:
+                self.cancelled += 1
+
+    async def root_with_children(invocation):
+        if invocation.invocation_id == "research_1":
+            return response(
+                invocation,
+                children=tuple(
+                    ResearchRequest(
+                        topic_id=f"child_{index}",
+                        request=document("child", str(index)),
+                    )
+                    for index in range(3)
+                ),
+            )
+        if invocation.depth == 1:
+            raise TransientInvocationError("retry child")
+        return response(invocation)
+
+    sleeper = ChildSleep()
+    runner = RecordingRunner(root_with_children)
+    async def scenario():
+        with pytest.raises(RuntimeError, match="recursive sleep failed"):
+            await DynamicWorkflowEngine(
+                runner=runner, sleep=sleeper
+            ).run_maven_research(
+                [topic(index) for index in range(3)]
+            )
+        current = asyncio.current_task()
+        return [
+            task
+            for task in asyncio.all_tasks()
+            if task is not current and not task.done()
+        ]
+
+    assert run(scenario()) == []
+    assert sleeper.started == 3
+    assert sleeper.cancelled == 2
+    assert runner.active == 0
 
 
 @pytest.mark.parametrize("target", ["executor", "approval", "signer", "raw_data_reader"])

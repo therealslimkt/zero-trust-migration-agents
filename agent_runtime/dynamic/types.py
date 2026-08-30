@@ -239,8 +239,24 @@ class DynamicLimits:
 
 @dataclasses.dataclass(frozen=True)
 class DynamicUsage:
-    agent_calls: int
+    """Exact scheduler-observed call accounting.
+
+    Every ``DynamicAgentRunner.invoke`` entry counts as one model boundary,
+    including calls that fail.  A logical invocation is one tree node; retry
+    and repair calls do not increment it.
+    """
+
+    model_calls: int
+    logical_invocations: int
+    transient_retries: int
+    schema_repairs: int
     elapsed_seconds: float
+
+    @property
+    def agent_calls(self) -> int:
+        """Backward-compatible alias for the exact model-call count."""
+
+        return self.model_calls
 
 
 @dataclasses.dataclass(frozen=True)

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
-import time
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Tuple
 
@@ -29,7 +28,6 @@ from .types import (
 
 
 Sleep = Callable[[float], Awaitable[None]]
-Clock = Callable[[], float]
 
 
 class _CallBudget:
@@ -51,11 +49,20 @@ class _CallBudget:
 
 
 @dataclasses.dataclass
+class _UsageCounter:
+    model_calls: int = 0
+    logical_invocations: int = 0
+    transient_retries: int = 0
+    schema_repairs: int = 0
+
+
+@dataclasses.dataclass
 class _RunContext:
     runner: DynamicAgentRunner
     limits: DynamicLimits
     semaphore: asyncio.Semaphore
     budget: _CallBudget
+    usage: _UsageCounter
     sleep: Sleep
 
 
@@ -79,12 +86,20 @@ async def _invoke(
     context: _RunContext,
     invocation: AgentInvocation,
 ) -> Tuple[AgentResponse | None, str | None]:
+    context.usage.logical_invocations += 1
     transient_retries = 0
     repair_attempt = 0
     attempt = 0
+    next_call_kind: str | None = None
     while True:
         if not await context.budget.consume():
             return None, "agent_call_budget_exhausted"
+        context.usage.model_calls += 1
+        if next_call_kind == "transient":
+            context.usage.transient_retries += 1
+        elif next_call_kind == "schema":
+            context.usage.schema_repairs += 1
+        next_call_kind = None
         attempt += 1
         current = dataclasses.replace(
             invocation, attempt=attempt, repair_attempt=repair_attempt
@@ -104,10 +119,12 @@ async def _invoke(
             )
             transient_retries += 1
             await context.sleep(delay)
+            next_call_kind = "transient"
         except SchemaOutputError:
             if repair_attempt >= context.limits.max_schema_repairs:
                 return None, "schema_repairs_exhausted"
             repair_attempt += 1
+            next_call_kind = "schema"
         except asyncio.CancelledError:
             raise
         except Exception:
@@ -163,16 +180,46 @@ async def _research_branch(
         return BranchOutcome(path, scope, response, error_code="research_child_width")
     if depth == 2 and response.children:
         return BranchOutcome(path, scope, response, error_code="research_max_depth")
-    children = tuple(
-        await asyncio.gather(
-            *(
-                _research_branch(context, child, path + (child_index,))
-                for child_index, child in enumerate(response.children)
-            )
+    children = await _gather_structured(
+        tuple(
+            _research_branch(context, child, path + (child_index,))
+            for child_index, child in enumerate(response.children)
         )
     )
     error = None if all(child.complete for child in children) else "child_incomplete"
     return BranchOutcome(path, scope, response, children=children, error_code=error)
+
+
+async def _gather_structured(
+    operations: Sequence[Awaitable[BranchOutcome]],
+) -> Tuple[BranchOutcome, ...]:
+    """Gather in declared order and never leave an unobserved sibling task."""
+
+    tasks = tuple(asyncio.create_task(operation) for operation in operations)
+    try:
+        return tuple(await asyncio.gather(*tasks))
+    except BaseException:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        raise
+
+
+def _branch_quotas(total: int, branch_count: int) -> Tuple[int, ...]:
+    """Deterministically distribute the global budget round-robin by root.
+
+    A root and all of its descendants share one quota.  No early flaky root
+    can consume another root's first call, and the quota sum never exceeds the
+    configured global ceiling.
+    """
+
+    quotient, remainder = divmod(total, branch_count)
+    return tuple(
+        quotient + (1 if index < remainder else 0)
+        for index in range(branch_count)
+    )
 
 
 class DynamicWorkflowEngine:
@@ -184,54 +231,75 @@ class DynamicWorkflowEngine:
         runner: DynamicAgentRunner,
         limits: DynamicLimits = DynamicLimits(),
         sleep: Sleep = asyncio.sleep,
-        clock: Clock = time.monotonic,
     ):
         if not isinstance(runner, DynamicAgentRunner):
             raise TypeError("dynamic_runner")
         if not isinstance(limits, DynamicLimits):
             raise TypeError("dynamic_limits")
-        if not callable(sleep) or not callable(clock):
-            raise TypeError("dynamic_clock")
+        if not callable(sleep):
+            raise TypeError("dynamic_sleep")
         self._runner = runner
         self._limits = limits
         self._sleep = sleep
-        self._clock = clock
 
-    def _context(self) -> _RunContext:
-        return _RunContext(
-            runner=self._runner,
-            limits=self._limits,
-            semaphore=asyncio.Semaphore(self._limits.max_concurrency),
-            budget=_CallBudget(self._limits.max_agent_calls),
-            sleep=self._sleep,
+    def _contexts(self, branch_count: int) -> Tuple[_RunContext, ...]:
+        semaphore = asyncio.Semaphore(self._limits.max_concurrency)
+        usage = _UsageCounter()
+        return tuple(
+            _RunContext(
+                runner=self._runner,
+                limits=self._limits,
+                semaphore=semaphore,
+                budget=_CallBudget(quota),
+                usage=usage,
+                sleep=self._sleep,
+            )
+            for quota in _branch_quotas(
+                self._limits.max_agent_calls, branch_count
+            )
         )
 
     async def _bounded_run(
         self,
-        context: _RunContext,
+        contexts: Sequence[_RunContext],
         operation: Awaitable[Tuple[BranchOutcome, ...]],
         started: float,
     ) -> DynamicRunResult:
+        task = asyncio.create_task(operation)
         try:
             outcomes = await asyncio.wait_for(
-                operation, timeout=self._limits.wall_time_seconds
+                task, timeout=self._limits.wall_time_seconds
             )
         except asyncio.TimeoutError as exc:
-            usage = DynamicUsage(
-                agent_calls=context.budget.used,
-                elapsed_seconds=max(0.0, self._clock() - started),
-            )
-            raise DynamicWorkflowTimedOut(usage) from exc
+            # wait_for cancels and awaits ``task`` on a genuine deadline.  An
+            # inner TimeoutError leaves it completed rather than cancelled.
+            if not task.cancelled():
+                raise
+            raise DynamicWorkflowTimedOut(
+                self._usage(contexts, started)
+            ) from exc
         result = DynamicRunResult(
             outcomes=outcomes,
-            usage=DynamicUsage(
-                agent_calls=context.budget.used,
-                elapsed_seconds=max(0.0, self._clock() - started),
-            ),
+            usage=self._usage(contexts, started),
         )
         if not all(outcome.complete for outcome in outcomes):
             raise DynamicWorkflowBlocked(result)
         return result
+
+    @staticmethod
+    def _usage(
+        contexts: Sequence[_RunContext], started: float
+    ) -> DynamicUsage:
+        counter = contexts[0].usage
+        # asyncio.wait_for and loop.time use the same event-loop clock.
+        elapsed = max(0.0, asyncio.get_running_loop().time() - started)
+        return DynamicUsage(
+            model_calls=counter.model_calls,
+            logical_invocations=counter.logical_invocations,
+            transient_retries=counter.transient_retries,
+            schema_repairs=counter.schema_repairs,
+            elapsed_seconds=elapsed,
+        )
 
     async def run_source_fanout(
         self, sources: Sequence[SourceInstance]
@@ -244,15 +312,15 @@ class DynamicWorkflowEngine:
         _require_unique(
             [source.instance_id for source in sources], "source_instance_duplicate"
         )
-        context = self._context()
-        started = self._clock()
-        operation = asyncio.gather(
-            *(
-                _source_branch(context, source, index)
+        contexts = self._contexts(len(sources))
+        started = asyncio.get_running_loop().time()
+        operation = _gather_structured(
+            tuple(
+                _source_branch(contexts[index], source, index)
                 for index, source in enumerate(sources)
             )
         )
-        return await self._bounded_run(context, operation, started)
+        return await self._bounded_run(contexts, operation, started)
 
     async def run_maven_research(
         self, topics: Sequence[ResearchRequest]
@@ -263,12 +331,12 @@ class DynamicWorkflowEngine:
         if any(not isinstance(topic, ResearchRequest) for topic in topics):
             raise DynamicValidationError("research_topic")
         _require_unique([topic.topic_id for topic in topics], "research_topic_duplicate")
-        context = self._context()
-        started = self._clock()
-        operation = asyncio.gather(
-            *(
-                _research_branch(context, topic, (index,))
+        contexts = self._contexts(len(topics))
+        started = asyncio.get_running_loop().time()
+        operation = _gather_structured(
+            tuple(
+                _research_branch(contexts[index], topic, (index,))
                 for index, topic in enumerate(topics)
             )
         )
-        return await self._bounded_run(context, operation, started)
+        return await self._bounded_run(contexts, operation, started)

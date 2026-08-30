@@ -1,5 +1,11 @@
 """Bounded dynamic-workflow scheduling for the enterprise fleet."""
 
+from .adapter import (
+    AdkSchemaFailure,
+    AdkTransientFailure,
+    ContextRunNodeAdapter,
+    DynamicAdapterError,
+)
 from .engine import DynamicWorkflowEngine
 from .types import (
     AgentInvocation,
@@ -27,8 +33,11 @@ from .types import (
 __all__ = [
     "AgentInvocation",
     "AgentResponse",
+    "AdkSchemaFailure",
+    "AdkTransientFailure",
     "BranchOutcome",
     "DynamicAgentRunner",
+    "DynamicAdapterError",
     "DynamicLimits",
     "DynamicRunResult",
     "DynamicUsage",
@@ -36,6 +45,7 @@ __all__ = [
     "DynamicWorkflowBlocked",
     "DynamicWorkflowEngine",
     "DynamicWorkflowTimedOut",
+    "ContextRunNodeAdapter",
     "FORBIDDEN_CAPABILITIES",
     "RESEARCH_CAPABILITIES",
     "RESEARCH_TARGET",
