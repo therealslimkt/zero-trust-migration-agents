@@ -34,7 +34,7 @@ def _nodes():
 
 def test_factory_fails_closed_without_the_pinned_runtime(monkeypatch):
     monkeypatch.setattr(
-        "agent_runtime.workflows.catalog.require_python_312",
+        "agent_runtime.workflows.catalog.load_adk_patterns",
         lambda: (_ for _ in ()).throw(RuntimeError("wrong python")),
     )
     with pytest.raises(RuntimeError, match="wrong python"):
