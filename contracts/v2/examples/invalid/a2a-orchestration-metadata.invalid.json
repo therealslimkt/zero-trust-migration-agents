@@ -1,0 +1,6 @@
+{
+  "base": "a2a-event.json",
+  "targetSchema": "schemas/a2a-event.schema.json",
+  "expect": "schema_rejection",
+  "mutation": {"operation": "set", "path": "/orchestration/attempt", "value": 0}
+}

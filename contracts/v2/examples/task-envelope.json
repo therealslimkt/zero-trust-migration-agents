@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "task_ENTERPRISE01",
+  "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "title": "Inspect the JDE fixture",
+  "objective": "Interpret sanitized JDE metadata and return typed findings.",
+  "ownerAgentId": "source_analyst_jde",
+  "reviewerAgentId": "atlas",
+  "status": "queued",
+  "readAllowlist": ["data/fixtures/jde/**"],
+  "readDenylist": ["data/raw/**"],
+  "writeAllowlist": ["artifacts/jde/**"],
+  "contextRefs": [],
+  "networkPolicy": "deny",
+  "allowedCommands": ["validate_fixture"],
+  "acceptanceCriteria": ["Return only the closed specialist output."],
+  "stopConditions": ["Stop if protected source values are present."],
+  "createdAt": "2026-08-30T12:00:00Z",
+  "workflowId": "wf_enterprise_migration",
+  "workflowVersion": "2.0.0",
+  "sessionId": "ses_ENTERPRISE0001",
+  "orchestrationBudget": {
+    "maxConcurrentNodes": 4,
+    "maxNodeExecutions": 100,
+    "maxModelCalls": 30,
+    "maxToolCalls": 100,
+    "maxDepth": 2,
+    "maxRetriesPerNode": 3,
+    "maxInterrupts": 8,
+    "maxWallClockSeconds": 1800
+  },
+  "sourceInstanceIds": ["src_jde_fixture_01"]
+}

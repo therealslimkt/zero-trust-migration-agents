@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "2.0.0",
+  "lineageRecordId": "lin_ENTERPRISE001",
+  "runId": "run_ENTERPRISE0001",
+  "cartridgeFamily": "jde_e1_ibmi",
+  "cartridgeVersion": "1.0.0",
+  "sourceObject": {
+    "sourceInstanceId": "src_jde_fixture_01",
+    "container": "PRODDTA",
+    "object": "F0101",
+    "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "destinationObject": {
+    "system": "bigquery",
+    "dataset": "ztm_silver",
+    "table": "jde_f0101",
+    "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "transformPlanDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "nodePath": ["source_portfolio", "jde_transform"],
+  "rowCount": 2,
+  "producedBy": {
+    "nodeRunId": "nr_LEDGER0000001",
+    "deterministicComponentId": "ledger"
+  },
+  "producedAt": "2026-08-30T12:00:10Z",
+  "evidenceRefs": [
+    {
+      "artifactId": "art_reconciliation_0001",
+      "kind": "reconciliation_result",
+      "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "verifiedBy": "ledger",
+      "verifiedAt": "2026-08-30T12:00:10Z"
+    }
+  ]
+}

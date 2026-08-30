@@ -1,0 +1,6 @@
+{
+  "base": "artifact-record.json",
+  "targetSchema": "schemas/evidence.schema.json#/$defs/artifactRecord",
+  "expect": "schema_rejection",
+  "mutation": {"operation": "set", "path": "/digest", "value": "sha256:not-a-digest"}
+}

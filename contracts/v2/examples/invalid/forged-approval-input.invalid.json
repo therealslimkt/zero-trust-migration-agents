@@ -1,0 +1,6 @@
+{
+  "base": "resume-input.json",
+  "targetSchema": "schemas/operations.schema.json#/$defs/resumeInterruptRequest",
+  "expect": "schema_rejection",
+  "mutation": {"operation": "set", "path": "/kind", "value": "production_approval"}
+}

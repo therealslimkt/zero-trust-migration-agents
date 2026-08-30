@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "2.0.0",
+  "kind": "clarification",
+  "response": {
+    "responseKind": "clarification",
+    "text": "Use the governed JDE fixture source instance."
+  },
+  "expectedCheckpointId": "ckpt_ENTERPRISE01",
+  "idempotencyKey": "resume.enterprise.0001"
+}

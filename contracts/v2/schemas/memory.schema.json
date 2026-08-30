@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/v2/2.0.0/memory.schema.json",
+  "title": "Migration Contract v2 Memory Promotion",
+  "description": "Cross-session memory is a set of verified, scoped, expiring claims. A candidate carries a summary and a claim digest; it never carries raw source content, protected rows, credentials, or model reasoning. Promotion requires deterministic verification and a human decision.",
+  "$defs": {
+    "claimKind": {
+      "type": "string",
+      "enum": [
+        "schema_fact",
+        "mapping_rule",
+        "failure_signature",
+        "reconciliation_threshold",
+        "routing_preference"
+      ]
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Deterministic re-check of the claim against its evidence. Only vale, flow, ledger, or forge can produce a verified status.",
+      "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["unverified", "verified"]},
+        "verifiedBy": {"$ref": "common.schema.json#/$defs/deterministicComponentId"},
+        "verifiedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "checkDigest": {"$ref": "common.schema.json#/$defs/digest"}
+      },
+      "oneOf": [
+        {
+          "properties": {"status": {"const": "verified"}},
+          "required": ["verifiedBy", "verifiedAt", "checkDigest"]
+        },
+        {
+          "properties": {"status": {"const": "unverified"}},
+          "allOf": [
+            {"not": {"required": ["verifiedBy"]}},
+            {"not": {"required": ["verifiedAt"]}},
+            {"not": {"required": ["checkDigest"]}}
+          ]
+        }
+      ]
+    },
+    "approvalReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Pointer to a decision recorded on the separate approval surface. The memory lane records that a decision exists, never who made it in free text.",
+      "required": ["approvalId", "subjectDigest", "decidedAt"],
+      "properties": {
+        "approvalId": {"$ref": "common.schema.json#/$defs/approvalId"},
+        "subjectDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "decidedAt": {"$ref": "common.schema.json#/$defs/timestamp"}
+      }
+    },
+    "memoryPromotionCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A proposed cross-session fact. Always requires human approval and always carries a full eight-dimension scope so it can never leak across tenant, role, purpose, region, family, version, fidelity, or fingerprint.",
+      "required": [
+        "schemaVersion",
+        "candidateId",
+        "runId",
+        "scope",
+        "claimKind",
+        "claimSummary",
+        "claimDigest",
+        "evidence",
+        "verification",
+        "requiresHumanApproval",
+        "status",
+        "proposedAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "candidateId": {"type": "string", "pattern": "^mcd_[A-Za-z0-9]{12,64}$"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "nodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"},
+        "scope": {"$ref": "common.schema.json#/$defs/memoryScope"},
+        "claimKind": {"$ref": "#/$defs/claimKind"},
+        "claimSummary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280,
+          "description": "Short structural statement. Must be derivable from the referenced evidence; it is not a place to copy source data."
+        },
+        "claimDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {"$ref": "common.schema.json#/$defs/verifiedEvidence"}
+        },
+        "verification": {"$ref": "#/$defs/verification"},
+        "approval": {"$ref": "#/$defs/approvalReference"},
+        "requiresHumanApproval": {"const": true},
+        "status": {"type": "string", "enum": ["proposed", "approved", "rejected"]},
+        "proposedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "expiresAt": {"$ref": "common.schema.json#/$defs/timestamp"}
+      },
+      "oneOf": [
+        {
+          "description": "Approval is only reachable once deterministic verification succeeded.",
+          "properties": {
+            "status": {"const": "approved"},
+            "verification": {"properties": {"status": {"const": "verified"}}}
+          },
+          "required": ["approval"]
+        },
+        {
+          "properties": {"status": {"enum": ["proposed", "rejected"]}},
+          "not": {"required": ["approval"]}
+        }
+      ]
+    },
+    "memoryPromotionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A promoted memory. Verification must be verified, an approval reference is mandatory, expiry is mandatory, and supersession is explicit. There is no content, rawContent, rows, text, prompt, or reasoning member anywhere in this type.",
+      "required": [
+        "schemaVersion",
+        "memoryRecordId",
+        "candidateId",
+        "scope",
+        "claimKind",
+        "claimSummary",
+        "claimDigest",
+        "evidence",
+        "verification",
+        "approval",
+        "status",
+        "promotedAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "memoryRecordId": {"type": "string", "pattern": "^mem_[A-Za-z0-9]{12,64}$"},
+        "candidateId": {"type": "string", "pattern": "^mcd_[A-Za-z0-9]{12,64}$"},
+        "scope": {"$ref": "common.schema.json#/$defs/memoryScope"},
+        "claimKind": {"$ref": "#/$defs/claimKind"},
+        "claimSummary": {"type": "string", "minLength": 1, "maxLength": 280},
+        "claimDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {"$ref": "common.schema.json#/$defs/verifiedEvidence"}
+        },
+        "verification": {
+          "allOf": [
+            {"$ref": "#/$defs/verification"},
+            {"properties": {"status": {"const": "verified"}}}
+          ]
+        },
+        "approval": {"$ref": "#/$defs/approvalReference"},
+        "status": {
+          "type": "string",
+          "enum": ["active", "expired", "superseded", "revoked"]
+        },
+        "promotedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "expiresAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "supersedes": {"type": "string", "pattern": "^mem_[A-Za-z0-9]{12,64}$"},
+        "supersededBy": {"type": "string", "pattern": "^mem_[A-Za-z0-9]{12,64}$"},
+        "revokedReason": {"$ref": "common.schema.json#/$defs/failureCode"}
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {"properties": {"status": {"const": "superseded"}}, "required": ["supersededBy"]},
+            {
+              "properties": {"status": {"enum": ["active", "expired", "revoked"]}},
+              "not": {"required": ["supersededBy"]}
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {"properties": {"status": {"const": "revoked"}}, "required": ["revokedReason"]},
+            {
+              "properties": {"status": {"enum": ["active", "expired", "superseded"]}},
+              "not": {"required": ["revokedReason"]}
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

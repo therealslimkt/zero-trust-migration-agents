@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/v2/2.0.0/evidence.schema.json",
+  "title": "Migration Contract v2 Evidence Types",
+  "description": "Artifact records, reconciliation results, and lineage records. Every type is content-addressed and none of them carries an artifact body, a protected row value, or a credential.",
+  "$defs": {
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Who produced an artifact. Exactly one of agentId or deterministicComponentId.",
+      "required": ["nodeRunId"],
+      "properties": {
+        "nodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"},
+        "agentId": {"$ref": "common.schema.json#/$defs/agentId"},
+        "deterministicComponentId": {"$ref": "common.schema.json#/$defs/deterministicComponentId"}
+      },
+      "oneOf": [
+        {"required": ["agentId"], "not": {"required": ["deterministicComponentId"]}},
+        {"required": ["deterministicComponentId"], "not": {"required": ["agentId"]}}
+      ]
+    },
+    "contentClass": {
+      "type": "string",
+      "description": "What the stored body is. protected_reference means the body is a pointer into the private edge and is never returned through this API.",
+      "enum": ["metadata", "derived_evidence", "protected_reference"]
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retentionClass", "expiresAt"],
+      "properties": {
+        "retentionClass": {
+          "type": "string",
+          "enum": ["ephemeral", "run_scoped", "audit", "permanent_evidence"]
+        },
+        "expiresAt": {
+          "oneOf": [
+            {"$ref": "common.schema.json#/$defs/timestamp"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "artifactRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Immutable, content-addressed record of one artifact. There is deliberately no content, body, rows, or text member.",
+      "required": [
+        "schemaVersion",
+        "artifactId",
+        "runId",
+        "kind",
+        "mediaType",
+        "version",
+        "uri",
+        "digest",
+        "byteSize",
+        "contentClass",
+        "producedBy",
+        "retention",
+        "region",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "artifactId": {"$ref": "common.schema.json#/$defs/artifactId"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "taskId": {"$ref": "common.schema.json#/$defs/taskId"},
+        "kind": {"$ref": "common.schema.json#/$defs/artifactKind"},
+        "mediaType": {
+          "type": "string",
+          "pattern": "^[a-z]+/[a-z0-9.+-]+$",
+          "maxLength": 120
+        },
+        "version": {"$ref": "common.schema.json#/$defs/semver"},
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 1000,
+          "description": "Versioned object-store reference; the API never embeds the artifact body."
+        },
+        "digest": {"$ref": "common.schema.json#/$defs/digest"},
+        "byteSize": {"type": "integer", "minimum": 0, "maximum": 8589934592},
+        "contentClass": {"$ref": "#/$defs/contentClass"},
+        "producedBy": {"$ref": "#/$defs/producer"},
+        "retention": {"$ref": "#/$defs/retention"},
+        "region": {"$ref": "common.schema.json#/$defs/residency"},
+        "createdAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "derivedFrom": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {"$ref": "common.schema.json#/$defs/artifactReference"}
+        },
+        "verification": {"$ref": "common.schema.json#/$defs/verifiedEvidence"}
+      }
+    },
+
+    "checkStatus": {
+      "type": "string",
+      "enum": ["passed", "failed", "skipped"]
+    },
+    "valueCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Field-level comparison over a sampled population. Counts only; never the compared values.",
+      "required": ["status", "sampledRowCount", "comparedFieldCount", "mismatchCount"],
+      "properties": {
+        "status": {"$ref": "#/$defs/checkStatus"},
+        "sampledRowCount": {"type": "integer", "minimum": 0},
+        "comparedFieldCount": {"type": "integer", "minimum": 0},
+        "mismatchCount": {"type": "integer", "minimum": 0}
+      },
+      "oneOf": [
+        {"properties": {"status": {"const": "passed"}, "mismatchCount": {"maximum": 0}}},
+        {"properties": {"status": {"enum": ["failed", "skipped"]}}}
+      ]
+    },
+    "countCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "sourceRowCount", "destinationRowCount", "rejectedRowCount"],
+      "properties": {
+        "status": {"$ref": "#/$defs/checkStatus"},
+        "sourceRowCount": {"type": "integer", "minimum": 0},
+        "destinationRowCount": {"type": "integer", "minimum": 0},
+        "rejectedRowCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "deleteCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Proves the destination did not lose rows the plan never authorized removing.",
+      "required": ["status", "expectedDeleteCount", "appliedDeleteCount", "unexpectedDeleteCount"],
+      "properties": {
+        "status": {"$ref": "#/$defs/checkStatus"},
+        "expectedDeleteCount": {"type": "integer", "minimum": 0},
+        "appliedDeleteCount": {"type": "integer", "minimum": 0},
+        "unexpectedDeleteCount": {"type": "integer", "minimum": 0}
+      },
+      "oneOf": [
+        {"properties": {"status": {"const": "passed"}, "unexpectedDeleteCount": {"maximum": 0}}},
+        {"properties": {"status": {"enum": ["failed", "skipped"]}}}
+      ]
+    },
+    "digestCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Compares the governed input digest against the recomputed destination digest. A passed status requires digestsMatch true, so a mismatch cannot be reported as success.",
+      "required": ["status", "sourceDigest", "destinationDigest", "digestsMatch"],
+      "properties": {
+        "status": {"$ref": "#/$defs/checkStatus"},
+        "sourceDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "destinationDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "digestsMatch": {"type": "boolean"}
+      },
+      "oneOf": [
+        {"properties": {"status": {"const": "passed"}, "digestsMatch": {"const": true}}},
+        {"properties": {"status": {"enum": ["failed", "skipped"]}}}
+      ]
+    },
+    "lineageCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "lineageRecordId", "coveredRowCount", "uncoveredRowCount"],
+      "properties": {
+        "status": {"$ref": "#/$defs/checkStatus"},
+        "lineageRecordId": {"type": "string", "pattern": "^lin_[A-Za-z0-9]{12,64}$"},
+        "coveredRowCount": {"type": "integer", "minimum": 0},
+        "uncoveredRowCount": {"type": "integer", "minimum": 0}
+      },
+      "oneOf": [
+        {"properties": {"status": {"const": "passed"}, "uncoveredRowCount": {"maximum": 0}}},
+        {"properties": {"status": {"enum": ["failed", "skipped"]}}}
+      ]
+    },
+    "reconciliationChecks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["valueCheck", "countCheck", "deleteCheck", "digestCheck", "lineageCheck"],
+      "properties": {
+        "valueCheck": {"$ref": "#/$defs/valueCheck"},
+        "countCheck": {"$ref": "#/$defs/countCheck"},
+        "deleteCheck": {"$ref": "#/$defs/deleteCheck"},
+        "digestCheck": {"$ref": "#/$defs/digestCheck"},
+        "lineageCheck": {"$ref": "#/$defs/lineageCheck"}
+      }
+    },
+    "reconciliationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Deterministic verdict produced by ledger. An overall pass requires all five checks to have passed; anything else must carry at least one failure code.",
+      "required": [
+        "schemaVersion",
+        "reconciliationId",
+        "runId",
+        "cartridgeFamily",
+        "cartridgeVersion",
+        "sourceInstanceId",
+        "status",
+        "checks",
+        "evaluatedBy",
+        "evaluatedAt",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "reconciliationId": {"type": "string", "pattern": "^rec_[A-Za-z0-9]{12,64}$"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "cartridgeFamily": {"$ref": "common.schema.json#/$defs/cartridgeFamily"},
+        "cartridgeVersion": {"$ref": "common.schema.json#/$defs/semver"},
+        "sourceInstanceId": {"$ref": "common.schema.json#/$defs/sourceInstanceId"},
+        "status": {"type": "string", "enum": ["passed", "failed", "inconclusive"]},
+        "checks": {"$ref": "#/$defs/reconciliationChecks"},
+        "evaluatedBy": {
+          "$ref": "common.schema.json#/$defs/deterministicComponentId",
+          "description": "Reconciliation is deterministic. A model agent can never author this record."
+        },
+        "evaluatedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "evidenceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {"$ref": "common.schema.json#/$defs/verifiedEvidence"}
+        },
+        "failureCodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/failureCode"}
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "status": {"const": "passed"},
+            "checks": {
+              "properties": {
+                "valueCheck": {"properties": {"status": {"const": "passed"}}},
+                "countCheck": {"properties": {"status": {"const": "passed"}}},
+                "deleteCheck": {"properties": {"status": {"const": "passed"}}},
+                "digestCheck": {"properties": {"status": {"const": "passed"}}},
+                "lineageCheck": {"properties": {"status": {"const": "passed"}}}
+              }
+            }
+          },
+          "not": {"required": ["failureCodes"]}
+        },
+        {
+          "properties": {"status": {"enum": ["failed", "inconclusive"]}},
+          "required": ["failureCodes"]
+        }
+      ]
+    },
+
+    "sourceObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceInstanceId", "container", "object", "digest"],
+      "properties": {
+        "sourceInstanceId": {"$ref": "common.schema.json#/$defs/sourceInstanceId"},
+        "container": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._$-]+$"},
+        "object": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._$-]+$"},
+        "digest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    },
+    "destinationObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "dataset", "table", "digest"],
+      "properties": {
+        "system": {"type": "string", "enum": ["bigquery", "cloud_storage"]},
+        "dataset": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._-]+$"},
+        "table": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._-]+$"},
+        "digest": {"$ref": "common.schema.json#/$defs/digest"}
+      }
+    },
+    "lineageRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Links one governed source object to one destination object through one transform plan and one node path. Structural identifiers and digests only; no values.",
+      "required": [
+        "schemaVersion",
+        "lineageRecordId",
+        "runId",
+        "cartridgeFamily",
+        "cartridgeVersion",
+        "sourceObject",
+        "destinationObject",
+        "transformPlanDigest",
+        "nodePath",
+        "rowCount",
+        "producedBy",
+        "producedAt",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "lineageRecordId": {"type": "string", "pattern": "^lin_[A-Za-z0-9]{12,64}$"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "cartridgeFamily": {"$ref": "common.schema.json#/$defs/cartridgeFamily"},
+        "cartridgeVersion": {"$ref": "common.schema.json#/$defs/semver"},
+        "sourceObject": {"$ref": "#/$defs/sourceObject"},
+        "destinationObject": {"$ref": "#/$defs/destinationObject"},
+        "transformPlanDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "nodePath": {"$ref": "common.schema.json#/$defs/nodePath"},
+        "rowCount": {"type": "integer", "minimum": 0},
+        "producedBy": {"$ref": "#/$defs/producer"},
+        "producedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "evidenceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {"$ref": "common.schema.json#/$defs/verifiedEvidence"}
+        }
+      }
+    }
+  }
+}

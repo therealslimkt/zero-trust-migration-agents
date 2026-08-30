@@ -1,0 +1,190 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Zero-Trust Migration v2 Orchestration API",
+    "version": "2.0.0",
+    "description": "Three read/resume routes over one workflow run. This contract is additive: it does not modify or replace /api/v1 or /api/web/v1.\n\nApproval is intentionally absent. Simulation approval and production approval remain on the separate identity-bound approval surface documented under x-approval-endpoints; they are not v2 input routes, and the input route rejects any body whose interrupt kind is an approval. See contracts/v2/README.md for the full rule."
+  },
+  "servers": [{"url": "/"}],
+  "security": [{"bearerAuth": []}],
+  "x-approval-endpoints": {
+    "description": "Approval endpoints are defined by other contracts and are deliberately not declared as paths here. Listing them is documentation, not an offer to serve them from this contract.",
+    "simulationApproval": {
+      "method": "POST",
+      "path": "/api/web/v1/runs/{run_id}/approval",
+      "contract": "contracts/web/v1/openapi.json",
+      "note": "Identity Platform bearer token; the server derives the actor from verified claims and no actor field is accepted."
+    },
+    "productionApproval": {
+      "method": "POST",
+      "path": "/api/v1/migrations/{run_id}/approval",
+      "contract": "contracts/openapi.json",
+      "note": "Service-token surface bound to one exact plan digest."
+    },
+    "prohibition": "POST /api/v2/runs/{run_id}/inputs/{interrupt_id} must return 403 with problem code APPROVAL_NOT_RESUMABLE_VIA_INPUT when the addressed interrupt's kind is simulation_approval or production_approval."
+  },
+  "paths": {
+    "/api/v2/runs/{run_id}/orchestration": {
+      "parameters": [{"$ref": "#/components/parameters/RunId"}],
+      "get": {
+        "operationId": "getRunOrchestration",
+        "summary": "Get the replay-friendly orchestration trace for one run",
+        "description": "Returns node executions, checkpoints, interrupts, specialist invocations, budget ceilings, and observed budget usage, ordered by sequence.",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"$ref": "#/components/parameters/SinceSequence"},
+          {"$ref": "#/components/parameters/Limit"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Current orchestration trace",
+            "headers": {
+              "ETag": {"schema": {"type": "string"}, "description": "Weak validator derived from the trace digest and lastSequence."}
+            },
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "./schemas/operations.schema.json#/$defs/orchestrationResponse"}
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/Problem"},
+          "401": {"$ref": "#/components/responses/Problem"},
+          "403": {"$ref": "#/components/responses/Problem"},
+          "404": {"$ref": "#/components/responses/Problem"},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/v2/runs/{run_id}/events": {
+      "parameters": [
+        {"$ref": "#/components/parameters/RunId"},
+        {"$ref": "#/components/parameters/LastEventId"}
+      ],
+      "get": {
+        "operationId": "streamRunEvents",
+        "summary": "Stream resumable v2 agent-to-agent events for one run",
+        "description": "Server-sent events. Each data field is one A2AEvent v2 document. Last-Event-ID resumes strictly after that exact event within this run; ordering is by the event's sequence, not wall clock.",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Persisted events in sequence order",
+            "headers": {
+              "Cache-Control": {"schema": {"type": "string"}, "description": "Always no-cache"}
+            },
+            "content": {
+              "text/event-stream": {
+                "schema": {"type": "string"},
+                "x-sse-event": "a2a.event",
+                "x-sse-data-schema": {"$ref": "./schemas/a2a-event.schema.json"}
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/Problem"},
+          "401": {"$ref": "#/components/responses/Problem"},
+          "403": {"$ref": "#/components/responses/Problem"},
+          "404": {"$ref": "#/components/responses/Problem"},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    },
+    "/api/v2/runs/{run_id}/inputs/{interrupt_id}": {
+      "parameters": [
+        {"$ref": "#/components/parameters/RunId"},
+        {"$ref": "#/components/parameters/InterruptId"}
+      ],
+      "post": {
+        "operationId": "resumeRunInput",
+        "summary": "Resume a clarification or task-input interrupt",
+        "description": "Resumes a paused run from the checkpoint the interrupt recorded. Only clarification and task_input interrupts are resumable here.\n\nThis route is not an approval surface. If the addressed interrupt is simulation_approval or production_approval the server returns 403 APPROVAL_NOT_RESUMABLE_VIA_INPUT and makes no state change. The request body has no actor, decision, approval, or authorization member, so a caller cannot forge a decision by shaping the body.\n\nexpectedCheckpointId must match the run's current pending checkpoint; a mismatch returns 409 and does not resume. Repeats with the same idempotencyKey return the original result.",
+        "security": [{"bearerAuth": []}],
+        "x-max-body-bytes": 65536,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "./schemas/operations.schema.json#/$defs/resumeInterruptRequest"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Interrupt resumed",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "./schemas/operations.schema.json#/$defs/resumeInterruptResponse"}
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/Problem"},
+          "401": {"$ref": "#/components/responses/Problem"},
+          "403": {
+            "description": "Not resumable through this route, including every approval interrupt kind",
+            "content": {
+              "application/problem+json": {
+                "schema": {"$ref": "./schemas/problem.schema.json"}
+              }
+            }
+          },
+          "404": {"$ref": "#/components/responses/Problem"},
+          "409": {"$ref": "#/components/responses/Problem"},
+          "413": {"$ref": "#/components/responses/Problem"},
+          "default": {"$ref": "#/components/responses/Problem"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "RunId": {
+        "name": "run_id",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "string", "pattern": "^run_[A-Za-z0-9]{12,64}$"}
+      },
+      "InterruptId": {
+        "name": "interrupt_id",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "string", "pattern": "^int_[A-Za-z0-9]{12,64}$"}
+      },
+      "SinceSequence": {
+        "name": "since_sequence",
+        "in": "query",
+        "required": false,
+        "description": "Return only orchestration records with a strictly greater sequence.",
+        "schema": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Maximum node executions and checkpoints to return.",
+        "schema": {"type": "integer", "minimum": 1, "maximum": 1000}
+      },
+      "LastEventId": {
+        "name": "Last-Event-ID",
+        "in": "header",
+        "required": false,
+        "description": "Resume strictly after the most recently processed event in this run.",
+        "schema": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"}
+      }
+    },
+    "responses": {
+      "Problem": {
+        "description": "Request failed",
+        "content": {
+          "application/problem+json": {
+            "schema": {"$ref": "./schemas/problem.schema.json"}
+          }
+        }
+      }
+    }
+  }
+}

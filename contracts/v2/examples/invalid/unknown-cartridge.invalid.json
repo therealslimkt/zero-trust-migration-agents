@@ -1,0 +1,6 @@
+{
+  "base": "cartridge-manifest.jde.json",
+  "targetSchema": "schemas/cartridge.schema.json",
+  "expect": "schema_rejection",
+  "mutation": {"operation": "set", "path": "/family", "value": "unknown_mainframe"}
+}

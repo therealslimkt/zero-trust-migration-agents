@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/v2/2.0.0/operations.schema.json",
+  "title": "Migration Contract v2 Operation Bodies",
+  "description": "Request and response bodies for the three v2 orchestration routes. The resume request deliberately has no run, interrupt, actor, decision, or approval member: the server derives the run and interrupt from the path and the caller identity from the verified bearer token.",
+  "$defs": {
+    "resumeInterruptRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Body for POST /api/v2/runs/{run_id}/inputs/{interrupt_id}. kind is limited to clarification and task_input. Simulation and production approvals are not reachable through this route under any body shape.",
+      "required": ["schemaVersion", "kind", "response", "expectedCheckpointId", "idempotencyKey"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "kind": {"type": "string", "enum": ["clarification", "task_input"]},
+        "response": {
+          "oneOf": [
+            {"$ref": "orchestration.schema.json#/$defs/clarificationResponse"},
+            {"$ref": "orchestration.schema.json#/$defs/taskInputResponse"}
+          ]
+        },
+        "expectedCheckpointId": {
+          "$ref": "common.schema.json#/$defs/checkpointId",
+          "description": "The checkpoint the caller believes the run is paused at. A mismatch is rejected with 409 rather than resumed."
+        },
+        "idempotencyKey": {"$ref": "common.schema.json#/$defs/idempotencyKey"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {"const": "clarification"},
+            "response": {"$ref": "orchestration.schema.json#/$defs/clarificationResponse"}
+          }
+        },
+        {
+          "properties": {
+            "kind": {"const": "task_input"},
+            "response": {"$ref": "orchestration.schema.json#/$defs/taskInputResponse"}
+          }
+        }
+      ]
+    },
+    "resumeInterruptResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Accepted resume. Echoes the persisted InterruptResume record and the position the run continues from.",
+      "required": ["schemaVersion", "accepted", "resume", "runStatus", "resumedFromSequence"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "accepted": {"const": true},
+        "resume": {"$ref": "orchestration.schema.json#/$defs/interruptResume"},
+        "runStatus": {"$ref": "orchestration.schema.json#/$defs/runStatus"},
+        "resumedFromSequence": {"$ref": "common.schema.json#/$defs/sequence"},
+        "nextNodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"}
+      }
+    },
+    "orchestrationResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Body for GET /api/v2/runs/{run_id}/orchestration.",
+      "required": ["schemaVersion", "trace"],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "trace": {"$ref": "orchestration.schema.json#/$defs/orchestrationTrace"},
+        "truncated": {
+          "type": "boolean",
+          "description": "True when nodeExecutions or checkpoints were capped. The caller must page by sequence rather than assume completeness."
+        }
+      }
+    }
+  }
+}
