@@ -187,9 +187,38 @@ class AtlasFinal:
 
 
 @dataclasses.dataclass(frozen=True)
+class CollaborationUsage:
+    """Exact successful product-agent calls made by one collaboration turn."""
+
+    specialist_model_calls: int
+    atlas_model_calls: int
+    total_model_calls: int
+    max_model_calls: int
+
+    def __post_init__(self) -> None:
+        for value, code in (
+            (self.specialist_model_calls, "usage_specialist_model_calls"),
+            (self.atlas_model_calls, "usage_atlas_model_calls"),
+            (self.total_model_calls, "usage_total_model_calls"),
+            (self.max_model_calls, "usage_max_model_calls"),
+        ):
+            if type(value) is not int or value < 0:
+                raise CollaborationViolation(code)
+        if self.atlas_model_calls != 1:
+            raise CollaborationViolation("usage_atlas_model_calls")
+        if self.total_model_calls != (
+            self.specialist_model_calls + self.atlas_model_calls
+        ):
+            raise CollaborationViolation("usage_model_call_sum")
+        if self.total_model_calls > self.max_model_calls:
+            raise CollaborationViolation("usage_model_call_budget")
+
+
+@dataclasses.dataclass(frozen=True)
 class CollaborationOutcome:
     results: tuple[SpecialistResult, ...]
     final: AtlasFinal
+    usage: CollaborationUsage
 
     def __post_init__(self) -> None:
         if type(self.results) is not tuple or not self.results or not all(
@@ -198,3 +227,7 @@ class CollaborationOutcome:
             raise CollaborationViolation("outcome_results")
         if not isinstance(self.final, AtlasFinal):
             raise CollaborationViolation("outcome_final")
+        if not isinstance(self.usage, CollaborationUsage):
+            raise CollaborationViolation("outcome_usage")
+        if self.usage.specialist_model_calls != len(self.results):
+            raise CollaborationViolation("outcome_usage_results")

@@ -89,6 +89,51 @@ class WrongSpeakerSynthesizer(AtlasOnlySynthesizer):
         )
 
 
+class HungDispatcher:
+    def __init__(self):
+        self.calls = 0
+        self.cancelled = 0
+
+    async def dispatch(self, request):
+        self.calls += 1
+        try:
+            await asyncio.Future()
+        except asyncio.CancelledError:
+            self.cancelled += 1
+            raise
+
+
+class CountingDispatcher(RecordingDispatcher):
+    def __init__(self):
+        super().__init__()
+        self.calls = 0
+
+    async def dispatch(self, request):
+        self.calls += 1
+        return await super().dispatch(request)
+
+
+class FailAndHangDispatcher:
+    def __init__(self, failed_request_id):
+        self.failed_request_id = failed_request_id
+        self.started = 0
+        self.cancelled = 0
+        self.all_started = asyncio.Event()
+
+    async def dispatch(self, request):
+        self.started += 1
+        if self.started == 2:
+            self.all_started.set()
+        await self.all_started.wait()
+        if request.request_id == self.failed_request_id:
+            raise RuntimeError("provider failed")
+        try:
+            await asyncio.Future()
+        except asyncio.CancelledError:
+            self.cancelled += 1
+            raise
+
+
 class CollaborationRuntimeTests(unittest.IsolatedAsyncioTestCase):
     async def test_concurrent_fan_in_is_bounded_and_returns_request_order(self):
         plan = make_plan(7)
@@ -106,6 +151,10 @@ class CollaborationRuntimeTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(outcome.final.speaker_id, "atlas")
         self.assertTrue(outcome.final.final)
+        self.assertEqual(outcome.usage.specialist_model_calls, 7)
+        self.assertEqual(outcome.usage.atlas_model_calls, 1)
+        self.assertEqual(outcome.usage.total_model_calls, 8)
+        self.assertEqual(outcome.usage.max_model_calls, 30)
 
     async def test_atlas_must_be_the_final_speaker(self):
         with self.assertRaisesRegex(CollaborationViolation, "atlas_final_speaker"):
@@ -170,6 +219,63 @@ class CollaborationRuntimeTests(unittest.IsolatedAsyncioTestCase):
                     result_request_ids=base.result_request_ids,
                 ),
             )
+
+    async def test_hung_dispatchers_are_cancelled_and_awaited_on_timeout(self):
+        dispatcher = HungDispatcher()
+        with self.assertRaises(TimeoutError):
+            await run_collaboration(
+                make_plan(2),
+                dispatcher=dispatcher,
+                synthesizer=AtlasOnlySynthesizer(),
+                max_concurrency=2,
+                max_wall_clock_seconds=0.02,
+            )
+        self.assertEqual(dispatcher.calls, 2)
+        self.assertEqual(dispatcher.cancelled, 2)
+
+    async def test_failed_dispatch_cancels_and_awaits_its_sibling(self):
+        plan = make_plan(2)
+        dispatcher = FailAndHangDispatcher(plan.requests[0].request_id)
+        with self.assertRaises(ExceptionGroup):
+            await run_collaboration(
+                plan,
+                dispatcher=dispatcher,
+                synthesizer=AtlasOnlySynthesizer(),
+                max_concurrency=2,
+            )
+        self.assertEqual(dispatcher.started, 2)
+        self.assertEqual(dispatcher.cancelled, 1)
+
+    async def test_model_call_budget_is_checked_before_dispatch(self):
+        plan = make_plan(2)
+        dispatcher = CountingDispatcher()
+        with self.assertRaisesRegex(
+            CollaborationViolation, "collaboration_model_call_budget"
+        ):
+            await run_collaboration(
+                plan,
+                dispatcher=dispatcher,
+                synthesizer=AtlasOnlySynthesizer(),
+                max_model_calls=2,
+            )
+        self.assertEqual(dispatcher.calls, 0)
+
+    async def test_production_hard_ceilings_cannot_be_configured_higher(self):
+        plan = make_plan(1)
+        cases = (
+            ({"max_concurrency": 5}, "collaboration_concurrency"),
+            ({"max_model_calls": 31}, "collaboration_model_call_limit"),
+            ({"max_wall_clock_seconds": 1800.1}, "collaboration_wall_clock_limit"),
+        )
+        for kwargs, code in cases:
+            with self.subTest(code=code):
+                with self.assertRaisesRegex(CollaborationViolation, code):
+                    await run_collaboration(
+                        plan,
+                        dispatcher=RecordingDispatcher(),
+                        synthesizer=AtlasOnlySynthesizer(),
+                        **kwargs,
+                    )
 
 
 if __name__ == "__main__":
