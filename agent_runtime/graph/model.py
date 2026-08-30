@@ -50,6 +50,7 @@ class GraphPhase(str, enum.Enum):
     PROBED = "probed"
     JOINED = "joined"
     ROUTED = "routed"
+    PLANNING = "planning"
     PAUSED = "paused"
     COMPLETE = "complete"
     FAILED = "failed"
@@ -131,6 +132,10 @@ class GraphEvent:
                 raise GraphInvariantError(code)
         if type(self.model_calls) is not int or self.model_calls < 0:
             raise GraphInvariantError("event_model_calls")
+        if self.model_calls > 0 and self.event_type != "model_call_observed":
+            raise GraphInvariantError("event_model_call_type")
+        if self.event_type == "model_call_observed" and self.model_calls != 1:
+            raise GraphInvariantError("event_model_call_count")
         if not isinstance(self.detail, Mapping):
             raise GraphInvariantError("event_detail")
         object.__setattr__(self, "detail", MappingProxyType(dict(self.detail)))
@@ -222,8 +227,10 @@ class GraphSnapshot:
     catalog_route: CatalogRoute | None = None
     repair_count: int = 0
     pending_interrupt: InterruptRequest | None = None
+    paused_from_phase: GraphPhase | None = None
     consumed_idempotency_keys: frozenset[str] = frozenset()
     resume_digests: tuple[tuple[str, str], ...] = ()
+    model_invocation_ids: frozenset[str] = frozenset()
     events: tuple[GraphEvent, ...] = ()
 
     def __post_init__(self) -> None:
@@ -246,6 +253,10 @@ class GraphSnapshot:
             raise GraphInvariantError("duplicate_resume_receipt")
         if frozenset(receipt_keys) != self.consumed_idempotency_keys:
             raise GraphInvariantError("resume_receipt_keys")
+        if (self.pending_interrupt is None) != (self.paused_from_phase is None):
+            raise GraphInvariantError("paused_phase")
+        if (self.phase is GraphPhase.PAUSED) != (self.pending_interrupt is not None):
+            raise GraphInvariantError("pending_interrupt_phase")
 
     @property
     def model_calls(self) -> int:
@@ -257,7 +268,15 @@ class GraphSnapshot:
 
     @property
     def checkpoint_id(self) -> str:
-        return f"ckpt_{self.run_id.replace('_', '')[-12:]}{self.revision:04d}"
+        return self.checkpoint_id_for_revision(self.revision)
+
+    def checkpoint_id_for_revision(self, revision: int) -> str:
+        if type(revision) is not int or revision < 0:
+            raise GraphInvariantError("checkpoint_revision")
+        binding = hashlib.sha256(
+            f"{self.tenant_id}\x00{self.run_id}\x00{revision}".encode()
+        ).hexdigest()[:32]
+        return f"ckpt_{binding}"
 
     @property
     def checkpoint(self) -> GraphCheckpoint:
@@ -267,5 +286,13 @@ class GraphSnapshot:
             sequence=len(self.events),
             phase=self.phase,
             model_calls=self.model_calls,
-            resumable=self.phase not in {GraphPhase.COMPLETE, GraphPhase.FAILED},
+            resumable=self.status is GraphStatus.RUNNING
+            and self.phase
+            in {
+                GraphPhase.NEW,
+                GraphPhase.VALIDATED,
+                GraphPhase.PROBED,
+                GraphPhase.JOINED,
+                GraphPhase.PLANNING,
+            },
         )

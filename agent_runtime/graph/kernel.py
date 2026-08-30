@@ -19,9 +19,11 @@ from .model import (
     GraphStatus,
     InterruptKind,
     InterruptRequest,
+    PlanRoute,
+    PlanRouteInput,
     ResumeInput,
 )
-from .routes import route_catalog
+from .routes import route_catalog, route_plan
 
 
 class GraphConflictError(RuntimeError):
@@ -72,11 +74,19 @@ class CatalogGraphKernel:
         state = await self._store.load(tenant_id=tenant_id, run_id=run_id)
         if state is None:
             state = GraphSnapshot(tenant_id=tenant_id, run_id=run_id)
-            state = await self._commit(None, state, "run_started", "validate_intent")
+            state = await self._commit(None, state, "run_started", "catalog_graph")
+        if self._is_terminal(state) or state.phase is GraphPhase.PAUSED:
+            return state
         if state.phase is GraphPhase.NEW:
             await self._callbacks.validate_intent(self._operation(run_id, "validate_intent"))
             state = dataclasses.replace(state, phase=GraphPhase.VALIDATED)
-            state = await self._commit(state.revision, state, "node_succeeded", "validate_intent")
+            state = await self._commit(
+                state.revision,
+                state,
+                "node_succeeded",
+                "validate_intent",
+                operation_id=self._operation(run_id, "validate_intent"),
+            )
         if state.phase is GraphPhase.VALIDATED:
             state = await self._run_probes(state)
         if state.phase is GraphPhase.PROBED:
@@ -86,17 +96,27 @@ class CatalogGraphKernel:
             state = await self._commit(state.revision, state, "join_completed", "catalog_join")
         if state.phase is GraphPhase.JOINED:
             selected = route_catalog(state.probes)
-            failed = selected is CatalogRoute.FAIL_CLOSED
-            state = dataclasses.replace(
-                state,
-                phase=GraphPhase.FAILED if failed else GraphPhase.ROUTED,
-                status=GraphStatus.FAILED if failed else GraphStatus.SUCCEEDED,
-                catalog_route=selected,
-            )
+            state = dataclasses.replace(state, catalog_route=selected)
+            if selected is CatalogRoute.NEEDS_INPUT:
+                return await self._pause(
+                    state=state,
+                    kind=InterruptKind.CLARIFICATION,
+                    preceding_route=("route_catalog", selected.value),
+                )
+            if selected is CatalogRoute.FAIL_CLOSED:
+                state = dataclasses.replace(
+                    state, phase=GraphPhase.FAILED, status=GraphStatus.FAILED
+                )
+            elif selected is not CatalogRoute.NEEDS_INPUT:
+                state = dataclasses.replace(
+                    state, phase=GraphPhase.ROUTED, status=GraphStatus.SUCCEEDED
+                )
             state = await self._commit(
                 state.revision,
                 state,
-                "route_selected" if not failed else "route_failed_closed",
+                "route_selected"
+                if selected is not CatalogRoute.FAIL_CLOSED
+                else "route_failed_closed",
                 "route_catalog",
                 detail={"selected_edge": selected.value},
             )
@@ -112,14 +132,125 @@ class CatalogGraphKernel:
     ) -> GraphSnapshot:
         state = await self._require_state(tenant_id, run_id)
         if state.pending_interrupt is not None:
-            if state.pending_interrupt.kind is kind:
+            if (
+                state.pending_interrupt.kind is kind
+                and state.pending_interrupt.subject_digest == subject_digest
+            ):
                 return state
             raise GraphConflictError("pending_interrupt")
+        self._ensure_resumable(state)
+        return await self._pause(
+            state=state, kind=kind, subject_digest=subject_digest
+        )
+
+    async def apply_plan_route(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        value: PlanRouteInput,
+    ) -> GraphSnapshot:
+        """Apply a deterministic plan edge and persist bounded repair progress."""
+
+        state = await self._require_state(tenant_id, run_id)
+        self._ensure_mutable(state)
+        if state.phase is not GraphPhase.PLANNING:
+            raise GraphConflictError("plan_phase")
+        selected = route_plan(value, repair_count=state.repair_count)
+        if selected is PlanRoute.NEEDS_RESEARCH:
+            state = dataclasses.replace(
+                state, repair_count=state.repair_count + 1
+            )
+        elif selected is PlanRoute.NEEDS_INPUT:
+            return await self._pause(
+                state=state,
+                kind=InterruptKind.CLARIFICATION,
+                preceding_route=("route_plan", selected.value),
+            )
+        elif selected is PlanRoute.READY:
+            state = dataclasses.replace(
+                state, phase=GraphPhase.COMPLETE, status=GraphStatus.SUCCEEDED
+            )
+        else:
+            state = dataclasses.replace(
+                state, phase=GraphPhase.FAILED, status=GraphStatus.FAILED
+            )
+        return await self._commit(
+            state.revision,
+            state,
+            "route_selected"
+            if selected not in {PlanRoute.FAIL_CLOSED, PlanRoute.REJECTED}
+            else "route_failed_closed",
+            "route_plan",
+            detail={
+                "selected_edge": selected.value,
+                "repair_count": str(state.repair_count),
+            },
+        )
+
+    async def record_model_call(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        agent_id: str,
+        invocation_id: str,
+    ) -> GraphSnapshot:
+        """Record exactly one observed call from an allowlisted model agent."""
+
+        state = await self._require_state(tenant_id, run_id)
+        self._ensure_mutable(state)
+        allowed = {
+            "atlas",
+            "scout",
+            "maven",
+            "prisma",
+            "jetty_advisor",
+            "source_analyst_sap",
+            "source_analyst_jde",
+            "source_analyst_oracle",
+            "source_analyst_cobol",
+            "source_analyst_ibmi",
+            "source_analyst_sage",
+            "source_analyst_ax",
+        }
+        if agent_id not in allowed:
+            raise GraphInvariantError("model_agent_id")
+        if (
+            type(invocation_id) is not str
+            or not invocation_id.startswith("inv_")
+            or len(invocation_id) < 16
+        ):
+            raise GraphInvariantError("model_invocation_id")
+        if invocation_id in state.model_invocation_ids:
+            return state
+        state = dataclasses.replace(
+            state,
+            model_invocation_ids=state.model_invocation_ids | {invocation_id},
+        )
+        return await self._commit(
+            state.revision,
+            state,
+            "model_call_observed",
+            agent_id,
+            operation_id=invocation_id,
+            model_calls=1,
+            detail={"invocation_id": invocation_id},
+        )
+
+    async def _pause(
+        self,
+        *,
+        state: GraphSnapshot,
+        kind: InterruptKind,
+        subject_digest: str | None = None,
+        preceding_route: tuple[str, str] | None = None,
+    ) -> GraphSnapshot:
         ordinal = 1 + sum(
             event.event_type == "interrupt_requested" for event in state.events
         )
         interrupt = InterruptRequest(
-            interrupt_id=self._interrupt_id(run_id, kind, ordinal),
+            interrupt_id=self._interrupt_id(state.run_id, kind, ordinal),
             kind=kind,
             checkpoint_id=state.checkpoint_id,
             ordinal=ordinal,
@@ -131,15 +262,50 @@ class CatalogGraphKernel:
             else GraphStatus.AWAITING_APPROVAL
         )
         paused = dataclasses.replace(
-            state, phase=GraphPhase.PAUSED, status=status, pending_interrupt=interrupt
+            state,
+            phase=GraphPhase.PAUSED,
+            status=status,
+            pending_interrupt=interrupt,
+            paused_from_phase=state.phase,
         )
-        return await self._commit(
-            state.revision,
-            paused,
-            "interrupt_requested",
-            "request_input",
+        if preceding_route is None:
+            return await self._commit(
+                state.revision,
+                paused,
+                "interrupt_requested",
+                "request_input",
+                detail={"interrupt_id": interrupt.interrupt_id, "kind": kind.value},
+            )
+        route_node, selected_edge = preceding_route
+        route_event = GraphEvent(
+            sequence=state.next_sequence,
+            event_type="route_selected",
+            node_id=route_node,
+            operation_id=self._operation(
+                state.run_id, f"{route_node}_{state.next_sequence}"
+            ),
+            detail={"selected_edge": selected_edge},
+        )
+        interrupt_event = GraphEvent(
+            sequence=state.next_sequence + 1,
+            event_type="interrupt_requested",
+            node_id="request_input",
+            operation_id=self._operation(
+                state.run_id, f"request_input_{state.next_sequence + 1}"
+            ),
             detail={"interrupt_id": interrupt.interrupt_id, "kind": kind.value},
         )
+        candidate = dataclasses.replace(
+            paused,
+            revision=paused.revision + 1,
+            events=paused.events + (route_event, interrupt_event),
+        )
+        persisted = await self._store.compare_and_set(
+            expected_revision=state.revision, snapshot=candidate
+        )
+        if self._after_commit is not None:
+            await self._after_commit(persisted)
+        return persisted
 
     async def resume(self, *, tenant_id: str, run_id: str, value: ResumeInput) -> GraphSnapshot:
         state = await self._require_state(tenant_id, run_id)
@@ -148,6 +314,8 @@ class CatalogGraphKernel:
             if receipts[value.idempotency_key] != value.request_digest:
                 raise GraphConflictError("idempotency_key_reused")
             return state
+        if self._is_terminal(state):
+            raise GraphConflictError("terminal_run")
         pending = state.pending_interrupt
         if pending is None:
             raise GraphConflictError("run_not_paused")
@@ -157,11 +325,20 @@ class CatalogGraphKernel:
             raise GraphConflictError("interrupt_mismatch")
         if value.checkpoint_id != pending.checkpoint_id:
             raise GraphConflictError("checkpoint_mismatch")
+        if state.revision < 1 or pending.checkpoint_id != state.checkpoint_id_for_revision(
+            state.revision - 1
+        ):
+            raise GraphConflictError("checkpoint_not_resumable")
+        if state.paused_from_phase is None or not self._phase_resumable(
+            state.paused_from_phase
+        ):
+            raise GraphConflictError("checkpoint_not_resumable")
         resumed = dataclasses.replace(
             state,
-            phase=GraphPhase.VALIDATED,
+            phase=state.paused_from_phase,
             status=GraphStatus.RUNNING,
             pending_interrupt=None,
+            paused_from_phase=None,
             consumed_idempotency_keys=state.consumed_idempotency_keys
             | {value.idempotency_key},
             resume_digests=state.resume_digests
@@ -197,7 +374,13 @@ class CatalogGraphKernel:
             ordered = tuple(existing[item] for item in CatalogProbeKind if item in existing)
             state = dataclasses.replace(state, probes=ordered)
             state = await self._commit(
-                state.revision, state, "node_succeeded", f"catalog_{kind.value}"
+                state.revision,
+                state,
+                "node_succeeded",
+                f"catalog_{kind.value}",
+                operation_id=self._operation(
+                    state.run_id, f"catalog_{kind.value}"
+                ),
             )
         state = dataclasses.replace(state, phase=GraphPhase.PROBED)
         return await self._commit(
@@ -233,13 +416,18 @@ class CatalogGraphKernel:
         node_id: str,
         *,
         detail: dict[str, str] | None = None,
+        operation_id: str | None = None,
+        model_calls: int = 0,
     ) -> GraphSnapshot:
         event = GraphEvent(
             sequence=state.next_sequence,
             event_type=event_type,
             node_id=node_id,
-            operation_id=self._operation(state.run_id, node_id),
-            model_calls=0,
+            operation_id=operation_id
+            or self._operation(
+                state.run_id, f"{node_id}_{state.next_sequence}"
+            ),
+            model_calls=model_calls,
             detail=detail or {},
         )
         candidate = dataclasses.replace(
@@ -251,6 +439,37 @@ class CatalogGraphKernel:
         if self._after_commit is not None:
             await self._after_commit(persisted)
         return persisted
+
+    @staticmethod
+    def _phase_resumable(phase: GraphPhase) -> bool:
+        return phase in {
+            GraphPhase.NEW,
+            GraphPhase.VALIDATED,
+            GraphPhase.PROBED,
+            GraphPhase.JOINED,
+            GraphPhase.PLANNING,
+        }
+
+    @classmethod
+    def _is_terminal(cls, state: GraphSnapshot) -> bool:
+        return state.status in {GraphStatus.SUCCEEDED, GraphStatus.FAILED} or state.phase in {
+            GraphPhase.ROUTED,
+            GraphPhase.COMPLETE,
+            GraphPhase.FAILED,
+        }
+
+    @classmethod
+    def _ensure_mutable(cls, state: GraphSnapshot) -> None:
+        if cls._is_terminal(state):
+            raise GraphConflictError("terminal_run")
+        if state.phase is GraphPhase.PAUSED:
+            raise GraphConflictError("run_paused")
+
+    @classmethod
+    def _ensure_resumable(cls, state: GraphSnapshot) -> None:
+        cls._ensure_mutable(state)
+        if not state.checkpoint.resumable:
+            raise GraphConflictError("checkpoint_not_resumable")
 
     @staticmethod
     def _operation(run_id: str, node_id: str) -> str:
