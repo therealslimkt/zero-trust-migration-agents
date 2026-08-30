@@ -1,0 +1,93 @@
+"""Validated collaboration kernel for the enterprise Atlas team."""
+
+from .adk_adapter import (
+    ADK_VERSION,
+    AdkDelegationSurface,
+    AdkSchemaBundle,
+    build_adk_atlas_team,
+    delegation_surfaces,
+)
+from .intake import (
+    IntakeDraft,
+    IntakeInterrupt,
+    IntakeResponse,
+    IntakeState,
+    IntakeStatus,
+    resume_intake,
+    start_intake,
+)
+from .models import (
+    AgentMode,
+    AtlasFinal,
+    CollaborationOutcome,
+    CollaborationViolation,
+    Portfolio,
+    SourceFamily,
+    SourceInstance,
+    SpecialistCapability,
+    SpecialistRequest,
+    SpecialistResult,
+)
+from .planning import (
+    AtlasDispatchPlan,
+    EligibleTeam,
+    build_eligible_team,
+    plan_dispatch,
+)
+from .profiles import (
+    ADVISOR_PROFILES,
+    ALL_SPECIALIST_PROFILES,
+    ANALYST_BY_FAMILY,
+    ATLAS_PROFILE,
+    SOURCE_ANALYST_PROFILES,
+    SpecialistProfile,
+)
+from .runtime import (
+    AtlasSynthesizer,
+    SpecialistDispatcher,
+    SynthesisInput,
+    run_collaboration,
+    validate_atlas_final,
+    validate_results,
+)
+
+__all__ = [
+    "ADK_VERSION",
+    "ADVISOR_PROFILES",
+    "ALL_SPECIALIST_PROFILES",
+    "ANALYST_BY_FAMILY",
+    "ATLAS_PROFILE",
+    "SOURCE_ANALYST_PROFILES",
+    "AdkDelegationSurface",
+    "AdkSchemaBundle",
+    "AgentMode",
+    "AtlasDispatchPlan",
+    "AtlasFinal",
+    "AtlasSynthesizer",
+    "CollaborationOutcome",
+    "CollaborationViolation",
+    "EligibleTeam",
+    "IntakeDraft",
+    "IntakeInterrupt",
+    "IntakeResponse",
+    "IntakeState",
+    "IntakeStatus",
+    "Portfolio",
+    "SourceFamily",
+    "SourceInstance",
+    "SpecialistCapability",
+    "SpecialistDispatcher",
+    "SpecialistProfile",
+    "SpecialistRequest",
+    "SpecialistResult",
+    "SynthesisInput",
+    "build_adk_atlas_team",
+    "build_eligible_team",
+    "delegation_surfaces",
+    "plan_dispatch",
+    "resume_intake",
+    "run_collaboration",
+    "start_intake",
+    "validate_atlas_final",
+    "validate_results",
+]
