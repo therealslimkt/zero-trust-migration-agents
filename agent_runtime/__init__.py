@@ -23,6 +23,15 @@ from .ports import (
     StateStore,
     VersionedDocument,
 )
+from .telemetry import (
+    NodeObservation,
+    ObservationStatus,
+    SanitizedEventBridge,
+    TelemetryViolation,
+    TraceAccountant,
+    TraceUsage,
+    WorkflowPattern,
+)
 
 __all__ = [
     "ApprovalAuthority",
@@ -32,12 +41,19 @@ __all__ = [
     "EventSink",
     "Executor",
     "ModelProvider",
+    "NodeObservation",
+    "ObservationStatus",
     "RuntimeApplication",
     "RuntimeContext",
     "RuntimePorts",
     "RuntimeSettings",
+    "SanitizedEventBridge",
     "StateStore",
+    "TelemetryViolation",
+    "TraceAccountant",
+    "TraceUsage",
     "VersionedDocument",
+    "WorkflowPattern",
     "build_application",
     "build_runner",
 ]

@@ -50,6 +50,40 @@ class AdkCompatibilityTests(unittest.TestCase):
             ["google.adk.apps.app", "google.adk.runners"],
         )
 
+    def test_pattern_loader_uses_only_reviewed_public_modules(self):
+        agent_type = type("Agent", (), {})
+        workflow_type = type("Workflow", (), {})
+        join_type = type("JoinNode", (), {})
+        start = object()
+        node_factory = lambda value: value
+        modules = {
+            "google.adk.agents": types.SimpleNamespace(Agent=agent_type),
+            "google.adk.workflow": types.SimpleNamespace(
+                Workflow=workflow_type,
+                JoinNode=join_type,
+                START=start,
+                DEFAULT_ROUTE="__DEFAULT__",
+                node=node_factory,
+            ),
+        }
+        with mock.patch.object(
+            adk_compat.sys, "version_info", (3, 12, 1)
+        ), mock.patch.object(
+            adk_compat.importlib.metadata, "version", return_value="2.7.1"
+        ), mock.patch.object(
+            adk_compat.importlib, "import_module", side_effect=modules.__getitem__
+        ) as importer:
+            symbols = adk_compat.load_adk_patterns()
+        self.assertIs(symbols.Agent, agent_type)
+        self.assertIs(symbols.Workflow, workflow_type)
+        self.assertIs(symbols.JoinNode, join_type)
+        self.assertIs(symbols.START, start)
+        self.assertIs(symbols.node, node_factory)
+        self.assertEqual(
+            [call.args[0] for call in importer.call_args_list],
+            ["google.adk.agents", "google.adk.workflow"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
