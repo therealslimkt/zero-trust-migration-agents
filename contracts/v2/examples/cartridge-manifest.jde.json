@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "2.0.0",
+  "cartridgeId": "crt_jde_e1_ibmi",
+  "family": "jde_e1_ibmi",
+  "version": "1.0.0",
+  "displayName": "JDE E1 on IBM i fixture cartridge",
+  "specialistId": "source_analyst_jde",
+  "capabilities": [
+    "inventory_source",
+    "profile_schema",
+    "decode_records",
+    "propose_mapping",
+    "validate_plan",
+    "reconcile_destination",
+    "emit_lineage"
+  ],
+  "producesArtifactKinds": [
+    "source_profile",
+    "protected_batch",
+    "transform_plan",
+    "reconciliation_result",
+    "lineage_record"
+  ],
+  "claim": {
+    "readiness": "fixture",
+    "fidelity": "synthetic_fixture",
+    "distribution": "preview_plugin",
+    "evidenceRefs": [],
+    "assertedAt": "2026-08-30T12:00:00Z",
+    "limitations": ["Synthetic F0101 fixture only; no customer runtime is claimed."]
+  },
+  "cartridgeDigest": "sha256:5774356703a843230e042e7bbdd510d4cb1f25a9403bb0ee066b593dc1de854d",
+  "publishedAt": "2026-08-30T12:00:00Z",
+  "status": "active"
+}

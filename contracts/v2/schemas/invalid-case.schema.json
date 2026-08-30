@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/v2/2.0.0/invalid-case.schema.json",
+  "title": "Migration Contract v2 Negative Fixture Mutation",
+  "description": "Test-only description of one precise mutation applied to a valid example. The mutated document, not this descriptor, is validated against targetSchema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["base", "targetSchema", "expect", "mutation"],
+  "properties": {
+    "base": {"type": "string", "pattern": "^[A-Za-z0-9._-]+\\.json$"},
+    "targetSchema": {"type": "string", "pattern": "^schemas/[A-Za-z0-9._-]+\\.schema\\.json(#/.+)?$"},
+    "expect": {"type": "string", "enum": ["schema_rejection", "digest_rejection"]},
+    "mutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "path", "value"],
+      "properties": {
+        "operation": {"const": "set"},
+        "path": {"type": "string", "pattern": "^(/([^~/]|~0|~1)+)+$"},
+        "value": true
+      }
+    }
+  }
+}

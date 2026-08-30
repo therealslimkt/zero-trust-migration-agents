@@ -1,0 +1,8 @@
+# Zero-Trust Migration Agent Runtime
+#
+# Install with CPython 3.12.  The release-tagged upstream constraints file pins
+# ADK's transitive graph for that interpreter while this file pins the direct
+# dependency.  See agent_runtime/README.md for the mirrored/offline strategy.
+--constraint https://raw.githubusercontent.com/google/adk-python/v2.7.1/constraints-3.12.txt
+
+google-adk==2.7.1

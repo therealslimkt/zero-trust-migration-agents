@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "2.0.0",
+  "eventId": "evt_ENTERPRISE0001",
+  "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "taskId": "task_ENTERPRISE01",
+  "from": "atlas",
+  "to": "source_analyst_jde",
+  "type": "orchestration.node_dispatched",
+  "sequence": 2,
+  "timestamp": "2026-08-30T12:00:02Z",
+  "summary": "Atlas dispatched the eligible JDE specialist.",
+  "contextRefs": [],
+  "artifactRefs": [],
+  "status": "running",
+  "requiresHumanApproval": false,
+  "payload": {
+    "payloadKind": "specialist_invocation",
+    "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "orchestration": {
+    "pattern": "collaborative",
+    "nodePath": ["atlas_team", "source_analyst_jde"],
+    "nodeRunId": "nr_ANALYST000001",
+    "parentNodeRunId": "nr_ATLAS00000001",
+    "attempt": 1,
+    "isolationScope": "worker_private",
+    "modelCall": true
+  }
+}

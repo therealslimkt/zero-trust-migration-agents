@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactId": "art_reconciliation_0001",
+  "runId": "run_ENTERPRISE0001",
+  "taskId": "task_ENTERPRISE01",
+  "kind": "reconciliation_result",
+  "mediaType": "application/json",
+  "version": "1.0.0",
+  "uri": "gs://ztm-evidence/run_ENTERPRISE0001/reconciliation.json",
+  "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "byteSize": 1024,
+  "contentClass": "derived_evidence",
+  "producedBy": {
+    "nodeRunId": "nr_LEDGER0000001",
+    "deterministicComponentId": "ledger"
+  },
+  "retention": {
+    "retentionClass": "audit",
+    "expiresAt": "2027-08-30T12:00:00Z"
+  },
+  "region": "us-central1",
+  "createdAt": "2026-08-30T12:00:10Z",
+  "derivedFrom": []
+}

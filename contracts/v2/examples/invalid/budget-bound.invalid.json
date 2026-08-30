@@ -1,0 +1,6 @@
+{
+  "base": "task-envelope.json",
+  "targetSchema": "schemas/task-envelope.schema.json",
+  "expect": "schema_rejection",
+  "mutation": {"operation": "set", "path": "/orchestrationBudget/maxConcurrentNodes", "value": 5}
+}

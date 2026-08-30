@@ -1,0 +1,6 @@
+{
+  "base": "memory-promotion-record.json",
+  "targetSchema": "schemas/memory.schema.json#/$defs/memoryPromotionRecord",
+  "expect": "schema_rejection",
+  "mutation": {"operation": "set", "path": "/rawContent", "value": "protected source row"}
+}

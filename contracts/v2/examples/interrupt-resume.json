@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "2.0.0",
+  "interruptId": "int_ENTERPRISE001",
+  "runId": "run_ENTERPRISE0001",
+  "checkpointId": "ckpt_ENTERPRISE01",
+  "nodeRunId": "nr_INTAKE0000001",
+  "kind": "clarification",
+  "response": {
+    "responseKind": "clarification",
+    "text": "Use the governed JDE fixture source instance."
+  },
+  "idempotencyKey": "resume.enterprise.0001",
+  "sequence": 4,
+  "submittedAt": "2026-08-30T12:00:30Z"
+}

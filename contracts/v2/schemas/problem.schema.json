@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/v2/2.0.0/problem.schema.json",
+  "title": "Migration Contract v2 Problem Details",
+  "description": "RFC 7807 problem details, closed. Detail text is bounded and carries no protected data, credential material, or stack trace.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "type", "title", "status"],
+  "properties": {
+    "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "type": {"type": "string", "format": "uri", "maxLength": 400},
+    "title": {"type": "string", "minLength": 1, "maxLength": 120},
+    "status": {"type": "integer", "minimum": 400, "maximum": 599},
+    "detail": {"type": "string", "maxLength": 500},
+    "instance": {"type": "string", "maxLength": 400, "pattern": "^/api/v2/[A-Za-z0-9._~/{}-]*$"},
+    "requestId": {"type": "string", "pattern": "^req_[A-Za-z0-9]{12,64}$"},
+    "code": {"$ref": "common.schema.json#/$defs/failureCode"},
+    "source": {"$ref": "common.schema.json#/$defs/errorSource"}
+  }
+}

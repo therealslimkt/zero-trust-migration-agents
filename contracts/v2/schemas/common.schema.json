@@ -1,0 +1,551 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/v2/2.0.0/common.schema.json",
+  "title": "Migration Contract v2 Common Definitions",
+  "description": "Shared identifier, budget, evidence, label, and error vocabulary for the v2 orchestration lane. Every object boundary is closed.",
+  "$defs": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "2.0.0"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$",
+      "description": "Replay-friendly instant. Always UTC with a trailing Z so recorded orchestration replays byte-identically."
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Monotonic per-run ordinal. Contiguous within one run so a replay can resume at an exact position."
+    },
+    "failureCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{2,63}$"
+    },
+
+    "runId": {
+      "type": "string",
+      "pattern": "^run_[A-Za-z0-9]{12,64}$"
+    },
+    "sessionId": {
+      "type": "string",
+      "pattern": "^ses_[A-Za-z0-9]{12,64}$"
+    },
+    "traceId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$",
+      "description": "W3C trace-context trace ID, lower-case hex."
+    },
+    "taskId": {
+      "type": "string",
+      "pattern": "^task_[A-Za-z0-9]{8,64}$"
+    },
+    "eventId": {
+      "type": "string",
+      "pattern": "^evt_[A-Za-z0-9]{12,64}$"
+    },
+    "workflowId": {
+      "type": "string",
+      "pattern": "^wf_[a-z][a-z0-9_]{2,62}$"
+    },
+    "workflowVersion": {
+      "$ref": "#/$defs/semver"
+    },
+    "nodeId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,62}$"
+    },
+    "nodeRunId": {
+      "type": "string",
+      "pattern": "^nr_[A-Za-z0-9]{12,64}$"
+    },
+    "checkpointId": {
+      "type": "string",
+      "pattern": "^ckpt_[A-Za-z0-9]{12,64}$"
+    },
+    "interruptId": {
+      "type": "string",
+      "pattern": "^int_[A-Za-z0-9]{12,64}$"
+    },
+    "invocationId": {
+      "type": "string",
+      "pattern": "^inv_[A-Za-z0-9]{12,64}$"
+    },
+    "artifactId": {
+      "type": "string",
+      "pattern": "^art_[A-Za-z0-9._-]{8,128}$"
+    },
+    "sourceInstanceId": {
+      "type": "string",
+      "pattern": "^src_[a-z0-9][a-z0-9_-]{2,62}$",
+      "description": "Stable identifier for one connected legacy source instance. Never a hostname, IP, or credential."
+    },
+    "tenantId": {
+      "type": "string",
+      "pattern": "^tnt_[A-Za-z0-9]{6,48}$"
+    },
+    "approvalId": {
+      "type": "string",
+      "pattern": "^apr_[A-Za-z0-9]{12,64}$"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$"
+    },
+
+    "workflowPattern": {
+      "type": "string",
+      "enum": ["graph", "collaborative", "dynamic"]
+    },
+    "nodeKind": {
+      "type": "string",
+      "enum": ["function", "agent", "join", "router", "task", "parallel_worker"]
+    },
+    "nodePath": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {"$ref": "#/$defs/nodeId"},
+      "description": "Ordered ancestor-to-self node identifiers. Length is bounded by the orchestration depth budget."
+    },
+    "isolationScope": {
+      "type": "string",
+      "enum": [
+        "shared_readonly",
+        "node_private",
+        "worker_private",
+        "session_private",
+        "tenant_private"
+      ],
+      "description": "State visibility granted to one execution. parallel_worker fan-out uses worker_private so siblings cannot observe each other."
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["routerNodeId", "selectedEdge", "candidateEdges", "deterministic", "reasonCode"],
+      "properties": {
+        "routerNodeId": {"$ref": "#/$defs/nodeId"},
+        "selectedEdge": {"$ref": "#/$defs/nodeId"},
+        "candidateEdges": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nodeId"}
+        },
+        "deterministic": {
+          "type": "boolean",
+          "description": "True when the branch was selected by a pure function of recorded state and is therefore replayable."
+        },
+        "reasonCode": {"$ref": "#/$defs/failureCode"}
+      }
+    },
+    "checkpointReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkpointId", "sequence"],
+      "properties": {
+        "checkpointId": {"$ref": "#/$defs/checkpointId"},
+        "sequence": {"$ref": "#/$defs/sequence"}
+      }
+    },
+
+    "orchestrationBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Hard ceilings enforced by the orchestrator before dispatch. Every dimension is bounded; there is no unlimited option.",
+      "required": [
+        "maxConcurrentNodes",
+        "maxNodeExecutions",
+        "maxModelCalls",
+        "maxToolCalls",
+        "maxDepth",
+        "maxRetriesPerNode",
+        "maxInterrupts",
+        "maxWallClockSeconds"
+      ],
+      "properties": {
+        "maxConcurrentNodes": {"type": "integer", "minimum": 1, "maximum": 4},
+        "maxNodeExecutions": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "maxModelCalls": {"type": "integer", "minimum": 0, "maximum": 30},
+        "maxToolCalls": {"type": "integer", "minimum": 0, "maximum": 2000},
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "description": "Maximum runtime-created dynamic/research depth; fixed graph path nesting is represented separately by nodePath."
+        },
+        "maxRetriesPerNode": {"type": "integer", "minimum": 0, "maximum": 3},
+        "maxInterrupts": {"type": "integer", "minimum": 0, "maximum": 32},
+        "maxWallClockSeconds": {"type": "integer", "minimum": 1, "maximum": 86400}
+      }
+    },
+    "budgetUsage": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Observed consumption against the run's orchestrationBudget. Bounds mirror the budget so a report can never claim more than the ceiling allows.",
+      "required": [
+        "peakConcurrentNodes",
+        "nodeExecutions",
+        "modelCalls",
+        "toolCalls",
+        "peakDepth",
+        "retries",
+        "interrupts",
+        "wallClockSeconds"
+      ],
+      "properties": {
+        "peakConcurrentNodes": {"type": "integer", "minimum": 0, "maximum": 4},
+        "nodeExecutions": {"type": "integer", "minimum": 0, "maximum": 5000},
+        "modelCalls": {"type": "integer", "minimum": 0, "maximum": 30},
+        "toolCalls": {"type": "integer", "minimum": 0, "maximum": 2000},
+        "peakDepth": {"type": "integer", "minimum": 0, "maximum": 2},
+        "retries": {"type": "integer", "minimum": 0, "maximum": 5000},
+        "interrupts": {"type": "integer", "minimum": 0, "maximum": 32},
+        "wallClockSeconds": {"type": "integer", "minimum": 0, "maximum": 86400}
+      }
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "1 is the first try. The ceiling is one greater than the frozen three-retry limit."
+    },
+
+    "errorSource": {
+      "type": "string",
+      "enum": [
+        "orchestrator",
+        "node",
+        "agent",
+        "model",
+        "tool",
+        "cartridge",
+        "policy",
+        "budget",
+        "human",
+        "transport",
+        "persistence"
+      ],
+      "description": "Which trust boundary produced the failure. Errors are never re-attributed across sources."
+    },
+    "orchestrationError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "code", "message", "retryable", "occurredAt"],
+      "properties": {
+        "source": {"$ref": "#/$defs/errorSource"},
+        "code": {"$ref": "#/$defs/failureCode"},
+        "message": {"type": "string", "minLength": 1, "maxLength": 500},
+        "sourceInstanceId": {"$ref": "#/$defs/sourceInstanceId"},
+        "cartridgeFamily": {"$ref": "#/$defs/cartridgeFamily"},
+        "nodePath": {"$ref": "#/$defs/nodePath"},
+        "nodeRunId": {"$ref": "#/$defs/nodeRunId"},
+        "retryable": {"type": "boolean"},
+        "occurredAt": {"$ref": "#/$defs/timestamp"},
+        "evidenceRefs": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {"$ref": "#/$defs/artifactReference"}
+        }
+      }
+    },
+
+    "buildAgentId": {
+      "type": "string",
+      "description": "Frozen build-fleet identifiers from studio/src/control/contracts.generated.ts. v2 is additive and removes none of them.",
+      "enum": [
+        "mission_control",
+        "architect",
+        "compiler",
+        "grammar_police",
+        "stage_manager",
+        "universal_translator",
+        "scout",
+        "front_of_house",
+        "fixer",
+        "breaker",
+        "gatekeeper",
+        "maestro",
+        "bette_davis_eyes",
+        "gifted_animator",
+        "piano_man",
+        "critic_that_counts",
+        "easter_bunny",
+        "golden_goose",
+        "pop_lock_and_drop_it"
+      ]
+    },
+    "productAgentId": {
+      "type": "string",
+      "description": "Canonical v2 product-fleet agents. These are the only roles permitted to make model calls.",
+      "enum": [
+        "atlas",
+        "scout",
+        "source_analyst_sap",
+        "source_analyst_jde",
+        "source_analyst_oracle",
+        "source_analyst_cobol",
+        "source_analyst_ibmi",
+        "source_analyst_sage",
+        "source_analyst_ax",
+        "maven",
+        "prisma",
+        "jetty_advisor"
+      ]
+    },
+    "agentId": {
+      "type": "string",
+      "description": "Union of the frozen build identifiers and the canonical v2 product identifiers. Deterministic components are deliberately absent.",
+      "enum": [
+        "mission_control",
+        "architect",
+        "compiler",
+        "grammar_police",
+        "stage_manager",
+        "universal_translator",
+        "scout",
+        "front_of_house",
+        "fixer",
+        "breaker",
+        "gatekeeper",
+        "maestro",
+        "bette_davis_eyes",
+        "gifted_animator",
+        "piano_man",
+        "critic_that_counts",
+        "easter_bunny",
+        "golden_goose",
+        "pop_lock_and_drop_it",
+        "atlas",
+        "source_analyst_sap",
+        "source_analyst_jde",
+        "source_analyst_oracle",
+        "source_analyst_cobol",
+        "source_analyst_ibmi",
+        "source_analyst_sage",
+        "source_analyst_ax",
+        "maven",
+        "prisma",
+        "jetty_advisor"
+      ]
+    },
+    "deterministicComponentId": {
+      "type": "string",
+      "description": "Deterministic validators, operators, and builders. They are components, not agents: they never appear in agentId and never carry model-call evidence.",
+      "enum": ["vale", "flow", "ledger", "forge"]
+    },
+
+    "cartridgeFamily": {
+      "type": "string",
+      "enum": [
+        "sap_ecc_maxdb",
+        "jde_e1_ibmi",
+        "oracle_ebs",
+        "zos_cobol",
+        "ibmi_native",
+        "sage_cre_zen",
+        "dynamics_ax"
+      ]
+    },
+    "readinessLabel": {
+      "type": "string",
+      "description": "Where a capability has actually been exercised. Labels intentionally match the product plan's fixture, cloud, customer-runtime, and production claims.",
+      "enum": ["fixture", "cloud", "customer_runtime", "production"]
+    },
+    "fidelityLabel": {
+      "type": "string",
+      "description": "What the exercised inputs actually were. synthetic_fixture is committed test data; production_runtime means a real customer production system was read.",
+      "enum": [
+        "synthetic_fixture",
+        "anonymized_capture",
+        "customer_runtime_shadow",
+        "production_runtime"
+      ]
+    },
+    "distributionLabel": {
+      "type": "string",
+      "description": "How the cartridge is shipped. preview_plugin is unsigned and may not claim production readiness; production_signed requires signature evidence.",
+      "enum": ["preview_plugin", "production_signed"]
+    },
+    "signatureEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["keyId", "algorithm", "signedDigest", "signedAt"],
+      "properties": {
+        "keyId": {"type": "string", "pattern": "^key_[A-Za-z0-9._-]{6,64}$"},
+        "algorithm": {"type": "string", "enum": ["ecdsa_p256_sha256", "ed25519"]},
+        "signedDigest": {"$ref": "#/$defs/digest"},
+        "signedAt": {"$ref": "#/$defs/timestamp"}
+      }
+    },
+    "capabilityClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A bounded, evidence-gated statement about what a cartridge has been shown to do. Claims above 'fixture' require at least one verified artifact reference.",
+      "required": ["readiness", "fidelity", "distribution", "evidenceRefs", "assertedAt"],
+      "properties": {
+        "readiness": {"$ref": "#/$defs/readinessLabel"},
+        "fidelity": {"$ref": "#/$defs/fidelityLabel"},
+        "distribution": {"$ref": "#/$defs/distributionLabel"},
+        "signature": {"$ref": "#/$defs/signatureEvidence"},
+        "evidenceRefs": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {"$ref": "#/$defs/verifiedEvidence"}
+        },
+        "assertedAt": {"$ref": "#/$defs/timestamp"},
+        "limitations": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {"type": "string", "minLength": 1, "maxLength": 240}
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "distribution": {"const": "preview_plugin"},
+                "readiness": {"enum": ["fixture", "cloud", "customer_runtime"]}
+              },
+              "not": {"required": ["signature"]}
+            },
+            {
+              "properties": {"distribution": {"const": "production_signed"}},
+              "required": ["signature"]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "readiness": {"const": "fixture"},
+                "fidelity": {"enum": ["synthetic_fixture", "anonymized_capture"]}
+              }
+            },
+            {
+              "properties": {
+                "readiness": {"enum": ["cloud", "customer_runtime", "production"]},
+                "evidenceRefs": {"minItems": 1}
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "fidelity": {"const": "production_runtime"},
+                "readiness": {"const": "production"}
+              }
+            },
+            {
+              "properties": {
+                "fidelity": {
+                  "enum": ["synthetic_fixture", "anonymized_capture", "customer_runtime_shadow"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    "artifactKind": {
+      "type": "string",
+      "enum": [
+        "source_profile",
+        "protected_batch",
+        "redaction_report",
+        "transform_plan",
+        "cartridge_manifest",
+        "reconciliation_result",
+        "lineage_record",
+        "dataflow_job",
+        "warehouse_table",
+        "audit_log",
+        "checkpoint_state",
+        "policy_decision",
+        "model_call_record"
+      ]
+    },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Content-addressed pointer. Carries no artifact body.",
+      "required": ["artifactId", "kind", "digest"],
+      "properties": {
+        "artifactId": {"$ref": "#/$defs/artifactId"},
+        "kind": {"$ref": "#/$defs/artifactKind"},
+        "digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "verifiedEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "An artifact reference whose digest was re-checked by a named deterministic component. Model output alone can never produce this record.",
+      "required": ["artifactId", "kind", "digest", "verifiedBy", "verifiedAt"],
+      "properties": {
+        "artifactId": {"$ref": "#/$defs/artifactId"},
+        "kind": {"$ref": "#/$defs/artifactKind"},
+        "digest": {"$ref": "#/$defs/digest"},
+        "verifiedBy": {"$ref": "#/$defs/deterministicComponentId"},
+        "verifiedAt": {"$ref": "#/$defs/timestamp"}
+      }
+    },
+
+    "residency": {
+      "type": "string",
+      "pattern": "^[a-z]{2,12}-[a-z][a-z0-9-]{1,24}[0-9]$",
+      "description": "Concrete cloud region such as us-central1; broad geography labels are not sufficient for residency filtering."
+    },
+    "memoryRole": {
+      "type": "string",
+      "enum": ["operator", "approver", "analyst", "auditor", "service"]
+    },
+    "memoryPurpose": {
+      "type": "string",
+      "enum": ["planning", "routing", "reconciliation", "diagnostics", "policy"]
+    },
+    "memoryScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Every filter a reader must match before a promoted memory is visible. All eight dimensions are mandatory; there is no wildcard.",
+      "required": [
+        "tenantId",
+        "role",
+        "purpose",
+        "region",
+        "sourceFamily",
+        "cartridgeVersion",
+        "fidelity",
+        "fingerprint"
+      ],
+      "properties": {
+        "tenantId": {"$ref": "#/$defs/tenantId"},
+        "role": {"$ref": "#/$defs/memoryRole"},
+        "purpose": {"$ref": "#/$defs/memoryPurpose"},
+        "region": {"$ref": "#/$defs/residency"},
+        "sourceFamily": {"$ref": "#/$defs/cartridgeFamily"},
+        "cartridgeVersion": {"$ref": "#/$defs/semver"},
+        "fidelity": {"$ref": "#/$defs/fidelityLabel"},
+        "fingerprint": {
+          "$ref": "#/$defs/digest",
+          "description": "Digest of the normalized source structure the claim was derived from."
+        }
+      }
+    }
+  }
+}

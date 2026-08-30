@@ -1,0 +1,553 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zero-trust-migration.example/contracts/v2/2.0.0/orchestration.schema.json",
+  "title": "Migration Contract v2 Orchestration Types",
+  "description": "Canonical orchestration vocabulary: node executions, checkpoints, budgets, traces, interrupts, and specialist invocations. Nothing here describes a model provider's internals; it records only what the orchestrator itself observed.",
+  "$defs": {
+    "executionStatus": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "interrupted",
+        "cancelled",
+        "skipped"
+      ]
+    },
+    "runStatus": {
+      "type": "string",
+      "enum": [
+        "running",
+        "awaiting_input",
+        "awaiting_approval",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "budget_exhausted"
+      ]
+    },
+    "workClass": {
+      "type": "string",
+      "description": "What kind of work the node performed. Everything except model_call is predictable: given the same recorded inputs it produces the same recorded outputs.",
+      "enum": [
+        "deterministic_function",
+        "control_flow",
+        "external_service",
+        "human_input",
+        "model_call"
+      ]
+    },
+
+    "predictableWorkEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Evidence for work that is reproducible offline. The orchestrator re-runs the named implementation against inputDigest and compares outputDigest.",
+      "required": ["implementationId", "implementationVersion", "inputDigest", "outputDigest", "reproducible"],
+      "properties": {
+        "implementationId": {"type": "string", "pattern": "^[a-z][a-z0-9_.]{2,63}$"},
+        "implementationVersion": {"$ref": "common.schema.json#/$defs/semver"},
+        "inputDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "outputDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "reproducible": {
+          "type": "boolean",
+          "description": "False only when the work touched an external service whose response is recorded but not re-derivable."
+        }
+      }
+    },
+    "modelCallEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Provider-neutral record that a model boundary was crossed. It deliberately carries no token counts, finish reasons, sampling parameters, or vendor identifiers, because this contract does not model provider behavior.",
+      "required": [
+        "invocationId",
+        "requestDigest",
+        "responseDigest",
+        "outputContractDigest",
+        "outputContractSatisfied",
+        "recordedAt"
+      ],
+      "properties": {
+        "invocationId": {"$ref": "common.schema.json#/$defs/invocationId"},
+        "requestDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "responseDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "outputContractDigest": {
+          "$ref": "common.schema.json#/$defs/digest",
+          "description": "Digest of the closed schema the response was required to satisfy."
+        },
+        "outputContractSatisfied": {"type": "boolean"},
+        "screened": {
+          "type": "boolean",
+          "description": "True when the request and response both passed the inline input/output screen before use."
+        },
+        "recordedAt": {"$ref": "common.schema.json#/$defs/timestamp"}
+      }
+    },
+
+    "nodeExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One attempt at one node. The pair (nodeRunId) is unique per run; (nodePath, attempt) identifies a retry lineage.",
+      "required": [
+        "schemaVersion",
+        "nodeRunId",
+        "runId",
+        "workflowId",
+        "workflowVersion",
+        "pattern",
+        "nodeId",
+        "nodePath",
+        "nodeKind",
+        "attempt",
+        "workClass",
+        "modelCall",
+        "isolationScope",
+        "sequence",
+        "status",
+        "startedAt"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "nodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"},
+        "parentNodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "workflowId": {"$ref": "common.schema.json#/$defs/workflowId"},
+        "workflowVersion": {"$ref": "common.schema.json#/$defs/workflowVersion"},
+        "pattern": {"$ref": "common.schema.json#/$defs/workflowPattern"},
+        "nodeId": {"$ref": "common.schema.json#/$defs/nodeId"},
+        "nodePath": {"$ref": "common.schema.json#/$defs/nodePath"},
+        "nodeKind": {"$ref": "common.schema.json#/$defs/nodeKind"},
+        "attempt": {"$ref": "common.schema.json#/$defs/attempt"},
+        "workClass": {"$ref": "#/$defs/workClass"},
+        "modelCall": {
+          "type": "boolean",
+          "description": "Exactly mirrors workClass. A deterministic component can never set this true."
+        },
+        "isolationScope": {"$ref": "common.schema.json#/$defs/isolationScope"},
+        "sequence": {"$ref": "common.schema.json#/$defs/sequence"},
+        "status": {"$ref": "#/$defs/executionStatus"},
+        "startedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "completedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "agentId": {"$ref": "common.schema.json#/$defs/agentId"},
+        "deterministicComponentId": {"$ref": "common.schema.json#/$defs/deterministicComponentId"},
+        "route": {"$ref": "common.schema.json#/$defs/route"},
+        "checkpointRef": {"$ref": "common.schema.json#/$defs/checkpointReference"},
+        "interruptId": {"$ref": "common.schema.json#/$defs/interruptId"},
+        "predictableWorkEvidence": {"$ref": "#/$defs/predictableWorkEvidence"},
+        "modelCallEvidence": {"$ref": "#/$defs/modelCallEvidence"},
+        "outputRefs": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {"$ref": "common.schema.json#/$defs/artifactReference"}
+        },
+        "errors": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {"$ref": "common.schema.json#/$defs/orchestrationError"}
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": ["modelCall", "workClass", "modelCallEvidence"],
+              "properties": {
+                "modelCall": {"const": true},
+                "workClass": {"const": "model_call"}
+              },
+              "not": {"required": ["predictableWorkEvidence"]}
+            },
+            {
+              "required": ["modelCall", "workClass"],
+              "properties": {
+                "modelCall": {"const": false},
+                "workClass": {
+                  "enum": [
+                    "deterministic_function",
+                    "control_flow",
+                    "external_service",
+                    "human_input"
+                  ]
+                }
+              },
+              "not": {"required": ["modelCallEvidence"]}
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": ["agentId"],
+              "properties": {"nodeKind": {"enum": ["agent", "task", "parallel_worker"]}},
+              "not": {"required": ["deterministicComponentId"]}
+            },
+            {
+              "required": ["deterministicComponentId"],
+              "properties": {
+                "modelCall": {"const": false},
+                "workClass": {"enum": ["deterministic_function", "control_flow"]}
+              },
+              "not": {"required": ["agentId"]}
+            },
+            {
+              "allOf": [
+                {"not": {"required": ["agentId"]}},
+                {"not": {"required": ["deterministicComponentId"]}},
+                {"properties": {"modelCall": {"const": false}}}
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": ["route"],
+              "properties": {"nodeKind": {"const": "router"}}
+            },
+            {
+              "not": {"required": ["route"]}
+            }
+          ]
+        }
+      ]
+    },
+
+    "workflowCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A resumable position in the run. Holds digests of persisted state, never the state itself.",
+      "required": [
+        "schemaVersion",
+        "checkpointId",
+        "runId",
+        "workflowId",
+        "workflowVersion",
+        "pattern",
+        "nodePath",
+        "nodeRunId",
+        "sequence",
+        "createdAt",
+        "stateDigest",
+        "writesDigest",
+        "budgetUsage",
+        "resumable"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "checkpointId": {"$ref": "common.schema.json#/$defs/checkpointId"},
+        "parentCheckpointId": {"$ref": "common.schema.json#/$defs/checkpointId"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "workflowId": {"$ref": "common.schema.json#/$defs/workflowId"},
+        "workflowVersion": {"$ref": "common.schema.json#/$defs/workflowVersion"},
+        "pattern": {"$ref": "common.schema.json#/$defs/workflowPattern"},
+        "nodePath": {"$ref": "common.schema.json#/$defs/nodePath"},
+        "nodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"},
+        "sequence": {"$ref": "common.schema.json#/$defs/sequence"},
+        "createdAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "stateDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "writesDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "budgetUsage": {"$ref": "common.schema.json#/$defs/budgetUsage"},
+        "resumable": {"type": "boolean"},
+        "interruptId": {"$ref": "common.schema.json#/$defs/interruptId"},
+        "stateRef": {"$ref": "common.schema.json#/$defs/artifactReference"}
+      }
+    },
+
+    "interruptKind": {
+      "type": "string",
+      "enum": ["clarification", "task_input", "simulation_approval", "production_approval"]
+    },
+    "resumeChannel": {
+      "type": "string",
+      "description": "Which surface may satisfy this interrupt. input_endpoint is the v2 POST inputs route; approval_endpoint is the separate, identity-bound approval surface that v2 does not expose.",
+      "enum": ["input_endpoint", "approval_endpoint"]
+    },
+    "interruptRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A paused node awaiting outside information. The resumeChannel is fixed by the interrupt kind, so an approval can never be satisfied through the input route.",
+      "required": [
+        "schemaVersion",
+        "interruptId",
+        "runId",
+        "workflowId",
+        "nodePath",
+        "nodeRunId",
+        "checkpointId",
+        "sequence",
+        "kind",
+        "resumeChannel",
+        "prompt",
+        "status",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "interruptId": {"$ref": "common.schema.json#/$defs/interruptId"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "workflowId": {"$ref": "common.schema.json#/$defs/workflowId"},
+        "nodePath": {"$ref": "common.schema.json#/$defs/nodePath"},
+        "nodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"},
+        "checkpointId": {"$ref": "common.schema.json#/$defs/checkpointId"},
+        "sequence": {"$ref": "common.schema.json#/$defs/sequence"},
+        "kind": {"$ref": "#/$defs/interruptKind"},
+        "resumeChannel": {"$ref": "#/$defs/resumeChannel"},
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "Operator-facing question. Contains no protected source rows and no model reasoning."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "resumed", "expired", "cancelled"]
+        },
+        "createdAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "expiresAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "approvalId": {"$ref": "common.schema.json#/$defs/approvalId"},
+        "subjectDigest": {
+          "$ref": "common.schema.json#/$defs/digest",
+          "description": "Exact digest an approval decision must name. Present only for approval interrupts."
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {"enum": ["clarification", "task_input"]},
+            "resumeChannel": {"const": "input_endpoint"}
+          },
+          "required": ["resumeChannel"],
+          "allOf": [
+            {"not": {"required": ["approvalId"]}},
+            {"not": {"required": ["subjectDigest"]}}
+          ]
+        },
+        {
+          "properties": {
+            "kind": {"enum": ["simulation_approval", "production_approval"]},
+            "resumeChannel": {"const": "approval_endpoint"}
+          },
+          "required": ["resumeChannel", "subjectDigest"]
+        }
+      ]
+    },
+
+    "clarificationResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["responseKind", "text"],
+      "properties": {
+        "responseKind": {"const": "clarification"},
+        "text": {"type": "string", "minLength": 1, "maxLength": 2000}
+      }
+    },
+    "taskInputField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,62}$"},
+        "value": {"type": ["string", "integer", "boolean"], "maxLength": 512}
+      }
+    },
+    "taskInputResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["responseKind", "fields"],
+      "properties": {
+        "responseKind": {"const": "task_input"},
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {"$ref": "#/$defs/taskInputField"}
+        }
+      }
+    },
+    "interruptResume": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The persisted record of a resumed interrupt. kind is restricted to clarification and task_input: approvals are never resumable through this type, and the object carries no decision, actor, or authorization field.",
+      "required": [
+        "schemaVersion",
+        "interruptId",
+        "runId",
+        "checkpointId",
+        "kind",
+        "response",
+        "idempotencyKey",
+        "sequence",
+        "submittedAt"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "interruptId": {"$ref": "common.schema.json#/$defs/interruptId"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "checkpointId": {"$ref": "common.schema.json#/$defs/checkpointId"},
+        "nodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"},
+        "kind": {"type": "string", "enum": ["clarification", "task_input"]},
+        "response": {
+          "oneOf": [
+            {"$ref": "#/$defs/clarificationResponse"},
+            {"$ref": "#/$defs/taskInputResponse"}
+          ]
+        },
+        "idempotencyKey": {"$ref": "common.schema.json#/$defs/idempotencyKey"},
+        "sequence": {"$ref": "common.schema.json#/$defs/sequence"},
+        "submittedAt": {"$ref": "common.schema.json#/$defs/timestamp"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {"const": "clarification"},
+            "response": {"$ref": "#/$defs/clarificationResponse"}
+          }
+        },
+        {
+          "properties": {
+            "kind": {"const": "task_input"},
+            "response": {"$ref": "#/$defs/taskInputResponse"}
+          }
+        }
+      ]
+    },
+
+    "specialistInvocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One dispatch of a product specialist against one source instance through one cartridge version.",
+      "required": [
+        "schemaVersion",
+        "invocationId",
+        "runId",
+        "nodeRunId",
+        "nodePath",
+        "specialistId",
+        "cartridgeFamily",
+        "cartridgeVersion",
+        "sourceInstanceId",
+        "capability",
+        "isolationScope",
+        "attempt",
+        "modelCall",
+        "status",
+        "inputDigest",
+        "startedAt"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "invocationId": {"$ref": "common.schema.json#/$defs/invocationId"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "nodeRunId": {"$ref": "common.schema.json#/$defs/nodeRunId"},
+        "nodePath": {"$ref": "common.schema.json#/$defs/nodePath"},
+        "specialistId": {"$ref": "common.schema.json#/$defs/productAgentId"},
+        "cartridgeFamily": {"$ref": "common.schema.json#/$defs/cartridgeFamily"},
+        "cartridgeVersion": {"$ref": "common.schema.json#/$defs/semver"},
+        "sourceInstanceId": {"$ref": "common.schema.json#/$defs/sourceInstanceId"},
+        "capability": {
+          "type": "string",
+          "enum": [
+            "inventory_source",
+            "profile_schema",
+            "propose_mapping",
+            "validate_plan",
+            "explain_failure",
+            "recommend_driver"
+          ]
+        },
+        "isolationScope": {"$ref": "common.schema.json#/$defs/isolationScope"},
+        "attempt": {"$ref": "common.schema.json#/$defs/attempt"},
+        "modelCall": {
+          "const": true,
+          "description": "A SpecialistInvocation crosses a product-agent model boundary; deterministic workers use NodeExecution instead."
+        },
+        "status": {"$ref": "#/$defs/executionStatus"},
+        "inputDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "outputDigest": {"$ref": "common.schema.json#/$defs/digest"},
+        "startedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "completedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "outputRefs": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {"$ref": "common.schema.json#/$defs/artifactReference"}
+        },
+        "errors": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {"$ref": "common.schema.json#/$defs/orchestrationError"}
+        }
+      }
+    },
+
+    "orchestrationTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Replay-friendly snapshot of one run's orchestration. Ordering is by sequence, not wall clock, so a replay is byte-stable.",
+      "required": [
+        "schemaVersion",
+        "runId",
+        "traceId",
+        "sessionId",
+        "workflowId",
+        "workflowVersion",
+        "pattern",
+        "status",
+        "budget",
+        "budgetUsage",
+        "lastSequence",
+        "nodeExecutions",
+        "checkpoints",
+        "interrupts",
+        "specialistInvocations",
+        "errors",
+        "startedAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+        "runId": {"$ref": "common.schema.json#/$defs/runId"},
+        "traceId": {"$ref": "common.schema.json#/$defs/traceId"},
+        "sessionId": {"$ref": "common.schema.json#/$defs/sessionId"},
+        "workflowId": {"$ref": "common.schema.json#/$defs/workflowId"},
+        "workflowVersion": {"$ref": "common.schema.json#/$defs/workflowVersion"},
+        "pattern": {"$ref": "common.schema.json#/$defs/workflowPattern"},
+        "status": {"$ref": "#/$defs/runStatus"},
+        "budget": {"$ref": "common.schema.json#/$defs/orchestrationBudget"},
+        "budgetUsage": {"$ref": "common.schema.json#/$defs/budgetUsage"},
+        "lastSequence": {"$ref": "common.schema.json#/$defs/sequence"},
+        "nodeExecutions": {
+          "type": "array",
+          "maxItems": 5000,
+          "items": {"$ref": "#/$defs/nodeExecution"}
+        },
+        "checkpoints": {
+          "type": "array",
+          "maxItems": 5000,
+          "items": {"$ref": "#/$defs/workflowCheckpoint"}
+        },
+        "interrupts": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {"$ref": "#/$defs/interruptRequest"}
+        },
+        "specialistInvocations": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"$ref": "#/$defs/specialistInvocation"}
+        },
+        "errors": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"$ref": "common.schema.json#/$defs/orchestrationError"}
+        },
+        "startedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "updatedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "traceDigest": {
+          "$ref": "common.schema.json#/$defs/digest",
+          "description": "sha256 over the canonical JSON of this document with traceDigest omitted."
+        }
+      }
+    }
+  }
+}

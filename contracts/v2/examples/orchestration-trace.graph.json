@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "2.0.0",
+  "runId": "run_ENTERPRISE0001",
+  "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "sessionId": "ses_ENTERPRISE0001",
+  "workflowId": "wf_enterprise_migration",
+  "workflowVersion": "2.0.0",
+  "pattern": "graph",
+  "status": "succeeded",
+  "budget": {
+    "maxConcurrentNodes": 4,
+    "maxNodeExecutions": 100,
+    "maxModelCalls": 30,
+    "maxToolCalls": 100,
+    "maxDepth": 2,
+    "maxRetriesPerNode": 3,
+    "maxInterrupts": 8,
+    "maxWallClockSeconds": 1800
+  },
+  "budgetUsage": {
+    "peakConcurrentNodes": 1,
+    "nodeExecutions": 1,
+    "modelCalls": 0,
+    "toolCalls": 0,
+    "peakDepth": 0,
+    "retries": 0,
+    "interrupts": 0,
+    "wallClockSeconds": 1
+  },
+  "lastSequence": 1,
+  "nodeExecutions": [
+    {
+      "schemaVersion": "2.0.0",
+      "nodeRunId": "nr_VALIDATE000001",
+      "runId": "run_ENTERPRISE0001",
+      "workflowId": "wf_enterprise_migration",
+      "workflowVersion": "2.0.0",
+      "pattern": "graph",
+      "nodeId": "validate_intent",
+      "nodePath": ["validate_intent"],
+      "nodeKind": "function",
+      "attempt": 1,
+      "workClass": "deterministic_function",
+      "modelCall": false,
+      "isolationScope": "node_private",
+      "sequence": 1,
+      "status": "succeeded",
+      "startedAt": "2026-08-30T12:00:00Z",
+      "completedAt": "2026-08-30T12:00:01Z",
+      "deterministicComponentId": "vale",
+      "predictableWorkEvidence": {
+        "implementationId": "vale.validate_intent",
+        "implementationVersion": "2.0.0",
+        "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "outputDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "reproducible": true
+      },
+      "outputRefs": [],
+      "errors": []
+    }
+  ],
+  "checkpoints": [],
+  "interrupts": [],
+  "specialistInvocations": [],
+  "errors": [],
+  "startedAt": "2026-08-30T12:00:00Z",
+  "updatedAt": "2026-08-30T12:00:01Z"
+}

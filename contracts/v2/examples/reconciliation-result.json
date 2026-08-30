@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "2.0.0",
+  "reconciliationId": "rec_ENTERPRISE001",
+  "runId": "run_ENTERPRISE0001",
+  "cartridgeFamily": "jde_e1_ibmi",
+  "cartridgeVersion": "1.0.0",
+  "sourceInstanceId": "src_jde_fixture_01",
+  "status": "passed",
+  "checks": {
+    "valueCheck": {"status": "passed", "sampledRowCount": 2, "comparedFieldCount": 8, "mismatchCount": 0},
+    "countCheck": {"status": "passed", "sourceRowCount": 2, "destinationRowCount": 2, "rejectedRowCount": 0},
+    "deleteCheck": {"status": "passed", "expectedDeleteCount": 1, "appliedDeleteCount": 1, "unexpectedDeleteCount": 0},
+    "digestCheck": {
+      "status": "passed",
+      "sourceDigest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "destinationDigest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "digestsMatch": true
+    },
+    "lineageCheck": {"status": "passed", "lineageRecordId": "lin_ENTERPRISE001", "coveredRowCount": 2, "uncoveredRowCount": 0}
+  },
+  "evaluatedBy": "ledger",
+  "evaluatedAt": "2026-08-30T12:00:10Z",
+  "evidenceRefs": [
+    {
+      "artifactId": "art_reconciliation_0001",
+      "kind": "reconciliation_result",
+      "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "verifiedBy": "ledger",
+      "verifiedAt": "2026-08-30T12:00:10Z"
+    }
+  ]
+}

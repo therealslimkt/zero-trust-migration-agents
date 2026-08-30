@@ -1,0 +1,6 @@
+{
+  "base": "orchestration-trace.graph.json",
+  "targetSchema": "schemas/orchestration.schema.json#/$defs/orchestrationTrace",
+  "expect": "schema_rejection",
+  "mutation": {"operation": "set", "path": "/nodeExecutions/0/modelCall", "value": true}
+}

@@ -1,0 +1,50 @@
+{
+  "contractVersion": "2.0.0",
+  "jsonSchemaDraft": "2020-12",
+  "openapi": "openapi.json",
+  "schemas": [
+    "schemas/common.schema.json",
+    "schemas/orchestration.schema.json",
+    "schemas/task-envelope.schema.json",
+    "schemas/a2a-event.schema.json",
+    "schemas/cartridge.schema.json",
+    "schemas/evidence.schema.json",
+    "schemas/memory.schema.json",
+    "schemas/operations.schema.json",
+    "schemas/problem.schema.json",
+    "schemas/invalid-case.schema.json"
+  ],
+  "examples": {
+    "valid": [
+      {"path": "examples/orchestration-trace.graph.json", "schema": "schemas/orchestration.schema.json#/$defs/orchestrationTrace"},
+      {"path": "examples/task-envelope.json", "schema": "schemas/task-envelope.schema.json"},
+      {"path": "examples/a2a-event.json", "schema": "schemas/a2a-event.schema.json"},
+      {"path": "examples/cartridge-manifest.jde.json", "schema": "schemas/cartridge.schema.json", "embeddedDigestField": "cartridgeDigest"},
+      {"path": "examples/artifact-record.json", "schema": "schemas/evidence.schema.json#/$defs/artifactRecord"},
+      {"path": "examples/reconciliation-result.json", "schema": "schemas/evidence.schema.json#/$defs/reconciliationResult"},
+      {"path": "examples/lineage-record.json", "schema": "schemas/evidence.schema.json#/$defs/lineageRecord"},
+      {"path": "examples/memory-promotion-candidate.json", "schema": "schemas/memory.schema.json#/$defs/memoryPromotionCandidate"},
+      {"path": "examples/memory-promotion-record.json", "schema": "schemas/memory.schema.json#/$defs/memoryPromotionRecord"},
+      {"path": "examples/interrupt-resume.json", "schema": "schemas/orchestration.schema.json#/$defs/interruptResume"},
+      {"path": "examples/resume-input.json", "schema": "schemas/operations.schema.json#/$defs/resumeInterruptRequest"}
+    ],
+    "invalid": [
+      {"path": "examples/invalid/unknown-property.invalid.json"},
+      {"path": "examples/invalid/budget-bound.invalid.json"},
+      {"path": "examples/invalid/forged-approval-input.invalid.json"},
+      {"path": "examples/invalid/deterministic-model-call.invalid.json"},
+      {"path": "examples/invalid/unknown-cartridge.invalid.json"},
+      {"path": "examples/invalid/unknown-readiness.invalid.json"},
+      {"path": "examples/invalid/malformed-digest.invalid.json"},
+      {"path": "examples/invalid/cartridge-digest-mismatch.invalid.json"},
+      {"path": "examples/invalid/unverified-memory-promotion.invalid.json"},
+      {"path": "examples/invalid/raw-memory-content.invalid.json"},
+      {"path": "examples/invalid/a2a-orchestration-metadata.invalid.json"}
+    ]
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "canonicalization": "sorted-keys-utf8-json",
+    "contractSetDigest": "sha256:e428e889182c90eb2beb66cad3bfaf2c600f56ccee4da3f5913731f54cb4daed"
+  }
+}

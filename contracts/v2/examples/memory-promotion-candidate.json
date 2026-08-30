@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "2.0.0",
+  "candidateId": "mcd_ENTERPRISE001",
+  "runId": "run_ENTERPRISE0001",
+  "nodeRunId": "nr_LEDGER0000001",
+  "scope": {
+    "tenantId": "tnt_TENANT01",
+    "role": "analyst",
+    "purpose": "planning",
+    "region": "us-central1",
+    "sourceFamily": "jde_e1_ibmi",
+    "cartridgeVersion": "1.0.0",
+    "fidelity": "synthetic_fixture",
+    "fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "claimKind": "schema_fact",
+  "claimSummary": "F0101 UPMJ is represented as a CYYDDD structural date field in this fixture.",
+  "claimDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "evidence": [
+    {
+      "artifactId": "art_reconciliation_0001",
+      "kind": "reconciliation_result",
+      "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "verifiedBy": "ledger",
+      "verifiedAt": "2026-08-30T12:00:10Z"
+    }
+  ],
+  "verification": {
+    "status": "verified",
+    "verifiedBy": "ledger",
+    "verifiedAt": "2026-08-30T12:00:10Z",
+    "checkDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "approval": {
+    "approvalId": "apr_ENTERPRISE001",
+    "subjectDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "decidedAt": "2026-08-30T12:00:20Z"
+  },
+  "requiresHumanApproval": true,
+  "status": "approved",
+  "proposedAt": "2026-08-30T12:00:11Z",
+  "expiresAt": "2027-08-30T12:00:11Z"
+}

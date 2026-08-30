@@ -1,0 +1,6 @@
+{
+  "base": "cartridge-manifest.jde.json",
+  "targetSchema": "schemas/cartridge.schema.json",
+  "expect": "digest_rejection",
+  "mutation": {"operation": "set", "path": "/cartridgeDigest", "value": "sha256:9999999999999999999999999999999999999999999999999999999999999999"}
+}
