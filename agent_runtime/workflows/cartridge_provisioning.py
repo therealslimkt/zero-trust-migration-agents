@@ -155,9 +155,29 @@ def provision_commands(plan: CartridgeHostPlan, *, bootstrap_script: Path) -> tu
         ("gcloud", "compute", "networks", "create", NETWORK, "--project", PROJECT, "--subnet-mode", "custom"),
         ("gcloud", "compute", "networks", "subnets", "create", SUBNET, "--project", PROJECT, "--region", REGION, "--network", NETWORK, "--range", "10.119.104.0/28", "--enable-private-ip-google-access"),
         ("gcloud", "compute", "routers", "create", ROUTER, "--project", PROJECT, "--region", REGION, "--network", NETWORK),
-        ("gcloud", "compute", "routers", "nats", "create", BOOTSTRAP_NAT, "--project", PROJECT, "--region", REGION, "--router", ROUTER, "--nat-all-subnet-ip-ranges"),
+        ("gcloud", "compute", "routers", "nats", "create", BOOTSTRAP_NAT, "--project", PROJECT, "--region", REGION, "--router", ROUTER, "--auto-allocate-nat-external-ips", "--nat-all-subnet-ip-ranges"),
         ("gcloud", "compute", "firewall-rules", "create", IAP_FIREWALL, "--project", PROJECT, "--network", NETWORK, "--direction", "INGRESS", "--priority", "1000", "--action", "ALLOW", "--rules", "tcp:22", "--source-ranges", "35.235.240.0/20", "--target-service-accounts", service_account),
         ("gcloud", "compute", "instances", "create", HOST, "--project", PROJECT, "--zone", ZONE, "--machine-type", "e2-small", "--boot-disk-size", "20GB", "--boot-disk-type", "pd-balanced", "--image-family", "ubuntu-2404-lts-amd64", "--image-project", "ubuntu-os-cloud", "--subnet", SUBNET, "--no-address", "--service-account", service_account, "--scopes", "cloud-platform", "--metadata", metadata, "--metadata-from-file", f"startup-script={bootstrap_script}", "--labels", "app=keraun-cartridge-lab,environment=hackathon,synthetic=true"),
+    )
+
+
+def _observe_commands() -> tuple[tuple[str, ...] | None, ...]:
+    """Read-only idempotency observations in the same order as create steps.
+
+    Repository IAM binding is intentionally repeated: the provider's add-binding
+    operation is set-like/idempotent, while parsing an IAM policy here would
+    create an unnecessarily broad authority surface.
+    """
+
+    return (
+        ("gcloud", "iam", "service-accounts", "describe", f"{HOST_SERVICE_ACCOUNT}@{PROJECT}.iam.gserviceaccount.com", "--project", PROJECT),
+        None,
+        ("gcloud", "compute", "networks", "describe", NETWORK, "--project", PROJECT),
+        ("gcloud", "compute", "networks", "subnets", "describe", SUBNET, "--project", PROJECT, "--region", REGION),
+        ("gcloud", "compute", "routers", "describe", ROUTER, "--project", PROJECT, "--region", REGION),
+        ("gcloud", "compute", "routers", "nats", "describe", BOOTSTRAP_NAT, "--project", PROJECT, "--region", REGION, "--router", ROUTER),
+        ("gcloud", "compute", "firewall-rules", "describe", IAP_FIREWALL, "--project", PROJECT),
+        ("gcloud", "compute", "instances", "describe", HOST, "--project", PROJECT, "--zone", ZONE),
     )
 
 
@@ -170,7 +190,12 @@ def apply_provisioning(
     """Execute only the sealed command set after a caller validates approval."""
 
     command_digests: list[str] = []
-    for command in provision_commands(plan, bootstrap_script=bootstrap_script):
+    creates = provision_commands(plan, bootstrap_script=bootstrap_script)
+    for command, observation in zip(creates, _observe_commands(), strict=True):
+        if observation is not None:
+            observed = runner(observation, check=False, text=True, capture_output=True)
+            if observed.returncode == 0:
+                continue
         result = runner(command, check=False, text=True, capture_output=True)
         if result.returncode != 0:
             raise CartridgeProvisioningError("provisioning_command_failed")

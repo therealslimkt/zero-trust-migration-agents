@@ -71,6 +71,7 @@ def test_commands_are_closed_to_one_private_host_topology(tmp_path):
     assert f"instances create {HOST}" in flattened
     assert "--no-address" in flattened
     assert "--source-ranges 35.235.240.0/20" in flattened
+    assert "--auto-allocate-nat-external-ips" in flattened
     assert "--metadata-from-file" in flattened
     assert "--network-interface" not in flattened
     assert "docker.sock" not in flattened
@@ -90,17 +91,21 @@ def test_apply_stops_at_first_provider_failure(tmp_path):
 
     def runner(command, **_kwargs):
         calls.append(command)
+        if "describe" in command:
+            return subprocess.CompletedProcess(command, 1, "", "not found")
         return subprocess.CompletedProcess(command, 1, "", "provider details")
 
     with pytest.raises(CartridgeProvisioningError, match="^provisioning_command_failed$"):
         apply_provisioning(plan, bootstrap_script=bootstrap, runner=runner)
-    assert len(calls) == 1
+    assert len(calls) == 2
 
 
 def test_apply_returns_only_command_digests(tmp_path):
     plan, bootstrap = _plan(tmp_path)
 
     def runner(command, **_kwargs):
+        if "describe" in command:
+            return subprocess.CompletedProcess(command, 1, "", "not found")
         return subprocess.CompletedProcess(command, 0, "provider details", "")
 
     output = apply_provisioning(plan, bootstrap_script=bootstrap, runner=runner)
@@ -108,3 +113,19 @@ def test_apply_returns_only_command_digests(tmp_path):
     assert all(value.startswith("sha256:") and len(value) == 71 for value in output)
     expected = "sha256:" + hashlib.sha256("\0".join(provision_commands(plan, bootstrap_script=bootstrap)[0]).encode()).hexdigest()
     assert output[0] == expected
+
+
+def test_apply_observes_and_skips_preexisting_create_steps(tmp_path):
+    plan, bootstrap = _plan(tmp_path)
+    creates = []
+
+    def runner(command, **_kwargs):
+        if "describe" in command:
+            return subprocess.CompletedProcess(command, 0, "exists", "")
+        creates.append(command)
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    output = apply_provisioning(plan, bootstrap_script=bootstrap, runner=runner)
+    assert len(creates) == 1
+    assert creates[0][1:4] == ("artifacts", "repositories", "add-iam-policy-binding")
+    assert len(output) == 1
