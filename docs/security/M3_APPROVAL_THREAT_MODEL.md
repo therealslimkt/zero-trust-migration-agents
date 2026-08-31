@@ -49,9 +49,9 @@ The composable HTTP mux dispatches only the two existing, separately documented 
 
 ## Replay, time, and concurrency
 
-A nonce is stored only as a domain-separated digest and is consumed in the same transaction that inserts the immutable decision. It is globally one-time within the approval authority. Verification uses an injected UTC clock with the interval `issued_at <= now < expires_at`; an expiry-boundary request is rejected.
+A nonce is stored only as a domain-separated digest and is consumed in the same transaction that inserts the immutable decision. It is one-time per tenant within the approval authority. Verification uses an injected UTC clock with the interval `issued_at <= now < expires_at`; an expiry-boundary request is rejected.
 
-When the approval adapter is joined to persistence, it must execute pending-row lock/read, binding checks, nonce uniqueness, stage-record uniqueness, prior simulation lookup, and decision insertion in one PostgreSQL transaction. Unique constraints should cover nonce digest and `(tenant_id, run_id, stage)`. Serializable isolation or explicit `SELECT ... FOR UPDATE` locking must preserve the reference `compare-and-record` semantics. A lost race rejects without mutation. The present memory repository demonstrates the semantics but is not a production authority. Side-effect idempotency belongs in Cloud SQL, not the workflow snapshot or BigQuery.
+When the approval adapter is joined to persistence, it must execute pending-row lock/read, binding checks, nonce uniqueness, stage-record uniqueness, prior simulation lookup, and decision insertion in one PostgreSQL transaction. Unique constraints cover `(tenant_id, nonce_digest)` and `(tenant_id, run_id, stage)`. Serializable isolation or explicit `SELECT ... FOR UPDATE` locking must preserve the reference `compare-and-record` semantics. A lost race rejects without mutation. The present memory repository demonstrates the semantics but is not a production authority. Side-effect idempotency belongs in Cloud SQL, not the workflow snapshot or BigQuery.
 
 ## Deterministic adversarial evaluator/optimizer
 
