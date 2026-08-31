@@ -20,7 +20,8 @@ The separation matters structurally, not just stylistically:
 
 from __future__ import annotations
 
-import inspect
+import enum
+from collections.abc import Mapping
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Final
 
@@ -119,6 +120,7 @@ MODEL_SURFACE_TOKENS: Final[frozenset[str]] = frozenset(
         "generation",
         "infer",
         "inference",
+        "invoke",
         "llm",
         "model",
         "models",
@@ -193,14 +195,28 @@ def _member_names(obj: object) -> tuple[str, ...]:
         for field in fields(obj):
             if field.name not in names:
                 names.append(field.name)
-    if not names:
-        for name in getattr(obj, "__dict__", {}):
-            if name not in names:
-                names.append(name)
+    for name in getattr(obj, "__dict__", {}):
+        if name not in names:
+            names.append(name)
     return tuple(names)
 
 
-def assert_no_model_surface(obj: object, *, context: str, depth: int = 2) -> None:
+_MODEL_ACCOUNTING_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        "max_model_calls",
+        "model_call",
+        "model_call_delta",
+        "model_calls",
+        "model_driven",
+        "post_production_model_calls",
+        "proves_post_production_model_free",
+    }
+)
+
+
+def assert_no_model_surface(
+    obj: object, *, context: str, depth: int | None = None
+) -> None:
     """Refuse ``obj`` if any model capability is reachable from it.
 
     This is a *structural* rejection, not a counter: it looks for a member that
@@ -210,43 +226,93 @@ def assert_no_model_surface(obj: object, *, context: str, depth: int = 2) -> Non
     post-approval path the correct number of model calls is not "zero so far",
     it is "not expressible".
     """
-    cls = type(obj)
-    if isinstance(obj, ModelCapable):
-        raise BudgetError(
-            FailureCode.POST_APPROVAL_MODEL_CALL,
-            f"{context} satisfies the model-capable shape",
-        )
-    for name in dir(cls):
-        if name.startswith("_") or not has_model_surface_name(name):
+    # ``depth`` is retained only for source compatibility.  A caller can no
+    # longer weaken the proof by selecting a shallow depth.
+    del depth
+    atomic = (type(None), bool, int, float, str, bytes, enum.Enum)
+    pending: list[tuple[object, str]] = [(obj, context)]
+    seen: set[int] = set()
+    inspected = 0
+    while pending:
+        current, current_context = pending.pop()
+        if isinstance(current, atomic):
             continue
-        try:
-            member = inspect.getattr_static(cls, name)
-        except AttributeError:  # pragma: no cover - defensive
+        identity = id(current)
+        if identity in seen:
             continue
-        if callable(member):
+        seen.add(identity)
+        inspected += 1
+        if inspected > 4096:
             raise BudgetError(
                 FailureCode.POST_APPROVAL_MODEL_CALL,
-                f"{context} exposes a model-capable method {name!r}",
+                f"{context} capability graph exceeds the structural proof bound",
             )
-    for name in _member_names(obj):
-        try:
-            value = getattr(obj, name)
-        except AttributeError:  # pragma: no cover - unset slot
+        if isinstance(current, ModelCapable):
+            raise BudgetError(
+                FailureCode.POST_APPROVAL_MODEL_CALL,
+                f"{current_context} satisfies the model-capable shape",
+            )
+        if callable(current):
+            raise BudgetError(
+                FailureCode.POST_APPROVAL_MODEL_CALL,
+                f"{current_context} holds a callable",
+            )
+
+        for klass in type(current).__mro__:
+            for name, member in vars(klass).items():
+                if name.startswith("__") or not has_model_surface_name(name):
+                    continue
+                if name.strip("_") in _MODEL_ACCOUNTING_NAMES:
+                    continue
+                if callable(member) or isinstance(member, (property, staticmethod, classmethod)):
+                    raise BudgetError(
+                        FailureCode.POST_APPROVAL_MODEL_CALL,
+                        f"{current_context} exposes a model-capable member {name!r}",
+                    )
+
+        if isinstance(current, Mapping):
+            for key, value in current.items():
+                if (
+                    isinstance(key, str)
+                    and has_model_surface_name(key)
+                    and not isinstance(value, atomic)
+                ):
+                    raise BudgetError(
+                        FailureCode.POST_APPROVAL_MODEL_CALL,
+                        f"{current_context} holds a model-capable key {key!r}",
+                    )
+                if not isinstance(key, atomic):
+                    pending.append((key, f"{current_context}.key"))
+                pending.append((value, f"{current_context}[{key!r}]"))
             continue
-        if value is None or isinstance(value, (bool, int, float, str, bytes)):
-            continue  # model *accounting* is data; data is never a capability
-        if has_model_surface_name(name):
-            raise BudgetError(
-                FailureCode.POST_APPROVAL_MODEL_CALL,
-                f"{context} holds a model-capable field {name!r}",
+        if isinstance(current, (tuple, list, set, frozenset)):
+            pending.extend(
+                (value, f"{current_context}[{index}]")
+                for index, value in enumerate(current)
             )
-        if callable(value):
-            raise BudgetError(
-                FailureCode.POST_APPROVAL_MODEL_CALL,
-                f"{context}.{name} holds a callable",
-            )
-        if depth > 0:
-            assert_no_model_surface(value, context=f"{context}.{name}", depth=depth - 1)
+            continue
+
+        for name in _member_names(current):
+            try:
+                # Names come only from slots/dataclass fields/__dict__, never
+                # arbitrary properties, so this reads stored state without
+                # walking the public descriptor surface.
+                value = object.__getattribute__(current, name)
+            except AttributeError:  # pragma: no cover - unset slot
+                continue
+            if isinstance(value, atomic):
+                continue  # model accounting is inert data, never a capability
+            if has_model_surface_name(name):
+                raise BudgetError(
+                    FailureCode.POST_APPROVAL_MODEL_CALL,
+                    f"{current_context} holds a model-capable field {name!r}",
+                )
+            if callable(value):
+                raise BudgetError(
+                    FailureCode.POST_APPROVAL_MODEL_CALL,
+                    f"{current_context}.{name} holds a callable",
+                )
+            pending.append((value, f"{current_context}.{name}"))
 
 
 # ---------------------------------------------------------------------------

@@ -36,6 +36,7 @@ from agent_runtime.trust_spine import (
     FlowKernel,
     ForgeKernel,
     FrozenPlan,
+    Journal,
     LedgerKernel,
     ModelCapable,
     NodeName,
@@ -54,6 +55,7 @@ from agent_runtime.trust_spine import (
     RunPhase,
     RunRequest,
     SealedExecution,
+    SealedBundle,
     Stage,
     TrustSpineRuntime,
     ValeKernel,
@@ -650,6 +652,43 @@ def test_production_approval_seals_atomically_and_irreversibly():
     assert exc.value.code is FailureCode.POST_APPROVAL_MODEL_CALL
 
 
+def test_sealed_resume_revalidates_records_without_touching_approval_authority():
+    harness = Harness()
+    harness.dispatcher.crash_before_effect = True
+    with pytest.raises(Crash):
+        harness.execute()
+    assert harness.checkpoint.sealed
+
+    class ForbiddenAuthority:
+        @property
+        def authority_id(self):  # pragma: no cover - access is the failure
+            raise AssertionError("sealed resume read approval authority")
+
+        def fetch_approval(self, query):  # pragma: no cover - access is the failure
+            raise AssertionError("sealed resume routed a fresh approval")
+
+    harness.runtime._authority = ForbiddenAuthority()
+    harness.dispatcher.crash_before_effect = False
+    result = harness.execute()
+    assert result.seal_digest == harness.checkpoint.seal_digest
+
+
+def test_sealed_resume_rejects_changed_immutable_approval_authority_binding():
+    harness = Harness()
+    harness.dispatcher.crash_before_effect = True
+    with pytest.raises(Crash):
+        harness.execute()
+    journal = Journal(harness.store, harness.plan)
+    sealed = SealedBundle.from_canonical(journal.state_value("sealed_bundle"))
+    simulation, production = journal.approvals
+    journal._approvals = (
+        simulation,
+        dataclasses.replace(production, authority_id="rogue.authority"),
+    )
+    with pytest.raises(ApprovalError, match="authority bindings changed"):
+        TrustSpineRuntime._revalidate_sealed_approvals(journal, harness.plan, sealed)
+
+
 def test_sealed_checkpoint_cannot_record_a_post_production_model_call():
     harness = Harness()
     harness.execute()
@@ -722,6 +761,22 @@ def test_model_surface_detection_rejects_smuggled_capabilities():
     ):
         with pytest.raises(BudgetError) as exc:
             assert_no_model_surface(candidate, context="candidate")
+        assert exc.value.code is FailureCode.POST_APPROVAL_MODEL_CALL
+
+
+def test_model_surface_detection_walks_private_members_and_deep_containers():
+    class PrivateMethod:
+        def _generate(self):  # pragma: no cover - rejected structurally
+            raise AssertionError
+
+    harness = Harness()
+    deeply_nested: object = harness.adapter
+    for _ in range(12):
+        deeply_nested = {"innocent": (deeply_nested,)}
+
+    for candidate in (PrivateMethod(), deeply_nested, {"_model_provider": harness.adapter}):
+        with pytest.raises(BudgetError) as exc:
+            assert_no_model_surface(candidate, context="private_or_nested", depth=0)
         assert exc.value.code is FailureCode.POST_APPROVAL_MODEL_CALL
 
 

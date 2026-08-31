@@ -66,6 +66,7 @@ from .types import (
     CertificationError,
     Certificate,
     DispatchReceipt,
+    Decision,
     DurabilityError,
     FailureCode,
     FrozenPlan,
@@ -225,13 +226,13 @@ class Journal:
             phase=loaded.phase,
             chain_digest=self._chain,
             sequence=len(self._records),
-            model_calls=self._sum_model_calls(),
+            model_calls=self._sum_observed_calls(),
         )
         if caught_up != loaded:
             self._store.write_checkpoint(caught_up)
         return caught_up
 
-    def _sum_model_calls(self) -> int:
+    def _sum_observed_calls(self) -> int:
         return sum(record.model_call_delta for record in self._records)
 
     # -- read surface -------------------------------------------------------
@@ -321,7 +322,7 @@ class Journal:
             phase=phase,
             chain_digest=self._chain,
             sequence=len(self._records),
-            model_calls=self._sum_model_calls(),
+            model_calls=self._sum_observed_calls(),
             state_key=state_key,
             state_value=state_value,
             seal_digest=seal_digest,
@@ -361,7 +362,7 @@ class Journal:
                 if model_call_delta == 0:
                     return record
                 continue
-        if model_call_delta and self._sum_model_calls() + model_call_delta > max_model_calls:
+        if model_call_delta and self._sum_observed_calls() + model_call_delta > max_model_calls:
             raise BudgetError(
                 FailureCode.MODEL_BUDGET_EXHAUSTED, "model call budget exhausted"
             )
@@ -504,7 +505,7 @@ class Journal:
             phase=RunPhase.APPROVED_FOR_EXECUTION,
             chain_digest=next_chain,
             sequence=len(self._records),
-            model_calls=self._sum_model_calls(),
+            model_calls=self._sum_observed_calls(),
             state_key=_SEALED_BUNDLE_KEY,
             state_value=sealed.canonical,
             seal_digest=sealed.seal_digest,
@@ -626,6 +627,7 @@ class TrustSpineRuntime:
                     FailureCode.BINDING_MISMATCH,
                     "sealed execution bundle is not bound to the frozen plan checkpoint",
                 )
+            self._revalidate_sealed_approvals(journal, plan, sealed)
             return self._execute_sealed(journal, plan, sealed)
 
         proposal = self._propose(journal, plan)
@@ -663,6 +665,95 @@ class TrustSpineRuntime:
         journal.commit_production_approval(production, sealed)
 
         return self._execute_sealed(journal, plan, sealed)
+
+    @staticmethod
+    def _revalidate_sealed_approvals(
+        journal: Journal, plan: FrozenPlan, sealed: SealedBundle
+    ) -> None:
+        """Re-check the immutable decisions without consulting an authority.
+
+        Authentication happened before the atomic production seal.  A sealed
+        resume trusts only those durable records and revalidates every binding;
+        it must not route to a human or even read the injected authority.
+        """
+        simulation = journal.approval_for(Stage.SIMULATION)
+        production = journal.approval_for(Stage.PRODUCTION)
+        if (
+            len(journal.approvals) != 2
+            or simulation is None
+            or production is None
+        ):
+            raise DurabilityError(
+                FailureCode.STATE_CORRUPTION,
+                "sealed execution requires exactly two immutable approvals",
+            )
+        if (
+            simulation.decision is not Decision.APPROVE
+            or production.decision is not Decision.APPROVE
+            or simulation.authority_id != production.authority_id
+        ):
+            raise ApprovalError(
+                FailureCode.APPROVAL_MISMATCH,
+                "sealed approval decisions or authority bindings changed",
+            )
+        simulation_subject = simulation_subject_digest(
+            plan_digest=plan.plan_digest,
+            proposal_digest=sealed.bundle.proposal_digest,
+            policy_digest=sealed.bundle.policy_digest,
+            vale_digest=sealed.bundle.vale_digest,
+        )
+        simulation_query = ApprovalQuery(
+            tenant_id=plan.tenant_id,
+            run_id=plan.run_id,
+            source_digest=plan.source_digest,
+            stage=Stage.SIMULATION,
+            subject_digest=simulation_subject,
+            predecessor_digest=simulation.predecessor_digest,
+        )
+        verify_approval(
+            simulation,
+            query=simulation_query,
+            authority_id=simulation.authority_id,
+            expected_key=derive_approval_key(
+                tenant_id=plan.tenant_id,
+                run_id=plan.run_id,
+                source_digest=plan.source_digest,
+                stage=Stage.SIMULATION,
+                subject_digest=simulation_subject,
+                plan_digest=plan.plan_digest,
+            ),
+        )
+        if simulation.digest != sealed.bundle.simulation_approval_digest:
+            raise DurabilityError(
+                FailureCode.BINDING_MISMATCH,
+                "sealed bundle is not bound to the immutable simulation approval",
+            )
+        production_query = ApprovalQuery(
+            tenant_id=plan.tenant_id,
+            run_id=plan.run_id,
+            source_digest=plan.source_digest,
+            stage=Stage.PRODUCTION,
+            subject_digest=sealed.bundle.bundle_digest,
+            predecessor_digest=production.predecessor_digest,
+        )
+        verify_approval(
+            production,
+            query=production_query,
+            authority_id=simulation.authority_id,
+            expected_key=derive_approval_key(
+                tenant_id=plan.tenant_id,
+                run_id=plan.run_id,
+                source_digest=plan.source_digest,
+                stage=Stage.PRODUCTION,
+                subject_digest=sealed.bundle.bundle_digest,
+                plan_digest=plan.plan_digest,
+            ),
+        )
+        if production.digest != sealed.production_approval_digest:
+            raise DurabilityError(
+                FailureCode.BINDING_MISMATCH,
+                "sealed bundle is not bound to the immutable production approval",
+            )
 
     def _execute_sealed(
         self, journal: Journal, plan: FrozenPlan, sealed: SealedBundle

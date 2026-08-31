@@ -13,10 +13,15 @@ import hashlib
 import re
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Any
 
 
 _SAFE_ID = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{2,95}$")
+_DIGEST = re.compile(r"^sha256:[a-f0-9]{64}$")
+_INTERRUPT_ID = re.compile(r"^int_[a-f0-9]{64}$")
+_CHECKPOINT_ID = re.compile(r"^ckpt_[a-f0-9]{64}$")
+_OPERATION_ID = re.compile(r"^op_[a-f0-9]{64}$")
+_RESUME_KEY = re.compile(r"^rsm_[a-f0-9]{64}$")
+_HASH = re.compile(r"^[a-f0-9]{64}$")
 
 
 class GraphInvariantError(ValueError):
@@ -118,7 +123,7 @@ class GraphEvent:
     node_id: str
     operation_id: str
     model_calls: int = 0
-    detail: Mapping[str, Any] = dataclasses.field(default_factory=dict)
+    detail: Mapping[str, str] = dataclasses.field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if type(self.sequence) is not int or self.sequence < 1:
@@ -126,17 +131,23 @@ class GraphEvent:
         for value, code in (
             (self.event_type, "event_type"),
             (self.node_id, "event_node"),
-            (self.operation_id, "event_operation"),
         ):
             if type(value) is not str or _SAFE_ID.fullmatch(value) is None:
                 raise GraphInvariantError(code)
+        if type(self.operation_id) is not str or _OPERATION_ID.fullmatch(
+            self.operation_id
+        ) is None:
+            raise GraphInvariantError("event_operation")
         if type(self.model_calls) is not int or self.model_calls < 0:
             raise GraphInvariantError("event_model_calls")
         if self.model_calls > 0 and self.event_type != "model_call_observed":
             raise GraphInvariantError("event_model_call_type")
         if self.event_type == "model_call_observed" and self.model_calls != 1:
             raise GraphInvariantError("event_model_call_count")
-        if not isinstance(self.detail, Mapping):
+        if not isinstance(self.detail, Mapping) or any(
+            type(key) is not str or type(value) is not str
+            for key, value in self.detail.items()
+        ):
             raise GraphInvariantError("event_detail")
         object.__setattr__(self, "detail", MappingProxyType(dict(self.detail)))
 
@@ -147,19 +158,38 @@ class InterruptRequest:
     kind: InterruptKind
     checkpoint_id: str
     ordinal: int
+    tenant_id: str
+    run_id: str
+    binding_digest: str
     subject_digest: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.interrupt_id.startswith("int_") or len(self.interrupt_id) < 16:
+        if type(self.interrupt_id) is not str or _INTERRUPT_ID.fullmatch(
+            self.interrupt_id
+        ) is None:
             raise GraphInvariantError("interrupt_id")
         if not isinstance(self.kind, InterruptKind):
             raise GraphInvariantError("interrupt_kind")
-        if not self.checkpoint_id.startswith("ckpt_"):
+        if type(self.checkpoint_id) is not str or _CHECKPOINT_ID.fullmatch(
+            self.checkpoint_id
+        ) is None:
             raise GraphInvariantError("interrupt_checkpoint")
         if type(self.ordinal) is not int or self.ordinal < 1:
             raise GraphInvariantError("interrupt_ordinal")
+        for value, code in ((self.tenant_id, "tenant_id"), (self.run_id, "run_id")):
+            if type(value) is not str or _SAFE_ID.fullmatch(value) is None:
+                raise GraphInvariantError(code)
+        if type(self.binding_digest) is not str or _DIGEST.fullmatch(
+            self.binding_digest
+        ) is None:
+            raise GraphInvariantError("interrupt_binding_digest")
         approval = self.kind is not InterruptKind.CLARIFICATION
         if approval != (self.subject_digest is not None):
+            raise GraphInvariantError("interrupt_subject")
+        if (
+            self.subject_digest is not None
+            and _DIGEST.fullmatch(self.subject_digest) is None
+        ):
             raise GraphInvariantError("interrupt_subject")
 
     @property
@@ -175,9 +205,13 @@ class ResumeInput:
     text: str
 
     def __post_init__(self) -> None:
-        if not self.interrupt_id.startswith("int_"):
+        if type(self.interrupt_id) is not str or _INTERRUPT_ID.fullmatch(
+            self.interrupt_id
+        ) is None:
             raise GraphInvariantError("resume_interrupt_id")
-        if not self.checkpoint_id.startswith("ckpt_"):
+        if type(self.checkpoint_id) is not str or _CHECKPOINT_ID.fullmatch(
+            self.checkpoint_id
+        ) is None:
             raise GraphInvariantError("resume_checkpoint_id")
         if type(self.idempotency_key) is not str or len(self.idempotency_key) < 8:
             raise GraphInvariantError("resume_idempotency_key")
@@ -202,9 +236,14 @@ class GraphCheckpoint:
     phase: GraphPhase
     model_calls: int
     resumable: bool
+    tenant_id: str
+    run_id: str
+    binding_digest: str
 
     def __post_init__(self) -> None:
-        if not self.checkpoint_id.startswith("ckpt_"):
+        if type(self.checkpoint_id) is not str or _CHECKPOINT_ID.fullmatch(
+            self.checkpoint_id
+        ) is None:
             raise GraphInvariantError("checkpoint_id")
         if type(self.revision) is not int or self.revision < 0:
             raise GraphInvariantError("checkpoint_revision")
@@ -214,12 +253,20 @@ class GraphCheckpoint:
             raise GraphInvariantError("checkpoint_model_calls")
         if type(self.resumable) is not bool:
             raise GraphInvariantError("checkpoint_resumable")
+        for value, code in ((self.tenant_id, "tenant_id"), (self.run_id, "run_id")):
+            if type(value) is not str or _SAFE_ID.fullmatch(value) is None:
+                raise GraphInvariantError(code)
+        if type(self.binding_digest) is not str or _DIGEST.fullmatch(
+            self.binding_digest
+        ) is None:
+            raise GraphInvariantError("checkpoint_binding_digest")
 
 
 @dataclasses.dataclass(frozen=True)
 class GraphSnapshot:
     tenant_id: str
     run_id: str
+    binding_digest: str
     revision: int = 0
     phase: GraphPhase = GraphPhase.NEW
     status: GraphStatus = GraphStatus.RUNNING
@@ -237,6 +284,10 @@ class GraphSnapshot:
         for value, code in ((self.tenant_id, "tenant_id"), (self.run_id, "run_id")):
             if type(value) is not str or _SAFE_ID.fullmatch(value) is None:
                 raise GraphInvariantError(code)
+        if type(self.binding_digest) is not str or _DIGEST.fullmatch(
+            self.binding_digest
+        ) is None:
+            raise GraphInvariantError("binding_digest")
         if type(self.revision) is not int or self.revision < 0:
             raise GraphInvariantError("revision")
         if type(self.repair_count) is not int or not 0 <= self.repair_count <= 3:
@@ -253,10 +304,21 @@ class GraphSnapshot:
             raise GraphInvariantError("duplicate_resume_receipt")
         if frozenset(receipt_keys) != self.consumed_idempotency_keys:
             raise GraphInvariantError("resume_receipt_keys")
+        if any(
+            _RESUME_KEY.fullmatch(key) is None or _HASH.fullmatch(digest) is None
+            for key, digest in self.resume_digests
+        ):
+            raise GraphInvariantError("resume_receipt_binding")
         if (self.pending_interrupt is None) != (self.paused_from_phase is None):
             raise GraphInvariantError("paused_phase")
         if (self.phase is GraphPhase.PAUSED) != (self.pending_interrupt is not None):
             raise GraphInvariantError("pending_interrupt_phase")
+        if self.pending_interrupt is not None and (
+            self.pending_interrupt.tenant_id != self.tenant_id
+            or self.pending_interrupt.run_id != self.run_id
+            or self.pending_interrupt.binding_digest != self.binding_digest
+        ):
+            raise GraphInvariantError("interrupt_run_binding")
 
     @property
     def model_calls(self) -> int:
@@ -274,8 +336,11 @@ class GraphSnapshot:
         if type(revision) is not int or revision < 0:
             raise GraphInvariantError("checkpoint_revision")
         binding = hashlib.sha256(
-            f"{self.tenant_id}\x00{self.run_id}\x00{revision}".encode()
-        ).hexdigest()[:32]
+            (
+                "graph.checkpoint.v2\x00"
+                f"{self.tenant_id}\x00{self.run_id}\x00{self.binding_digest}\x00{revision}"
+            ).encode()
+        ).hexdigest()
         return f"ckpt_{binding}"
 
     @property
@@ -295,4 +360,7 @@ class GraphSnapshot:
                 GraphPhase.JOINED,
                 GraphPhase.PLANNING,
             },
+            tenant_id=self.tenant_id,
+            run_id=self.run_id,
+            binding_digest=self.binding_digest,
         )

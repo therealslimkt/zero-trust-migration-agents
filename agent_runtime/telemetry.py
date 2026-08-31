@@ -25,6 +25,42 @@ _DIGEST = re.compile(r"^sha256:[a-f0-9]{64}$")
 _TIMESTAMP = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$"
 )
+_IMPLEMENTATION_ID = re.compile(r"^[a-z][a-z0-9_.]{2,63}$")
+_FAILURE_CODE = re.compile(r"^[A-Z][A-Z0-9_]{2,63}$")
+_AGENT_IDS = frozenset(
+    {
+        "mission_control",
+        "architect",
+        "compiler",
+        "grammar_police",
+        "stage_manager",
+        "universal_translator",
+        "scout",
+        "front_of_house",
+        "fixer",
+        "breaker",
+        "gatekeeper",
+        "maestro",
+        "bette_davis_eyes",
+        "gifted_animator",
+        "piano_man",
+        "critic_that_counts",
+        "easter_bunny",
+        "golden_goose",
+        "pop_lock_and_drop_it",
+        "atlas",
+        "source_analyst_sap",
+        "source_analyst_jde",
+        "source_analyst_oracle",
+        "source_analyst_cobol",
+        "source_analyst_ibmi",
+        "source_analyst_sage",
+        "source_analyst_ax",
+        "maven",
+        "prisma",
+        "jetty_advisor",
+    }
+)
 
 
 class TelemetryViolation(ValueError):
@@ -43,6 +79,51 @@ class ObservationStatus(str, enum.Enum):
     COMPLETE = "complete"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class DeterministicRoute:
+    """The closed v2 route object; callers cannot smuggle a free-form route."""
+
+    router_node_id: str
+    selected_edge: str
+    candidate_edges: tuple[str, ...]
+    reason_code: str
+    deterministic: bool = True
+
+    def __post_init__(self) -> None:
+        if any(
+            type(value) is not str or _NODE_ID.fullmatch(value) is None
+            for value in (self.router_node_id, self.selected_edge)
+        ):
+            raise TelemetryViolation("observation_route_node")
+        if (
+            type(self.candidate_edges) is not tuple
+            or not 1 <= len(self.candidate_edges) <= 16
+            or len(set(self.candidate_edges)) != len(self.candidate_edges)
+            or any(
+                type(value) is not str or _NODE_ID.fullmatch(value) is None
+                for value in self.candidate_edges
+            )
+            or self.selected_edge not in self.candidate_edges
+        ):
+            raise TelemetryViolation("observation_route_candidates")
+        if type(self.deterministic) is not bool or not self.deterministic:
+            raise TelemetryViolation("observation_route_deterministic")
+        if type(self.reason_code) is not str or _FAILURE_CODE.fullmatch(
+            self.reason_code
+        ) is None:
+            raise TelemetryViolation("observation_route_reason")
+
+    @property
+    def payload(self) -> dict[str, object]:
+        return {
+            "routerNodeId": self.router_node_id,
+            "selectedEdge": self.selected_edge,
+            "candidateEdges": self.candidate_edges,
+            "deterministic": self.deterministic,
+            "reasonCode": self.reason_code,
+        }
 
 
 _ISOLATION_SCOPES = frozenset(
@@ -75,7 +156,10 @@ class NodeObservation:
     timestamp: str
     agent_id: str | None = None
     parent_node_run_id: str | None = None
-    route: str | None = None
+    route: DeterministicRoute | None = None
+    implementation_id: str | None = None
+    approval_required: bool = False
+    journal_ref: str | None = None
 
     def __post_init__(self) -> None:
         if type(self.sequence) is not int or self.sequence < 1:
@@ -103,8 +187,10 @@ class NodeObservation:
             raise TelemetryViolation("observation_model_call")
         if self.model_calls not in (0, 1) or self.model_driven != (self.model_calls == 1):
             raise TelemetryViolation("observation_model_call")
-        if self.model_driven and not self.agent_id:
+        if self.model_driven and self.agent_id not in _AGENT_IDS:
             raise TelemetryViolation("observation_agent")
+        if not self.model_driven and self.agent_id is not None:
+            raise TelemetryViolation("observation_deterministic_agent")
         if self.parent_node_run_id is not None and not _NODE_RUN_ID.fullmatch(
             self.parent_node_run_id
         ):
@@ -113,10 +199,24 @@ class NodeObservation:
             raise TelemetryViolation("observation_digest")
         if type(self.timestamp) is not str or not _TIMESTAMP.fullmatch(self.timestamp):
             raise TelemetryViolation("observation_timestamp")
-        if self.route is not None and (
-            type(self.route) is not str or not self.route or len(self.route) > 64
-        ):
+        if self.route is not None and not isinstance(self.route, DeterministicRoute):
             raise TelemetryViolation("observation_route")
+        if self.model_driven != (self.implementation_id is None):
+            raise TelemetryViolation("observation_implementation")
+        if self.implementation_id is not None and _IMPLEMENTATION_ID.fullmatch(
+            self.implementation_id
+        ) is None:
+            raise TelemetryViolation("observation_implementation")
+        if type(self.approval_required) is not bool or (
+            self.approval_required and self.status is not ObservationStatus.BLOCKED
+        ):
+            raise TelemetryViolation("observation_approval")
+        if self.journal_ref is not None and (
+            type(self.journal_ref) is not str
+            or not self.journal_ref
+            or len(self.journal_ref) > 200
+        ):
+            raise TelemetryViolation("observation_journal_ref")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -193,7 +293,7 @@ class SanitizedEventBridge:
             f"{observation.trace_id}:{observation.task_id}:"
             f"{observation.node_run_id}:{observation.sequence}"
         )
-        event_id = "evt_" + hashlib.sha256(stable.encode()).hexdigest()[:24]
+        event_id = "evt_" + hashlib.sha256(stable.encode()).hexdigest()
         orchestration: dict[str, object] = {
             "pattern": observation.pattern.value,
             "nodePath": observation.node_path,
@@ -205,25 +305,38 @@ class SanitizedEventBridge:
         if observation.parent_node_run_id is not None:
             orchestration["parentNodeRunId"] = observation.parent_node_run_id
         if observation.route is not None:
-            orchestration["route"] = observation.route
+            orchestration["route"] = observation.route.payload
         node_id = observation.node_path[-1]
+        context_refs: tuple[str, ...] = ()
+        if observation.implementation_id is not None:
+            # a2a-event has no top-level deterministic-component member.  The
+            # closed contextRefs member is the contract-defined carrier; the
+            # value is an exact implementation identity, not executable data.
+            context_refs += (f"implementationId:{observation.implementation_id}",)
+        if observation.journal_ref is not None:
+            context_refs += (f"journal:{observation.journal_ref}",)
+        approval_required = observation.approval_required
         payload = {
             "schemaVersion": "2.0.0",
             "eventId": event_id,
             "traceId": observation.trace_id,
             "taskId": observation.task_id,
-            "from": observation.agent_id or "atlas",
+            "from": observation.agent_id if observation.model_driven else "mission_control",
             "to": "mission_control",
-            "type": f"orchestration.node_{observation.status.value}",
+            "type": (
+                "orchestration.approval_required"
+                if approval_required
+                else f"orchestration.node_{observation.status.value}"
+            ),
             "sequence": observation.sequence,
             "timestamp": observation.timestamp,
             "summary": f"{node_id} {observation.status.value}",
-            "contextRefs": (),
+            "contextRefs": context_refs,
             "artifactRefs": (),
             "status": observation.status.value,
-            "requiresHumanApproval": False,
+            "requiresHumanApproval": approval_required,
             "payload": {
-                "payloadKind": "node_execution",
+                "payloadKind": "interrupt_request" if approval_required else "node_execution",
                 "digest": observation.payload_digest,
             },
             "orchestration": orchestration,

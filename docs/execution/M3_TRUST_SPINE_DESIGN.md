@@ -26,6 +26,14 @@ nothing in between re-enters planning. Recursion depth is fixed at `0`,
 side-effect concurrency is fixed at `1`, and the node list is a closed constant
 (`NODE_PLAN`) that a plan is not permitted to alter.
 
+The executable join is `agent_runtime.m3_integration.TrustSpineCoordinator`.
+It accepts exactly a `ReadyFrozenPlan`, constructed from an M2 snapshot whose
+phase is `COMPLETE`, status is `SUCCEEDED`, pending interrupt is absent, and
+immutable graph binding equals the full `FrozenPlan.plan_digest`. It rejects a
+generic `ResumeInput`, A2A `ContractDocument`, bare `FrozenPlan`, mapping, or
+duck-typed object. This is a local coordinator seam, not a deployed adapter,
+and it does not change or pass through the v1 compatibility wrapper.
+
 ## The fixed trace
 
 ```
@@ -75,23 +83,26 @@ the life of the run, which is what makes it safe to bind into every key below.
 
 ## The production boundary
 
-The production approval seals the run in **one durable checkpoint write**:
+The production approval seals the run in **one PostgreSQL transaction**:
 
 ```python
 checkpoint.advanced(phase=RunPhase.APPROVED_FOR_EXECUTION, seal_digest=..., ...)
 ```
 
-That single write simultaneously sets the phase, fixes `seal_digest` and copies
-the current model-call total into `model_calls_at_seal`. There is no
-intermediate "sealing" state that a crash could leave behind.
+`StateStore.commit_production_approval(expected_checkpoint, record,
+sealed_checkpoint)` must compare-and-swap the expected checkpoint, append the
+production decision, and install the sealed checkpoint atomically. That
+checkpoint simultaneously sets the phase, fixes `seal_digest` and copies the
+current model-call total into `model_calls_at_seal`. There is no intermediate
+"production decision exists but execution is unsealed" state.
 
 It is irreversible in three independent ways:
 
 1. `RunCheckpoint.advanced` refuses any backwards phase transition, refuses to
    re-seal to a different digest, and refuses any change to `model_calls` once
    sealed.
-2. `Journal.seal` re-reads the store first: a checkpoint already sealed to a
-   different bundle fails closed rather than being overwritten.
+2. `Journal.commit_production_approval` refuses conflicts and delegates the
+   decision plus seal to the store's atomic compare-and-swap transaction.
 3. `RunCheckpoint.__post_init__` pins `post_seal_model_calls` to
    `POST_PRODUCTION_MODEL_CALLS` (`0`) and requires
    `model_calls == model_calls_at_seal` whenever the checkpoint is sealed. A
@@ -108,8 +119,12 @@ effect nodes through it. That object has exactly five slots — `sealed`,
   satisfy it);
 * it holds no field named like a model adapter or provider;
 * it holds **no callable field at all**;
-* `assert_no_model_surface` walks the object and its members and refuses to let
-  it be constructed if any of the above is violated, including through nesting.
+* `assert_no_model_surface` performs a cycle-safe traversal of stored fields,
+  mappings and containers at arbitrary nesting depth, and checks private as
+  well as public class members. A bounded object-count ceiling fails closed;
+  callers cannot weaken the proof by passing a shallow depth. Ordinary class
+  methods on deterministic dispatcher, reader and signer ports remain valid,
+  while stored callables and private/nested model capabilities do not.
 
 The distinction matters. A counter would answer "how many model calls have
 happened?" with `0` and still leave a method that could make one. Here there is
@@ -150,6 +165,14 @@ any component changes the key; a truncated digest is refused with
 Approval keys bind the stage and the subject, which is what makes a simulation
 approval structurally unusable at the production boundary: replaying it
 produces the wrong key and fails with `APPROVAL_REPLAY`.
+
+The M2 graph applies the same rule before the handoff. Its snapshot contains a
+full immutable SHA-256 `binding_digest`; operation, checkpoint, interrupt and
+resume-receipt identities hash a domain tag plus tenant, run and that complete
+binding. Approval interrupts additionally bind their distinct subject. The
+hash encoding uses all 64 hexadecimal characters. A caller presenting the
+same run under a different binding gets `run_binding_mismatch`; values are
+never trimmed, case-folded, padded or prefix-compared.
 
 ## Intent before effect, and stable-key replay
 
@@ -214,6 +237,13 @@ The two boundaries are genuinely distinct:
 
 The runtime additionally refuses two approvals that share a digest, a key or a
 stage.
+
+On a sealed resume, authentication is not performed again and the
+`ApprovalAuthority` is not read. The runtime instead revalidates both immutable
+records: approved decision, shared recorded authority, tenant/run/source,
+stage, exact simulation and production subjects, predecessor positions,
+derived idempotency keys, and the approval digests embedded by the sealed
+bundle. Any mismatch fails closed before Flow can run.
 
 **There is no generic resume input.** `TrustSpineRuntime` has exactly one
 public method, `execute(plan)`. A pending approval raises `APPROVAL_MISSING`
@@ -296,6 +326,26 @@ Repaired payloads are stored per attempt (`a1`, `a2`, `a3`) so a later repair
 can never overwrite the payload an earlier attempt was journalled against, and
 the repair chain is re-walked identically on every replay.
 
+### Joining the M2 and M3 journals
+
+The two journals remain separate and keep their own local sequence and digest
+rules. They join only in the PostgreSQL event authority. In the intended
+adapter, one transaction assigns a monotonically increasing
+`postgres_sequence` to a reference containing journal name, local sequence and
+immutable record digest. Replay orders only by that database sequence, never
+by timestamps or BigQuery ingestion order.
+
+`PostgresJournalEvent`, `project_graph_event` and
+`project_trust_spine_record` are pure typed definitions of that seam. Given the
+same authoritative sequence and immutable record, they produce the same closed
+v2 A2A event. Deterministic components emit from `mission_control`; their exact
+`implementationId` is carried in the contract-defined `contextRefs` member
+because the closed A2A orchestration block has no implementation field. Router
+events use the full closed route object. Approval interrupts are `blocked`,
+set `requiresHumanApproval=true`, and use `interrupt_request` payload kind.
+BigQuery is a downstream consumer of these projections only. This repository
+does not claim that the PostgreSQL adapter is deployed.
+
 ## Failure posture
 
 Every failure is terminal and typed (`FailureCode`). There is no retry loop
@@ -314,6 +364,12 @@ cannot prove a property, it stops.
   every durable write of a single run's lifetime, and conflicting-replay
   fail-closed behaviour. Every port fake is idempotent on its key and counts
   real effects, so "zero duplicate effects" is asserted directly.
+* `tests/agent_runtime/test_m3_integration.py` — the READY/frozen coordinator
+  boundary, rejection of generic resume/A2A inputs, exact plan binding, and
+  deterministic contract-valid projection of both journals under PostgreSQL
+  authority.
+* `tests/agent_runtime/test_telemetry.py` — closed route projection,
+  deterministic component attribution and approval-required event semantics.
 
 All fakes are local, in-process and data-configured; none of them holds a
 callable, which is what lets the model-surface assertions run against the real

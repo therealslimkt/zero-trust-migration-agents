@@ -23,6 +23,9 @@ from agent_runtime.graph import (
 from agent_runtime.graph.kernel import CatalogCallbacks
 
 
+BINDING = "sha256:" + "b" * 64
+
+
 class Store:
     def __init__(self):
         self.value = None
@@ -85,7 +88,7 @@ def stop_after_validation(store, effects):
         run(
             CatalogGraphKernel(
                 store=store, callbacks=effects.callbacks(), after_commit=stop
-            ).run(tenant_id="tenant_AAA", run_id="run_CATALOG0001")
+            ).run(tenant_id="tenant_AAA", run_id="run_CATALOG0001", binding_digest=BINDING)
         )
     assert store.value.phase is GraphPhase.VALIDATED
     return CatalogGraphKernel(store=store, callbacks=effects.callbacks())
@@ -96,7 +99,7 @@ def test_catalog_probes_are_concurrent_then_joined_in_stable_graph_order():
     effects = Effects()
     state = run(
         CatalogGraphKernel(store=store, callbacks=effects.callbacks()).run(
-            tenant_id="tenant_AAA", run_id="run_CATALOG0001"
+            tenant_id="tenant_AAA", run_id="run_CATALOG0001", binding_digest=BINDING
         )
     )
     assert effects.peak == 3
@@ -163,7 +166,7 @@ def test_probe_failure_cancels_and_awaits_all_siblings_before_returning():
     async def exercise():
         with pytest.raises(RuntimeError, match="metadata_probe_failed"):
             await CatalogGraphKernel(store=store, callbacks=callbacks).run(
-                tenant_id="tenant_AAA", run_id="run_PROBEFAIL001"
+                tenant_id="tenant_AAA", run_id="run_PROBEFAIL001", binding_digest=BINDING
             )
         # If cancellation were fire-and-forget, this yield would expose either
         # a still-pending task or a late mutation after the kernel returned.
@@ -194,7 +197,7 @@ def test_kill_after_every_commit_fast_forwards_without_duplicate_effects(kill_af
         store=store, callbacks=effects.callbacks(), after_commit=kill_once
     )
     with pytest.raises(RuntimeError, match="simulated_process_death"):
-        run(first.run(tenant_id="tenant_AAA", run_id="run_CATALOG0001"))
+        run(first.run(tenant_id="tenant_AAA", run_id="run_CATALOG0001", binding_digest=BINDING))
 
     # New callbacks model a restarted process. Operation IDs remain stable and
     # are the adapter-level idempotency keys for work attempted before a crash.
@@ -202,7 +205,7 @@ def test_kill_after_every_commit_fast_forwards_without_duplicate_effects(kill_af
     final = run(
         CatalogGraphKernel(
             store=store, callbacks=restarted_effects.callbacks()
-        ).run(tenant_id="tenant_AAA", run_id="run_CATALOG0001")
+        ).run(tenant_id="tenant_AAA", run_id="run_CATALOG0001", binding_digest=BINDING)
     )
     assert final.phase is GraphPhase.ROUTED
     assert len(final.events) == 8
@@ -219,6 +222,7 @@ def test_unique_interrupts_and_idempotent_clarification_resume():
         kernel.request_interrupt(
             tenant_id="tenant_AAA",
             run_id="run_CATALOG0001",
+            binding_digest=BINDING,
             kind=InterruptKind.CLARIFICATION,
         )
     )
@@ -233,23 +237,30 @@ def test_unique_interrupts_and_idempotent_clarification_resume():
     )
     resumed = run(
         kernel.resume(
-            tenant_id="tenant_AAA", run_id="run_CATALOG0001", value=value
+            tenant_id="tenant_AAA", run_id="run_CATALOG0001",
+            binding_digest=BINDING, value=value
         )
     )
     repeated = run(
         kernel.resume(
-            tenant_id="tenant_AAA", run_id="run_CATALOG0001", value=value
+            tenant_id="tenant_AAA", run_id="run_CATALOG0001",
+            binding_digest=BINDING, value=value
         )
     )
     assert repeated == resumed
     assert repeated.phase is GraphPhase.VALIDATED
     assert repeated.pending_interrupt is None
     assert repeated.events[-1].event_type == "interrupt_resumed"
+    assert all(
+        key.startswith("rsm_") and len(key) == 68
+        for key in repeated.consumed_idempotency_keys
+    )
     with pytest.raises(GraphConflictError, match="idempotency_key_reused"):
         run(
             kernel.resume(
                 tenant_id="tenant_AAA",
                 run_id="run_CATALOG0001",
+                binding_digest=BINDING,
                 value=ResumeInput(
                     interrupt_id=value.interrupt_id,
                     checkpoint_id=value.checkpoint_id,
@@ -263,6 +274,7 @@ def test_unique_interrupts_and_idempotent_clarification_resume():
         kernel.request_interrupt(
             tenant_id="tenant_AAA",
             run_id="run_CATALOG0001",
+            binding_digest=BINDING,
             kind=InterruptKind.SIMULATION_APPROVAL,
             subject_digest="sha256:" + "a" * 64,
         )
@@ -278,14 +290,18 @@ def test_unique_interrupts_and_idempotent_clarification_resume():
     with pytest.raises(GraphConflictError, match="approval_not_resumable_via_input"):
         run(
             kernel.resume(
-                tenant_id="tenant_AAA", run_id="run_CATALOG0001", value=forged
+                tenant_id="tenant_AAA", run_id="run_CATALOG0001",
+            binding_digest=BINDING, value=forged
             )
         )
 
 
 def test_interrupt_ids_are_unique_across_kinds_and_three_repair_cycles():
+    state = GraphSnapshot(
+        tenant_id="tenant_AAA", run_id="run_CATALOG0001", binding_digest=BINDING
+    )
     generated = {
-        CatalogGraphKernel._interrupt_id("run_CATALOG0001", kind, ordinal)
+        CatalogGraphKernel._interrupt_id(state, kind, ordinal, None)
         for kind in InterruptKind
         for ordinal in range(1, 4)
     }
@@ -301,6 +317,7 @@ def test_mismatched_resume_makes_no_state_change():
         kernel.request_interrupt(
             tenant_id="tenant_AAA",
             run_id="run_CATALOG0001",
+            binding_digest=BINDING,
             kind=InterruptKind.CLARIFICATION,
         )
     )
@@ -310,9 +327,10 @@ def test_mismatched_resume_makes_no_state_change():
             kernel.resume(
                 tenant_id="tenant_AAA",
                 run_id="run_CATALOG0001",
+                binding_digest=BINDING,
                 value=ResumeInput(
                     interrupt_id=paused.pending_interrupt.interrupt_id,
-                    checkpoint_id="ckpt_wrong00000000",
+                    checkpoint_id="ckpt_" + "e" * 64,
                     idempotency_key="resume-key-0003",
                     text="answer",
                 ),
@@ -329,6 +347,7 @@ def test_resume_restores_exact_phase_then_skips_completed_work():
         kernel.request_interrupt(
             tenant_id="tenant_AAA",
             run_id="run_CATALOG0001",
+            binding_digest=BINDING,
             kind=InterruptKind.CLARIFICATION,
         )
     )
@@ -342,12 +361,19 @@ def test_resume_restores_exact_phase_then_skips_completed_work():
     )
     resumed = run(
         kernel.resume(
-            tenant_id="tenant_AAA", run_id="run_CATALOG0001", value=value
+            tenant_id="tenant_AAA", run_id="run_CATALOG0001",
+            binding_digest=BINDING, value=value
         )
     )
     assert resumed.phase is GraphPhase.VALIDATED
     assert resumed.pending_interrupt is None
-    final = run(kernel.run(tenant_id="tenant_AAA", run_id="run_CATALOG0001"))
+    final = run(
+        kernel.run(
+            tenant_id="tenant_AAA",
+            run_id="run_CATALOG0001",
+            binding_digest=BINDING,
+        )
+    )
     assert final.phase is GraphPhase.ROUTED
     assert [event.node_id for event in final.events].count("validate_intent") == 1
     assert len({event.operation_id for event in final.events}) == len(final.events)
@@ -363,7 +389,7 @@ def test_needs_input_routes_to_a_real_awaiting_input_pause():
         CatalogGraphKernel(
             store=store,
             callbacks=effects.callbacks(missing_input=True),
-        ).run(tenant_id="tenant_AAA", run_id="run_NEEDSINPUT01")
+        ).run(tenant_id="tenant_AAA", run_id="run_NEEDSINPUT01", binding_digest=BINDING)
     )
     assert state.catalog_route is CatalogRoute.NEEDS_INPUT
     assert state.phase is GraphPhase.PAUSED
@@ -388,13 +414,13 @@ def test_needs_input_route_and_pause_commit_atomically_across_crash():
         after_commit=die_after_pause,
     )
     with pytest.raises(RuntimeError, match="crash_after_atomic_pause"):
-        run(kernel.run(tenant_id="tenant_AAA", run_id="run_ATOMICPAUSE1"))
+        run(kernel.run(tenant_id="tenant_AAA", run_id="run_ATOMICPAUSE1", binding_digest=BINDING))
     before = store.value
     restarted = CatalogGraphKernel(
         store=store, callbacks=Effects().callbacks(missing_input=True)
     )
     after = run(
-        restarted.run(tenant_id="tenant_AAA", run_id="run_ATOMICPAUSE1")
+        restarted.run(tenant_id="tenant_AAA", run_id="run_ATOMICPAUSE1", binding_digest=BINDING)
     )
     assert after == before
     assert [event.event_type for event in after.events].count("route_selected") == 1
@@ -409,11 +435,12 @@ def test_corrupted_checkpoint_binding_cannot_resume():
         kernel.request_interrupt(
             tenant_id="tenant_AAA",
             run_id="run_CATALOG0001",
+            binding_digest=BINDING,
             kind=InterruptKind.CLARIFICATION,
         )
     )
     forged_interrupt = dataclasses.replace(
-        paused.pending_interrupt, checkpoint_id="ckpt_" + "f" * 32
+        paused.pending_interrupt, checkpoint_id="ckpt_" + "f" * 64
     )
     store.value = dataclasses.replace(paused, pending_interrupt=forged_interrupt)
     with pytest.raises(GraphConflictError, match="checkpoint_not_resumable"):
@@ -421,6 +448,7 @@ def test_corrupted_checkpoint_binding_cannot_resume():
             kernel.resume(
                 tenant_id="tenant_AAA",
                 run_id="run_CATALOG0001",
+                binding_digest=BINDING,
                 value=ResumeInput(
                     interrupt_id=forged_interrupt.interrupt_id,
                     checkpoint_id=forged_interrupt.checkpoint_id,
@@ -447,6 +475,7 @@ def test_terminal_states_cannot_be_interrupted_or_resurrected(phase, status):
     store.value = GraphSnapshot(
         tenant_id="tenant_AAA",
         run_id="run_TERMINAL001",
+        binding_digest=BINDING,
         phase=phase,
         status=status,
     )
@@ -456,6 +485,7 @@ def test_terminal_states_cannot_be_interrupted_or_resurrected(phase, status):
             kernel.request_interrupt(
                 tenant_id="tenant_AAA",
                 run_id="run_TERMINAL001",
+                binding_digest=BINDING,
                 kind=InterruptKind.CLARIFICATION,
             )
         )
@@ -464,8 +494,9 @@ def test_terminal_states_cannot_be_interrupted_or_resurrected(phase, status):
             kernel.resume(
                 tenant_id="tenant_AAA",
                 run_id="run_TERMINAL001",
+                binding_digest=BINDING,
                 value=ResumeInput(
-                    interrupt_id="int_terminal000001",
+                    interrupt_id="int_" + "e" * 64,
                     checkpoint_id=store.value.checkpoint_id,
                     idempotency_key="terminal-resume-key",
                     text="resurrect",
@@ -480,6 +511,7 @@ def test_plan_route_persists_three_repairs_then_fails_closed():
     store.value = GraphSnapshot(
         tenant_id="tenant_AAA",
         run_id="run_REPAIRS0001",
+        binding_digest=BINDING,
         phase=GraphPhase.PLANNING,
     )
     kernel = CatalogGraphKernel(store=store, callbacks=Effects().callbacks())
@@ -488,6 +520,7 @@ def test_plan_route_persists_three_repairs_then_fails_closed():
             kernel.apply_plan_route(
                 tenant_id="tenant_AAA",
                 run_id="run_REPAIRS0001",
+                binding_digest=BINDING,
                 value=PlanRouteInput(needs_research=True),
             )
         )
@@ -497,6 +530,7 @@ def test_plan_route_persists_three_repairs_then_fails_closed():
         kernel.apply_plan_route(
             tenant_id="tenant_AAA",
             run_id="run_REPAIRS0001",
+            binding_digest=BINDING,
             value=PlanRouteInput(needs_research=True),
         )
     )
@@ -509,6 +543,7 @@ def test_plan_route_persists_three_repairs_then_fails_closed():
             kernel.apply_plan_route(
                 tenant_id="tenant_AAA",
                 run_id="run_REPAIRS0001",
+                binding_digest=BINDING,
                 value=PlanRouteInput(ready=True),
             )
         )
@@ -519,6 +554,7 @@ def test_plan_needs_input_pauses_and_resumes_the_planning_phase():
     store.value = GraphSnapshot(
         tenant_id="tenant_AAA",
         run_id="run_PLANINPUT001",
+        binding_digest=BINDING,
         phase=GraphPhase.PLANNING,
     )
     kernel = CatalogGraphKernel(store=store, callbacks=Effects().callbacks())
@@ -526,6 +562,7 @@ def test_plan_needs_input_pauses_and_resumes_the_planning_phase():
         kernel.apply_plan_route(
             tenant_id="tenant_AAA",
             run_id="run_PLANINPUT001",
+            binding_digest=BINDING,
             value=PlanRouteInput(needs_input=True),
         )
     )
@@ -535,6 +572,7 @@ def test_plan_needs_input_pauses_and_resumes_the_planning_phase():
         kernel.resume(
             tenant_id="tenant_AAA",
             run_id="run_PLANINPUT001",
+            binding_digest=BINDING,
             value=ResumeInput(
                 interrupt_id=paused.pending_interrupt.interrupt_id,
                 checkpoint_id=paused.pending_interrupt.checkpoint_id,
@@ -550,7 +588,7 @@ def test_plan_needs_input_pauses_and_resumes_the_planning_phase():
 def test_plan_route_rejects_non_planning_snapshots():
     store = Store()
     store.value = GraphSnapshot(
-        tenant_id="tenant_AAA", run_id="run_NOTPLANNING1"
+        tenant_id="tenant_AAA", run_id="run_NOTPLANNING1", binding_digest=BINDING
     )
     kernel = CatalogGraphKernel(store=store, callbacks=Effects().callbacks())
     with pytest.raises(GraphConflictError, match="plan_phase"):
@@ -558,6 +596,7 @@ def test_plan_route_rejects_non_planning_snapshots():
             kernel.apply_plan_route(
                 tenant_id="tenant_AAA",
                 run_id="run_NOTPLANNING1",
+                binding_digest=BINDING,
                 value=PlanRouteInput(ready=True),
             )
         )
@@ -567,21 +606,32 @@ def test_checkpoint_ids_bind_full_run_tenant_and_unbounded_revision():
     left = GraphSnapshot(
         tenant_id="tenant_AAA",
         run_id="run_LEFTsame_suffix",
+        binding_digest=BINDING,
         revision=10**30,
     )
     right = GraphSnapshot(
         tenant_id="tenant_AAA",
         run_id="run_RIGHTsame_suffix",
+        binding_digest=BINDING,
         revision=10**30,
     )
     other_tenant = GraphSnapshot(
         tenant_id="tenant_BBB",
         run_id=left.run_id,
+        binding_digest=BINDING,
         revision=left.revision,
     )
-    assert len({left.checkpoint_id, right.checkpoint_id, other_tenant.checkpoint_id}) == 3
+    other_subject = dataclasses.replace(left, binding_digest="sha256:" + "c" * 64)
+    assert len(
+        {
+            left.checkpoint_id,
+            right.checkpoint_id,
+            other_tenant.checkpoint_id,
+            other_subject.checkpoint_id,
+        }
+    ) == 4
     assert all(
-        value.startswith("ckpt_") and len(value) == 37
+        value.startswith("ckpt_") and len(value) == 69
         for value in (
             left.checkpoint_id,
             right.checkpoint_id,
@@ -590,16 +640,58 @@ def test_checkpoint_ids_bind_full_run_tenant_and_unbounded_revision():
     )
 
 
+def test_operation_and_interrupt_identities_bind_tenant_run_and_full_subject():
+    base = GraphSnapshot(
+        tenant_id="tenant_AAA", run_id="run_IDBINDING001", binding_digest=BINDING
+    )
+    variants = (
+        base,
+        dataclasses.replace(base, tenant_id="tenant_BBB"),
+        dataclasses.replace(base, run_id="run_IDBINDING002"),
+        dataclasses.replace(base, binding_digest="sha256:" + "c" * 64),
+    )
+    operations = {
+        CatalogGraphKernel._operation(state, "validate_intent") for state in variants
+    }
+    interrupts = {
+        CatalogGraphKernel._interrupt_id(
+            state, InterruptKind.PRODUCTION_APPROVAL, 1, "sha256:" + "d" * 64
+        )
+        for state in variants
+    }
+    assert len(operations) == len(variants)
+    assert len(interrupts) == len(variants)
+    assert all(len(value) == 67 for value in operations)
+    assert all(len(value) == 68 for value in interrupts)
+
+
+def test_incompatible_binding_is_rejected_without_state_change():
+    store = Store()
+    kernel = stop_after_validation(store, Effects())
+    before = store.value
+    with pytest.raises(GraphConflictError, match="run_binding_mismatch"):
+        run(
+            kernel.request_interrupt(
+                tenant_id="tenant_AAA",
+                run_id="run_CATALOG0001",
+                binding_digest="sha256:" + "f" * 64,
+                kind=InterruptKind.CLARIFICATION,
+            )
+        )
+    assert store.value == before
+
+
 def test_model_call_accounting_records_each_observed_invocation_once():
     store = Store()
     store.value = GraphSnapshot(
-        tenant_id="tenant_AAA", run_id="run_MODELCALL001"
+        tenant_id="tenant_AAA", run_id="run_MODELCALL001", binding_digest=BINDING
     )
     kernel = CatalogGraphKernel(store=store, callbacks=Effects().callbacks())
     first = run(
         kernel.record_model_call(
             tenant_id="tenant_AAA",
             run_id="run_MODELCALL001",
+            binding_digest=BINDING,
             agent_id="scout",
             invocation_id="inv_MODELBOUNDARY001",
         )
@@ -608,6 +700,7 @@ def test_model_call_accounting_records_each_observed_invocation_once():
         kernel.record_model_call(
             tenant_id="tenant_AAA",
             run_id="run_MODELCALL001",
+            binding_digest=BINDING,
             agent_id="scout",
             invocation_id="inv_MODELBOUNDARY001",
         )
@@ -616,6 +709,7 @@ def test_model_call_accounting_records_each_observed_invocation_once():
         kernel.record_model_call(
             tenant_id="tenant_AAA",
             run_id="run_MODELCALL001",
+            binding_digest=BINDING,
             agent_id="prisma",
             invocation_id="inv_MODELBOUNDARY002",
         )
@@ -629,6 +723,7 @@ def test_model_call_accounting_records_each_observed_invocation_once():
             kernel.record_model_call(
                 tenant_id="tenant_AAA",
                 run_id="run_MODELCALL001",
+                binding_digest=BINDING,
                 agent_id="catalog_metadata",
                 invocation_id="inv_FAKEBOUNDARY0001",
             )
@@ -642,7 +737,7 @@ def test_event_model_call_counts_are_closed_to_observed_call_events():
             sequence=1,
             event_type="node_succeeded",
             node_id="catalog_metadata",
-            operation_id="op_deterministic0001",
+            operation_id="op_" + "a" * 64,
             model_calls=1,
         )
     with pytest.raises(GraphInvariantError, match="event_model_call_count"):
@@ -650,6 +745,6 @@ def test_event_model_call_counts_are_closed_to_observed_call_events():
             sequence=1,
             event_type="model_call_observed",
             node_id="scout",
-            operation_id="inv_MODELBOUNDARY003",
+            operation_id="op_" + "b" * 64,
             model_calls=0,
         )
