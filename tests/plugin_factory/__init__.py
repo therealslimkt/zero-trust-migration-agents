@@ -1,0 +1,1 @@
+"""Plugin factory tests."""

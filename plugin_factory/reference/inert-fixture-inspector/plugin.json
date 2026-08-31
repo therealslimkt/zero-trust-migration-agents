@@ -1,0 +1,7 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "inert-fixture-inspector",
+  "version": "1.0.0",
+  "description": "Read-only guidance for inspecting synthetic migration fixture evidence.",
+  "keywords": ["fixtures", "migration", "verification"]
+}
