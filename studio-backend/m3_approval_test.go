@@ -33,7 +33,7 @@ type m3TestAuth struct {
 	err       error
 }
 
-func (a m3TestAuth) AuthenticateM3Approval(*http.Request) (M3Principal, error) {
+func (a m3TestAuth) AuthenticateM3Approval(*http.Request, M3ApprovalStage) (M3Principal, error) {
 	return a.principal, a.err
 }
 
@@ -49,7 +49,7 @@ func (a *m3TestAuthority) ReadM3ApprovalAuthority(context.Context, M3Principal, 
 func m3SimulationPending(t *testing.T) M3PendingApproval {
 	t.Helper()
 	p, err := M3NewPendingApproval(M3IssuePendingInput{
-		RequestID: "req_simulation", TenantID: "tenant_alpha", RunID: "run_alpha", Stage: M3SimulationStage,
+		RequestID: "req_simulation", TenantID: "tnt_testtenant01", RunID: "run_testrun000001", Stage: M3SimulationStage,
 		PlanDigest: m3TestPlan, ReleaseDigest: m3TestRelease, ArtifactDigest: m3TestArtifact,
 		CheckpointID: "ckpt_simulation", Nonce: m3TestSimulationNonce,
 		IssuedAt: m3TestNow.Add(-time.Minute), ExpiresAt: m3TestNow.Add(5 * time.Minute),
@@ -75,7 +75,7 @@ func m3Harness(t *testing.T, pending M3PendingApproval, view M3AuthorityView, no
 		t.Fatal(err)
 	}
 	authority := &m3TestAuthority{view: view}
-	service, err := NewM3ApprovalService(m3TestAuth{principal: M3Principal{ActorID: "actor_alice", Authenticated: true}}, authority, repo, m3TestClock{now})
+	service, err := NewM3ApprovalService(m3TestAuth{principal: M3Principal{ActorID: "actor_alice", Role: M3ApprovalAdmin, Authenticated: true}}, authority, repo, m3TestClock{now})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,8 +166,8 @@ func TestM3AuthorityAndDatabaseDisagreementsDoNotMutate(t *testing.T) {
 	tests := map[string]func(*M3AuthorityView){
 		"stale plan":         func(v *M3AuthorityView) { v.PlanDigest = "sha256:" + strings.Repeat("4", 64) },
 		"release mismatch":   func(v *M3AuthorityView) { v.ReleaseDigest = "sha256:" + strings.Repeat("5", 64) },
-		"cross tenant":       func(v *M3AuthorityView) { v.TenantID = "tenant_other" },
-		"cross run":          func(v *M3AuthorityView) { v.RunID = "run_other" },
+		"cross tenant":       func(v *M3AuthorityView) { v.TenantID = "tnt_other000001" },
+		"cross run":          func(v *M3AuthorityView) { v.RunID = "run_other0000001" },
 		"wrong kind":         func(v *M3AuthorityView) { v.Stage = M3ProductionStage },
 		"wrong interrupt":    func(v *M3AuthorityView) { v.InterruptID = "int_forged" },
 		"wrong checkpoint":   func(v *M3AuthorityView) { v.CheckpointID = "ckpt_other" },
@@ -204,7 +204,7 @@ func TestM3TimeBoundariesAndNonceReplay(t *testing.T) {
 		"expiry boundary": {m3TestNow.Add(-time.Minute), m3TestNow, false},
 	} {
 		t.Run(name, func(t *testing.T) {
-			p, err := M3NewPendingApproval(M3IssuePendingInput{RequestID: "req_simulation", TenantID: "tenant_alpha", RunID: "run_alpha", Stage: M3SimulationStage,
+			p, err := M3NewPendingApproval(M3IssuePendingInput{RequestID: "req_simulation", TenantID: "tnt_testtenant01", RunID: "run_testrun000001", Stage: M3SimulationStage,
 				PlanDigest: m3TestPlan, ReleaseDigest: m3TestRelease, ArtifactDigest: m3TestArtifact, CheckpointID: "ckpt_simulation", Nonce: m3TestSimulationNonce,
 				IssuedAt: tc.issued, ExpiresAt: tc.expires, Audience: "release_operators", RequiredApprovers: 2})
 			if err != nil {
@@ -251,6 +251,27 @@ func TestM3KindSwapWrongNonceAndUnauthenticatedFail(t *testing.T) {
 	}
 }
 
+func TestM3WrongStageRoleFailsWithoutMutation(t *testing.T) {
+	p := m3SimulationPending(t)
+	repo := NewM3MemoryApprovalRepository()
+	if err := repo.IssueM3Pending(p); err != nil {
+		t.Fatal(err)
+	}
+	authority := &m3TestAuthority{view: m3AuthorityFor(p)}
+	service, err := NewM3ApprovalService(
+		m3TestAuth{principal: M3Principal{ActorID: "actor_alice", Role: M3ProductionApprover, Authenticated: true}},
+		authority, repo, m3TestClock{m3TestNow},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := repo.M3MutationCount()
+	response := m3Request(service.SimulationHandler(), m3SimulationJSON(m3TestSimulationNonce, "approve_simulation"))
+	if response.Code != http.StatusForbidden || repo.M3MutationCount() != before {
+		t.Fatalf("status=%d mutations=%d/%d", response.Code, repo.M3MutationCount(), before)
+	}
+}
+
 func TestM3ClosedJSONRejectsForgedResumeA2AActorAndTrailingData(t *testing.T) {
 	p := m3SimulationPending(t)
 	repo, _, service := m3Harness(t, p, m3AuthorityFor(p), m3TestNow)
@@ -258,7 +279,7 @@ func TestM3ClosedJSONRejectsForgedResumeA2AActorAndTrailingData(t *testing.T) {
 	bodies := []string{
 		`{"requestId":"req_simulation","nonce":"` + m3TestSimulationNonce + `","decision":"approve_simulation","actorId":"actor_admin"}`,
 		`{"requestId":"req_simulation","nonce":"` + m3TestSimulationNonce + `","decision":"approve_simulation","authenticated":true}`,
-		`{"requestId":"req_simulation","nonce":"` + m3TestSimulationNonce + `","decision":"approve_simulation","tenantId":"tenant_alpha"}`,
+		`{"requestId":"req_simulation","nonce":"` + m3TestSimulationNonce + `","decision":"approve_simulation","tenantId":"tnt_testtenant01"}`,
 		`{"requestId":"req_simulation","nonce":"` + m3TestSimulationNonce + `","decision":"approve_simulation","resume":"approved"}`,
 		`{"requestId":"req_simulation","nonce":"` + m3TestSimulationNonce + `","decision":"approve_simulation","a2a":{"approved":true}}`,
 		m3SimulationJSON(m3TestSimulationNonce, "approve_simulation") + `{}`,
@@ -332,8 +353,8 @@ func TestM3ForgedDigestInterruptAndProductionBindingCannotIssue(t *testing.T) {
 	if repo.IssueM3Pending(production) == nil {
 		t.Fatal("production issued without simulation")
 	}
-	reused, err := M3NewPendingApproval(M3IssuePendingInput{RequestID: "req_other", TenantID: "tenant_other", RunID: "run_other", Stage: M3SimulationStage,
-		PlanDigest: m3TestPlan, ReleaseDigest: m3TestRelease, ArtifactDigest: m3TestArtifact, CheckpointID: "ckpt_other", Nonce: m3TestSimulationNonce,
+	reused, err := M3NewPendingApproval(M3IssuePendingInput{RequestID: "req_OTHER000001", TenantID: "tnt_other000001", RunID: "run_other0000001", Stage: M3SimulationStage,
+		PlanDigest: m3TestPlan, ReleaseDigest: m3TestRelease, ArtifactDigest: m3TestArtifact, CheckpointID: "ckpt_OTHER000001", Nonce: m3TestSimulationNonce,
 		IssuedAt: m3TestNow, ExpiresAt: m3TestNow.Add(time.Minute), Audience: "release_operators", RequiredApprovers: 2})
 	if err != nil {
 		t.Fatal(err)

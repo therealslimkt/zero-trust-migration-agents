@@ -1,8 +1,9 @@
 package main
 
-// Milestone 3 approval boundary. Cloud SQL/PostgreSQL is the production
-// transactional authority. The memory repository is only a local/test
-// reference; BigQuery is downstream analytics and is never read here.
+// Milestone 3 approval boundary. Cloud SQL/PostgreSQL is the intended
+// production transactional authority, but its staged persistence adapter is
+// not wired by this file. The memory repository is only a local/test reference;
+// BigQuery is downstream analytics and is never read here.
 
 import (
 	"context"
@@ -38,6 +39,20 @@ const (
 	M3Reject  M3ApprovalDecision = "reject"
 )
 
+type M3ApprovalRole string
+
+const (
+	M3SimulationApprover M3ApprovalRole = "simulation_approver"
+	M3ProductionApprover M3ApprovalRole = "production_approver"
+	M3ApprovalAdmin      M3ApprovalRole = "approval_admin"
+)
+
+func m3RolePermits(role M3ApprovalRole, stage M3ApprovalStage) bool {
+	return role == M3ApprovalAdmin ||
+		(role == M3SimulationApprover && stage == M3SimulationStage) ||
+		(role == M3ProductionApprover && stage == M3ProductionStage)
+}
+
 type M3Clock interface{ Now() time.Time }
 
 type m3SystemClock struct{}
@@ -48,11 +63,12 @@ func (m3SystemClock) Now() time.Time { return time.Now().UTC() }
 // field can select the actor.
 type M3Principal struct {
 	ActorID       string
+	Role          M3ApprovalRole
 	Authenticated bool
 }
 
 type M3Authenticator interface {
-	AuthenticateM3Approval(*http.Request) (M3Principal, error)
+	AuthenticateM3Approval(*http.Request, M3ApprovalStage) (M3Principal, error)
 }
 
 // M3AuthorityView is the result of a server-side authority/transactional-state
@@ -130,10 +146,17 @@ type M3ApprovalRepository interface {
 }
 
 var (
-	m3IDPattern     = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_.:-]{2,127}$`)
-	m3DigestPattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
-	m3NoncePattern  = regexp.MustCompile(`^[A-Za-z0-9_-]{24,256}$`)
-	errM3Rejected   = errors.New("approval rejected")
+	// m3IDPattern remains for the currently joined persistence implementation's
+	// non-tenant/run identifiers. Approval bindings below use dedicated types.
+	m3IDPattern         = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_.:-]{2,127}$`)
+	m3RequestIDPattern  = regexp.MustCompile(`^req_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`)
+	m3ActorIDPattern    = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_.:-]{2,127}$`)
+	m3InterruptPattern  = regexp.MustCompile(`^int_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`)
+	m3CheckpointPattern = regexp.MustCompile(`^ckpt_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`)
+	m3AudiencePattern   = regexp.MustCompile(`^[a-z][a-z0-9_.-]{2,63}$`)
+	m3DigestPattern     = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
+	m3NoncePattern      = regexp.MustCompile(`^[A-Za-z0-9_-]{24,256}$`)
+	errM3Rejected       = errors.New("approval rejected")
 )
 
 func m3CanonicalDigest(domain string, fields ...string) string {
@@ -212,9 +235,9 @@ func M3NewPendingApproval(in M3IssuePendingInput) (M3PendingApproval, error) {
 }
 
 func m3ValidPending(p M3PendingApproval) bool {
-	if !m3IDPattern.MatchString(p.RequestID) || !m3IDPattern.MatchString(p.TenantID) ||
-		!m3IDPattern.MatchString(p.RunID) || !m3IDPattern.MatchString(p.InterruptID) ||
-		!m3IDPattern.MatchString(p.CheckpointID) || !m3IDPattern.MatchString(p.Audience) ||
+	if !m3RequestIDPattern.MatchString(p.RequestID) || !m3TenantRE.MatchString(p.TenantID) ||
+		!m3RunRE.MatchString(p.RunID) || !m3InterruptPattern.MatchString(p.InterruptID) ||
+		!m3CheckpointPattern.MatchString(p.CheckpointID) || !m3AudiencePattern.MatchString(p.Audience) ||
 		!m3DigestPattern.MatchString(p.PlanDigest) || !m3DigestPattern.MatchString(p.ReleaseDigest) ||
 		!m3DigestPattern.MatchString(p.ArtifactDigest) || !m3DigestPattern.MatchString(p.NonceDigest) ||
 		p.RequiredApprovers < 1 || !p.IssuedAt.Before(p.ExpiresAt) {
@@ -265,6 +288,7 @@ func m3EvaluateAdversarial(e m3Evaluation) bool {
 		}
 		checks := []bool{
 			e.principal.Authenticated, e.authority.Authorized,
+			m3RolePermits(e.principal.Role, e.pending.Stage),
 			e.authority.Stage == e.pending.Stage,
 			m3Equal(e.authority.TenantID, e.pending.TenantID), m3Equal(e.authority.RunID, e.pending.RunID),
 			m3Equal(e.authority.PlanDigest, e.pending.PlanDigest), m3Equal(e.authority.ReleaseDigest, e.pending.ReleaseDigest),
@@ -390,6 +414,14 @@ type M3ApprovalService struct {
 	Clock      M3Clock
 }
 
+type m3ApprovalContextKey uint8
+
+const m3ExpectedRunKey m3ApprovalContextKey = 1
+
+func m3WithExpectedApprovalRun(r *http.Request, runID string) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), m3ExpectedRunKey, runID))
+}
+
 func NewM3ApprovalService(auth M3Authenticator, authority M3ApprovalAuthority, repository M3ApprovalRepository, clock M3Clock) (*M3ApprovalService, error) {
 	if auth == nil || authority == nil || repository == nil || clock == nil {
 		return nil, errors.New("m3 approval dependencies required")
@@ -458,17 +490,21 @@ func m3StageDecision(stage M3ApprovalStage, raw string) (M3ApprovalDecision, boo
 }
 
 func (s *M3ApprovalService) m3Handle(w http.ResponseWriter, r *http.Request, requestID, nonce string, stage M3ApprovalStage, decision M3ApprovalDecision) {
-	if !m3IDPattern.MatchString(requestID) || !m3NoncePattern.MatchString(nonce) {
+	if !m3RequestIDPattern.MatchString(requestID) || !m3NoncePattern.MatchString(nonce) {
 		m3WriteRejection(w, http.StatusForbidden)
 		return
 	}
-	principal, err := s.Auth.AuthenticateM3Approval(r)
-	if err != nil || !principal.Authenticated || !m3IDPattern.MatchString(principal.ActorID) {
+	principal, err := s.Auth.AuthenticateM3Approval(r, stage)
+	if err != nil || !principal.Authenticated || !m3ActorIDPattern.MatchString(principal.ActorID) || !m3RolePermits(principal.Role, stage) {
 		m3WriteRejection(w, http.StatusForbidden)
 		return
 	}
 	pending, ok := s.Repository.LoadM3Pending(r.Context(), requestID)
 	if !ok || pending.Stage != stage {
+		m3WriteRejection(w, http.StatusForbidden)
+		return
+	}
+	if expectedRun, mounted := r.Context().Value(m3ExpectedRunKey).(string); mounted && !m3Equal(expectedRun, pending.RunID) {
 		m3WriteRejection(w, http.StatusForbidden)
 		return
 	}
