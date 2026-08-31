@@ -37,10 +37,14 @@ Generated code is never evaluated. See [ARCHITECTURE.md](ARCHITECTURE.md) and
 
 ## For judges — start here
 
-**There is no hosted judge URL.** Keraun runs in *your* Google Cloud project by design: the
-whole premise is that legacy source data never leaves the owner's perimeter, so we do not
-host a multi-tenant instance holding anyone's source access. No login is required for the
-path below — it runs entirely on your machine plus your own Vertex AI project.
+**Hosted UI:** <https://keraun-mission-control-322558310296.us-central1.run.app> — served
+from Cloud Run in project `ztm-agent-9049c3`, no login required.
+
+That deployment is deliberately **static and inert**: it holds no credentials, has no source
+access, and cannot launch a billable action. The `/factory` **Run evidence** control needs the
+loopback-only local agent, so live execution happens on *your* machine against *your* Vertex
+project — which is the whole premise, since legacy source data must never leave the owner's
+perimeter. Use the three steps below for the live path.
 
 Everything in these three steps was executed and captured on 2026-08-31; see
 [`docs/evidence/`](docs/evidence/).
@@ -124,7 +128,9 @@ Expected output: `KERAUN_VERTEX_OK`.
 | Three cartridges detect their signature defect in sealed sandboxes | **proven** — [evidence](docs/evidence/THREE_CARTRIDGE_EVIDENCE.md) |
 | gVisor-isolated private source host on Compute Engine, no external IP | **deployed** — `keraun-cartridge-lab` |
 | ADK 2 collaborative / dynamic / graph orchestration | **implemented and unit-tested**; not yet exercised end-to-end in one cloud run |
-| Dataflow job, migration writes to BigQuery, portable plugin download | **not executed** — do not treat as complete |
+| Clustered binary export decoded and loaded into BigQuery | **proven** — [evidence](docs/evidence/CLUSTERED_BINARY_TO_BIGQUERY.md) |
+| Hosted UI on Cloud Run | **deployed** — static/inert by design |
+| Dataflow job and portable plugin download | **not executed** — do not treat as complete |
 
 We would rather show you a smaller proven surface than a larger claimed one.
 

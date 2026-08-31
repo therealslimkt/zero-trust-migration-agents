@@ -41,3 +41,22 @@ Region: `us-central1`
 - The M6 Cloud SQL canary is continuously billable. Deletion protection must be
   disabled by an approved owner action before deletion; retain the CMEK until
   the instance and retained backups are gone.
+
+## keraun-mission-control (Cloud Run) — added 2026-08-31T22:42:55Z
+
+| Field | Value |
+| --- | --- |
+| Service | `keraun-mission-control` |
+| Region | `us-central1` |
+| Project | `ztm-agent-9049c3` |
+| URL | <https://keraun-mission-control-322558310296.us-central1.run.app> |
+| Revision | `keraun-mission-control-00001-r7s` |
+| Access | public, unauthenticated (read-only static UI) |
+| Limits | `--max-instances=2`, 256Mi |
+| Purpose | hosted judge experience for the All Things Agentic submission |
+| Console | https://console.cloud.google.com/run/detail/us-central1/keraun-mission-control/metrics?project=ztm-agent-9049c3 |
+
+Serves the built `studio/dist` bundle from nginx. It is a **static** deployment: it holds
+no credentials, has no source access, and cannot launch a billable action. The `/factory`
+"Run evidence" control requires the loopback-only local agent and is therefore inert here —
+run it locally per the README to see live execution.
