@@ -79,9 +79,17 @@ export function LandingPage({
           </section>
 
           <section className="landing-pipeline" aria-labelledby="capability-heading">
-            <div className="section-head"><div><span className="section-head__eyebrow">CONTROL SURFACE</span><h2 id="capability-heading" className="section-head__title">Configured data speaks; absent data stays absent.</h2></div></div>
+            <div className="landing-control__heading">
+              <span className="landing-control__eyebrow"><PixelIcon name="sparkle" size="xs" color="google-yellow" />CONTROL SURFACE</span>
+              <h2 id="capability-heading">Evidence appears when the system can prove it.</h2>
+              <p>Configured data speaks; absent data stays absent. That keeps the canvas useful without pretending a migration is in flight.</p>
+            </div>
             <div className="landing-tech-grid">
-              {capabilityCards.map((card, index) => <motion.article key={card.title} className="landing-tech-card" initial={reducedMotion ? false : { opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: reducedMotion ? 0 : index * 0.06 }}><PixelIcon name={card.icon} size="md" color={card.color} glow /><span className="landing-tech-card__role">{card.title}</span><p>{card.text}</p></motion.article>)}
+              {capabilityCards.map((card, index) => <motion.article key={card.title} className="landing-tech-card" initial={reducedMotion ? false : { opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: reducedMotion ? 0 : index * 0.06 }}>
+                <div className="landing-tech-card__top"><span className="landing-tech-card__icon"><PixelIcon name={card.icon} size="md" color={card.color} glow /></span><span className="landing-tech-card__index">0{index + 1}</span></div>
+                <h3>{card.title}</h3>
+                <p>{card.text}</p>
+              </motion.article>)}
             </div>
           </section>
 
