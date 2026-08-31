@@ -43,8 +43,8 @@ deployment metadata only: `jt400.jar`/`db2jcc4.jar`, `mssql-jdbc.jar`, and
   on an internal Docker network.
 - The `evidence-runner` is the only parser/certifier process. It uses
   `runtime: runsc` (gVisor), an unprivileged UID, read-only root, no Linux
-  capabilities, `no-new-privileges`, an explicit small tmpfs, 256 MiB memory,
-  half a CPU, and a 64-process ceiling. It has no Docker socket or bind mounts.
+  capabilities, `no-new-privileges`, a dedicated tmpfs, 256 MiB memory, half
+  a CPU, and a 64-process ceiling. It has no Docker socket or bind mounts.
 - The runner reads only through the `cartridge_reader` role, emits counts of
   seeded failure cases, and never emits raw fixture rows.
 

@@ -73,7 +73,7 @@ services:
     depends_on: [jde-e1-ibmi, dynamics-ax, oracle-ebs-19c]
     networks: [cartridge-internal]
     read_only: true
-    tmpfs: ["/tmp:rw,noexec,nosuid,size=16m"]
+    tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
     pids_limit: 64

@@ -1,0 +1,6 @@
+# Local preflight override only. Production uses `runtime: runsc` on the
+# private VM; this lets Docker Desktop validate the same runner behavior when
+# it does not have gVisor installed.
+services:
+  evidence-runner:
+    runtime: runc
