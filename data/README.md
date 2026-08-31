@@ -20,3 +20,17 @@ The private live host is built from these images by the bounded cartridge
 provisioner. Its source databases have no host-published ports; the only
 cross-container reader is the gVisor `runsc` evidence runner. Never mount
 `/var/run/docker.sock` in a cartridge or runner container.
+
+## Full local evidence pass
+
+With Docker Desktop running, execute this one command from the repository root:
+
+```bash
+./scripts/run_local_cartridge_evidence.sh
+```
+
+It builds only the project-owned synthetic images, starts an isolated temporary
+Compose project, prints the sanitized three-cartridge evidence JSON, and then
+removes that temporary project's containers, network, and volumes. It uses the
+explicit `compose.local.yaml` `runc` override because Docker Desktop does not
+provide the production VM's `runsc` gVisor runtime.
