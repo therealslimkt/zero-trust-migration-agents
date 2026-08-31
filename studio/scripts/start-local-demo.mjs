@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { mkdtemp, readFile } from 'node:fs/promises'
+import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -47,12 +48,29 @@ export async function prepareLocalDemoState(stateArgument, environment = process
   }
 }
 
+/** Select a currently unused loopback port for the disposable local backend. */
+export async function findLoopbackPort() {
+  const server = createServer()
+  await new Promise((resolvePromise, reject) => {
+    server.once('error', reject)
+    server.listen({ host: '127.0.0.1', port: 0 }, resolvePromise)
+  })
+  const address = server.address()
+  await new Promise((resolvePromise, reject) => server.close((error) => error ? reject(error) : resolvePromise()))
+  if (!address || typeof address === 'string' || !Number.isInteger(address.port) || address.port < 1) {
+    throw new Error('Local demo could not reserve a loopback backend port')
+  }
+  return String(address.port)
+}
+
 export async function main(argv = process.argv, processEnvironment = process.env) {
   let prepared
   let port
+  let backendPort
   try {
     prepared = await prepareLocalDemoState(option('--state', argv), processEnvironment)
     port = option('--port', argv) || '5173'
+    backendPort = processEnvironment.MISSION_CONTROL_LOCAL_DEMO_PORT?.trim() || await findLoopbackPort()
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error))
     process.exitCode = 2
@@ -71,12 +89,15 @@ export async function main(argv = process.argv, processEnvironment = process.env
     MISSION_CONTROL_API_TOKEN: apiToken,
     MISSION_CONTROL_WEB_STATE_PATH: webStatePath,
     MISSION_CONTROL_LOCAL_DEMO: 'true',
+    MISSION_CONTROL_LOCAL_DEMO_PORT: backendPort,
     MISSION_CONTROL_LOCAL_DEMO_RUN_IDS: runIds.join(','),
+    MISSION_CONTROL_PROXY_TARGET: `http://127.0.0.1:${backendPort}`,
     VITE_LOCAL_DEMO: 'true',
   }
   delete environment.MISSION_CONTROL_FIREBASE_PROJECT_ID
 
   console.log(`Local demo state: ${statePath}${temporary ? ' (temporary)' : ''}`)
+  console.log(`Local demo backend: http://127.0.0.1:${backendPort}`)
   console.log(`Local demo: ${runIds.length} existing durable run${runIds.length === 1 ? '' : 's'}`)
   console.log(`Local demo UI: http://127.0.0.1:${port}`)
 

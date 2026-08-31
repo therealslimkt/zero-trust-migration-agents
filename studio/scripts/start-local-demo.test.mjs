@@ -4,7 +4,12 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
 
-import { prepareLocalDemoState } from './start-local-demo.mjs'
+import { findLoopbackPort, prepareLocalDemoState } from './start-local-demo.mjs'
+
+test('the default backend port is loopback-allocated rather than hard-coded', async () => {
+  const port = await findLoopbackPort()
+  assert.match(port, /^[1-9][0-9]{1,4}$/)
+})
 
 test('no configured state allocates a fresh temporary control-plane path', async (t) => {
   const prepared = await prepareLocalDemoState(undefined, {})

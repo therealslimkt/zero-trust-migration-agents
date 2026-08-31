@@ -88,6 +88,15 @@ func TestConfiguredListenAddressHonorsCloudRunPortAndLoopbackDemo(t *testing.T) 
 	if err != nil || address != "127.0.0.1:8080" {
 		t.Fatalf("local demo address = %q, %v", address, err)
 	}
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO_PORT", "5183")
+	address, err = configuredListenAddress()
+	if err != nil || address != "127.0.0.1:5183" {
+		t.Fatalf("configured local demo address = %q, %v", address, err)
+	}
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO_PORT", "not-a-port")
+	if _, err := configuredListenAddress(); err == nil {
+		t.Fatal("invalid local demo port unexpectedly accepted")
+	}
 }
 
 func TestConfiguredLocalDemoBindsExplicitDurableRunsToLoopbackIdentity(t *testing.T) {

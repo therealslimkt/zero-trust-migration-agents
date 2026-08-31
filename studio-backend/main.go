@@ -102,7 +102,15 @@ func localDemoEnabled() bool {
 
 func configuredListenAddress() (string, error) {
 	if localDemoEnabled() {
-		return "127.0.0.1:8080", nil
+		port := strings.TrimSpace(os.Getenv("MISSION_CONTROL_LOCAL_DEMO_PORT"))
+		if port == "" {
+			port = "8080"
+		}
+		parsed, err := strconv.Atoi(port)
+		if err != nil || parsed < 1 || parsed > 65535 || strconv.Itoa(parsed) != port {
+			return "", errors.New("local demo server port configuration is invalid")
+		}
+		return "127.0.0.1:" + port, nil
 	}
 	port := strings.TrimSpace(os.Getenv("PORT"))
 	if port == "" {
