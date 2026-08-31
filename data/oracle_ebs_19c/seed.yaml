@@ -1,0 +1,43 @@
+schema_version: keraun.source-seed/v1
+cartridge_id: oracle_ebs_19c
+source_claim: "Synthetic Oracle E-Business Suite / Oracle 19c shaped emulator; not Oracle software."
+emulation_engine: postgresql-16
+driver_requirements:
+  - artifact: ojdbc8.jar
+    supplier: Oracle
+    use: "Authorized Oracle JDBC extraction in a customer runtime; not bundled in this emulator."
+system_metadata:
+  - table: FND_TABLES
+    role: application_table_catalog
+  - table: FND_COLUMNS
+    role: application_column_catalog
+  - table: FND_DESCRIPTIVE_FLEXS
+    role: descriptive_flexfield_semantic_mapping
+source_shape:
+  table: HZ_PARTIES
+  identity: [party_id]
+  context_column: attribute_category
+  generic_columns: [attribute1, attribute2, attribute3, attribute4, attribute5]
+  cdc_high_watermark: [last_update_date, last_updated_by]
+  bad_representation: "ATTRIBUTE1 is semantically ambiguous until resolved by application, table, context, segment, and metadata version."
+snapshot:
+  - party_id: 501
+    party_name: Apollo Synthetic
+    attribute_category: CUSTOMER_EXT
+    attribute1: GOLD
+    attribute2: NA
+    last_update_date: "2026-08-01T10:00:00Z"
+  - party_id: 502
+    party_name: Hermes Synthetic
+    attribute_category: SUPPLIER_EXT
+    attribute1: NET30
+    attribute2: null
+    last_update_date: "2026-08-01T10:01:00Z"
+invalid_vectors:
+  - party_id: 599
+    attribute_category: UNKNOWN_CONTEXT
+    attribute1: AMBIGUOUS
+    reason: unmapped_context_metadata
+delta:
+  watermark: ["2026-08-01T10:01:00Z", 502]
+  operations: [insert, update, delete]

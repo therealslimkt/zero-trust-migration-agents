@@ -1,0 +1,48 @@
+services:
+  jde-e1-ibmi:
+    image: ${KERAUN_JDE_IMAGE:?digest-pinned image required}
+    environment:
+      POSTGRES_DB: keraun_jde
+      POSTGRES_USER: keraun
+      POSTGRES_PASSWORD: synthetic-only-admin
+    networks: [cartridge-internal]
+    volumes: [jde-data:/var/lib/postgresql/data]
+    restart: unless-stopped
+  dynamics-ax:
+    image: ${KERAUN_AX_IMAGE:?digest-pinned image required}
+    environment:
+      POSTGRES_DB: keraun_ax
+      POSTGRES_USER: keraun
+      POSTGRES_PASSWORD: synthetic-only-admin
+    networks: [cartridge-internal]
+    volumes: [ax-data:/var/lib/postgresql/data]
+    restart: unless-stopped
+  oracle-ebs-19c:
+    image: ${KERAUN_EBS_IMAGE:?digest-pinned image required}
+    environment:
+      POSTGRES_DB: keraun_ebs
+      POSTGRES_USER: keraun
+      POSTGRES_PASSWORD: synthetic-only-admin
+    networks: [cartridge-internal]
+    volumes: [ebs-data:/var/lib/postgresql/data]
+    restart: unless-stopped
+  evidence-runner:
+    image: ${KERAUN_RUNNER_IMAGE:?digest-pinned image required}
+    runtime: runsc
+    depends_on: [jde-e1-ibmi, dynamics-ax, oracle-ebs-19c]
+    networks: [cartridge-internal]
+    read_only: true
+    tmpfs: [/tmp:rw,noexec,nosuid,size=16m]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.50
+    profiles: [evidence]
+networks:
+  cartridge-internal:
+    internal: true
+volumes:
+  jde-data:
+  ax-data:
+  ebs-data:

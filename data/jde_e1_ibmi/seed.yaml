@@ -1,0 +1,58 @@
+schema_version: keraun.source-seed/v1
+cartridge_id: jde_e1_ibmi
+source_claim: "Synthetic JD Edwards EnterpriseOne 9.2 / IBM i shaped emulator; not Oracle or IBM software."
+emulation_engine: postgresql-16
+driver_requirements:
+  - artifact: jt400.jar
+    supplier: JTOpen
+    use: "Authorized IBM i JDBC extraction in a customer runtime; not bundled in this emulator."
+  - artifact: db2jcc4.jar
+    supplier: IBM
+    use: "Customer-supplied enterprise alternative; never redistributed by Keraun."
+system_metadata:
+  - table: F9860
+    role: object_librarian_master
+  - table: F98711
+    role: field_definitions
+source_shape:
+  table: F0911
+  identity: [company, document_type, document_number, line_number, ledger_type]
+  cdc_high_watermark: [UPMJ, UPMT]
+  bad_representation: "UPMJ is a CYYDDD integer, including zero and an intentionally invalid ordinal."
+snapshot:
+  - company: "00001"
+    document_type: JE
+    document_number: 700101
+    line_number: 1
+    ledger_type: AA
+    upmj: 123165
+    upmt: 93015
+    amount_minor: 128450
+  - company: "00001"
+    document_type: JE
+    document_number: 700102
+    line_number: 1
+    ledger_type: AA
+    upmj: 115351
+    upmt: 81500
+    amount_minor: -4200
+  - company: "00002"
+    document_type: PV
+    document_number: 700103
+    line_number: 2
+    ledger_type: AA
+    upmj: 0
+    upmt: 0
+    amount_minor: 9000
+invalid_vectors:
+  - company: "00002"
+    document_type: JE
+    document_number: 700104
+    line_number: 1
+    ledger_type: AA
+    upmj: 121366
+    upmt: 101500
+    reason: non_leap_year_ordinal_366
+delta:
+  watermark: [123165, 93015]
+  operations: [insert, update, delete]

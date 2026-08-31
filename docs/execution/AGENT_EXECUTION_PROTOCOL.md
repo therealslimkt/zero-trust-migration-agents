@@ -61,3 +61,12 @@ variant) from the documented directory. The check must cover the collision
 conditions the command claims to handle, confirm the printed endpoint is
 usable, and stop only processes it started. If the check discovers a conflict,
 the launcher or documentation must be repaired before the command is shared.
+
+## Cloud resource manifest rule
+
+Every approved Google Cloud create, update, or delete must update
+`cloud_architecture/CLOUD_RESOURCE_MANIFEST.md` in the same integration branch
+before the milestone delivery report is written. The entry must distinguish
+live facts from planned resources, include a direct authorized-operator Console
+link, and state the resource's trust and teardown boundary. Secrets, account
+identities, and customer identifiers are never recorded there.

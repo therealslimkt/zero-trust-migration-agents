@@ -1,0 +1,44 @@
+schema_version: keraun.source-seed/v1
+cartridge_id: dynamics_ax_2012_r3
+source_claim: "Synthetic Microsoft Dynamics AX 2012 R3 / SQL Server shaped emulator; not Microsoft software."
+emulation_engine: postgresql-16
+driver_requirements:
+  - artifact: mssql-jdbc.jar
+    supplier: Microsoft
+    use: "Authorized SQL Server JDBC extraction in a customer runtime; not bundled in this emulator."
+system_metadata:
+  - table: SQLDICTIONARY
+    role: ax_object_to_physical_table_mapping
+  - table: MODELELEMENT
+    role: application_object_tree_inheritance
+source_shape:
+  base_table: DirPartyTable
+  derived_table: CustTable
+  identity: [data_area_id, partition_id, table_id, rec_id]
+  cdc_high_watermark: [modified_datetime, rec_id]
+  bad_representation: "A derived table must join its base row in the same company and partition; an orphan is intentionally seeded."
+snapshot:
+  - data_area_id: usmf
+    partition_id: 5637144576
+    rec_id: 1001
+    party_name: Acme Synthetic
+    customer_group: RETAIL
+    modified_datetime: "2026-08-01T10:00:00Z"
+  - data_area_id: demf
+    partition_id: 5637144576
+    rec_id: 1002
+    party_name: Northwind Synthetic
+    customer_group: WHOLESALE
+    modified_datetime: "2026-08-01T10:05:00Z"
+invalid_vectors:
+  - data_area_id: usmf
+    partition_id: 5637144576
+    rec_id: 9001
+    reason: orphan_derived_record
+  - data_area_id: usmf
+    partition_id: 9999999999
+    rec_id: 1001
+    reason: cross_partition_identity_binding
+delta:
+  watermark: ["2026-08-01T10:05:00Z", 1002]
+  operations: [insert, update]

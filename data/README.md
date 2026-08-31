@@ -1,28 +1,22 @@
-# EBCDIC to BigQuery Pipeline
+# Keraun source-emulator cartridges
 
-This directory contains an Apache Beam pipeline to decode EBCDIC data and prepare it for ingestion into Google BigQuery.
+Each source family has a self-contained folder with a semantic `seed.yaml`, a
+source-shaped SQL initialization file, a container recipe, and a one-command
+local start script:
 
-## `beam_pipeline.py`
+| Folder | Command | Demonstrates |
+| --- | --- | --- |
+| `jde_e1_ibmi/` | `./data/jde_e1_ibmi/start.sh` | `UPMJ` CYYDDD dates and ordered `UPMT` CDC. |
+| `dynamics_ax_2012_r3/` | `./data/dynamics_ax_2012_r3/start.sh` | `RecId` base/derived inheritance in a company/partition scope. |
+| `oracle_ebs_19c/` | `./data/oracle_ebs_19c/start.sh` | Context-sensitive DFF mapping for `ATTRIBUTE1…ATTRIBUTE15`. |
 
-This script defines a simple Beam pipeline that:
+These are project-owned, synthetic PostgreSQL emulators. They deliberately
+resemble the relevant metadata and data boundaries but are **not** licensed
+JDE, IBM i/Db2, Microsoft Dynamics/SQL Server, Oracle EBS, or Oracle Database
+products. The required enterprise JDBC JAR name is recorded in each seed file;
+no proprietary driver is bundled, downloaded, or redistributed.
 
-1.  Reads raw EBCDIC data from a binary file (`F0101_address_book.bin`).
-2.  Decodes the data from the `ibm037` EBCDIC codepage to ASCII.
-3.  Prints the decoded data to the console.
-
-### Usage
-
-To run the pipeline, execute the following command from the `data` directory:
-
-```
-python3 beam_pipeline.py
-```
-
-### Next Steps
-
-This is a basic pipeline that can be extended to:
-
-*   Read from a streaming source like Pub/Sub.
-*   Write the decoded data to a BigQuery table.
-*   Implement error handling for records that fail to decode.
-*   Use a schema to structure the data for BigQuery.
+The private live host is built from these images by the bounded cartridge
+provisioner. Its source databases have no host-published ports; the only
+cross-container reader is the gVisor `runsc` evidence runner. Never mount
+`/var/run/docker.sock` in a cartridge or runner container.
