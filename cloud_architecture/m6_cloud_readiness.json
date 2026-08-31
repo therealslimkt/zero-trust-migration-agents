@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "zeraun.m6.cloud-readiness/v1",
+  "status": "planned",
+  "deployment": {
+    "projectId": "ztm-agent-9049c3",
+    "region": "us-central1",
+    "observedBaseline": [
+      "execution-sandbox",
+      "cloud-run-source-deploy",
+      "aiplatform.googleapis.com",
+      "bigquery.googleapis.com",
+      "run.googleapis.com",
+      "artifactregistry.googleapis.com",
+      "pubsub.googleapis.com",
+      "modelarmor.googleapis.com"
+    ]
+  },
+  "authority": {
+    "lifecycle": "cloud_sql_postgresql",
+    "lifecycleReference": "studio-backend/migrations/m3_001_cloud_sql_authority.sql",
+    "lifecycleReferenceSha256": "sha256:b5db0f9f472a6b7c67807924d9afb91df983268a834d0cb4a843b86660190f24",
+    "analytics": "bigquery_downstream_only",
+    "relay": "pubsub_sanitized_outbox",
+    "approval": "cloud_sql_authority_only"
+  },
+  "resources": [
+    {
+      "id": "cloud-sql-authority",
+      "kind": "cloud_sql_postgresql_ha_private_ip",
+      "status": "planned",
+      "ownerApprovalRequired": true,
+      "requiredApis": ["sqladmin.googleapis.com", "servicenetworking.googleapis.com"],
+      "purpose": "authoritative lifecycle approvals leases releases idempotency and sanitized outbox"
+    },
+    {
+      "id": "authority-cmek",
+      "kind": "cloud_kms_key",
+      "status": "planned",
+      "ownerApprovalRequired": true,
+      "requiredApis": ["cloudkms.googleapis.com"],
+      "purpose": "CMEK for explicitly approved persistent resources"
+    },
+    {
+      "id": "outbox-events",
+      "kind": "pubsub_topic",
+      "status": "planned",
+      "ownerApprovalRequired": true,
+      "requiredApis": ["pubsub.googleapis.com"],
+      "purpose": "sanitized committed-event delivery only"
+    },
+    {
+      "id": "outbox-events-subscription",
+      "kind": "pubsub_subscription",
+      "status": "planned",
+      "ownerApprovalRequired": true,
+      "requiredApis": ["pubsub.googleapis.com"],
+      "purpose": "relay delivery with stable event-id deduplication"
+    },
+    {
+      "id": "outbox-events-dlq",
+      "kind": "pubsub_dead_letter_topic",
+      "status": "planned",
+      "ownerApprovalRequired": true,
+      "requiredApis": ["pubsub.googleapis.com"],
+      "purpose": "visible failed outbox delivery without lifecycle mutation"
+    },
+    {
+      "id": "migration-audit",
+      "kind": "bigquery_dataset_and_append_only_audit_table",
+      "status": "planned",
+      "ownerApprovalRequired": true,
+      "requiredApis": ["bigquery.googleapis.com"],
+      "purpose": "downstream sanitized audit and reconciliation projection"
+    },
+    {
+      "id": "vpc-service-perimeter",
+      "kind": "vpc_service_controls_perimeter",
+      "status": "planned",
+      "ownerApprovalRequired": true,
+      "requiredApis": ["accesscontextmanager.googleapis.com"],
+      "purpose": "protect approved data-service egress boundaries"
+    },
+    {
+      "id": "model-armor-policy",
+      "kind": "model_armor_template",
+      "status": "planned",
+      "ownerApprovalRequired": true,
+      "requiredApis": ["modelarmor.googleapis.com"],
+      "purpose": "inspect only approved sanitized model and tool boundaries"
+    }
+  ],
+  "identities": [
+    {
+      "id": "mission-control-runtime",
+      "kind": "cloud_run_service_account",
+      "bindings": [
+        {"role": "roles/cloudsql.client", "resource": "cloud-sql-authority"},
+        {"role": "roles/pubsub.publisher", "resource": "outbox-events"},
+        {"role": "roles/cloudkms.cryptoKeyEncrypterDecrypter", "resource": "authority-cmek"}
+      ]
+    },
+    {
+      "id": "m3-schema-migrator",
+      "kind": "external_workload_identity",
+      "bindings": [
+        {"role": "roles/cloudsql.admin", "resource": "cloud-sql-authority"},
+        {"role": "roles/cloudkms.cryptoKeyEncrypterDecrypter", "resource": "authority-cmek"}
+      ]
+    },
+    {
+      "id": "outbox-relay",
+      "kind": "cloud_run_service_account",
+      "bindings": [
+        {"role": "roles/pubsub.publisher", "resource": "outbox-events"},
+        {"role": "roles/pubsub.subscriber", "resource": "outbox-events-subscription"}
+      ]
+    },
+    {
+      "id": "bigquery-audit-projector",
+      "kind": "dataflow_service_account",
+      "bindings": [
+        {"role": "roles/pubsub.subscriber", "resource": "outbox-events-subscription"},
+        {"role": "roles/bigquery.dataEditor", "resource": "migration-audit"}
+      ]
+    }
+  ],
+  "guardrails": {
+    "prohibitedRoles": ["roles/owner", "roles/editor", "roles/iam.serviceAccountTokenCreator"],
+    "prohibited": [
+      "service_account_keys",
+      "project_wide_data_editor",
+      "bigquery_lifecycle_reads",
+      "browser_to_cloud_sql",
+      "raw_rows_in_outbox",
+      "model_armor_bypass"
+    ],
+    "required": [
+      "owner_approval_before_provisioning",
+      "separate_migrator_and_runtime_identities",
+      "workload_identity_federation_for_external_migrator",
+      "outbox_delivery_cannot_mutate_lifecycle",
+      "bigquery_is_not_an_authorization_source"
+    ]
+  },
+  "evidence": {
+    "requiredBeforeLiveClaim": [
+      "approved_change_record",
+      "resource_configuration_export",
+      "iam_policy_export",
+      "cloud_sql_migration_receipt",
+      "pubsub_relay_canary",
+      "bigquery_projection_query",
+      "model_armor_enforcement_evidence",
+      "vpc_service_perimeter_verification"
+    ]
+  }
+}

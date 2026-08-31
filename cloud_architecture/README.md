@@ -40,6 +40,9 @@ into an issue, a terminal recording, or this repository.
    the intended producer-to-dashboard path without claiming a running job.
 5. [Judge experience](JUDGES.md) makes the hosted exact replay primary and the
    local connector lab optional.
+6. [M6 cloud readiness](M6_CLOUD_READINESS.md) validates the non-secret
+   desired state and owner-approval boundary for Cloud SQL, Pub/Sub, BigQuery,
+   KMS, VPC Service Controls, and Model Armor without provisioning any of them.
 
 ## Architecture map
 

@@ -189,3 +189,9 @@ baseline remains green.
 This milestone does not claim a Cloud SQL instance, Datastream stream,
 Pub/Sub topic, BigQuery projection, or production relay was deployed or live
 tested.
+
+The M6 [cloud readiness record](../../cloud_architecture/M6_CLOUD_READINESS.md)
+selects a planned sanitized Pub/Sub outbox relay and records the required
+resource-scoped IAM and pre-live evidence. It does not alter this authority
+boundary or claim that any named Cloud SQL, KMS, Pub/Sub, BigQuery, VPC Service
+Controls, or Model Armor resource exists.
