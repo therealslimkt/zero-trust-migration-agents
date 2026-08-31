@@ -232,6 +232,14 @@ type WebLiveSourceDetailReader interface {
 	ReadLiveSourceDetail(ctx context.Context, runID, sourceID string) (*WebSourceReplay, error)
 }
 
+// WebPersistedWorkflowEvidenceReader reads a closed projection from the
+// deployment's persisted orchestration authority. The BFF verifies ownership
+// before calling it; implementations must never construct entries from
+// browser state, timestamps, or narrative event text.
+type WebPersistedWorkflowEvidenceReader interface {
+	ReadPersistedWorkflowEvidence(ctx context.Context, runID string) (WebWorkflowEvidenceProjection, error)
+}
+
 // ---------------------------------------------------------------------------
 // Configuration and constructor
 // ---------------------------------------------------------------------------
@@ -250,6 +258,10 @@ type WebBFFConfig struct {
 	Artifacts WebPublicationArtifactReader
 	// LiveDetails resolves captured source/compiler/destination detail.
 	LiveDetails WebLiveSourceDetailReader
+	// WorkflowEvidence is optional until the M3 persistence adapter is wired
+	// into a deployment. Its absence means the authenticated endpoint is not
+	// available, rather than an inferred or simulated workflow projection.
+	WorkflowEvidence WebPersistedWorkflowEvidenceReader
 
 	CloudProber WebCloudCapabilityProber
 	// CloudVerifierPrincipal is the deployment-owned service account granted
@@ -284,6 +296,7 @@ type webBFFHandler struct {
 	store                   *WebStateStore
 	artifacts               WebPublicationArtifactReader
 	liveDetails             WebLiveSourceDetailReader
+	workflowEvidence        WebPersistedWorkflowEvidenceReader
 	cloudProber             WebCloudCapabilityProber
 	cloudVerifierPrincipal  string
 	researcher              WebDriverResearcher
@@ -339,6 +352,7 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 		store:                   cfg.Store,
 		artifacts:               cfg.Artifacts,
 		liveDetails:             cfg.LiveDetails,
+		workflowEvidence:        cfg.WorkflowEvidence,
 		cloudProber:             cfg.CloudProber,
 		cloudVerifierPrincipal:  cloudVerifierPrincipal,
 		researcher:              cfg.DriverResearcher,
@@ -383,6 +397,7 @@ func NewWebBFFHandler(cfg WebBFFConfig) (http.Handler, error) {
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}", h.handleRunByID)
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/sources/{source_id}", h.handleRunSource)
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/sources/{source_id}/terminal", h.handleRunSourceTerminal)
+	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/workflow-evidence", h.handleWorkflowEvidence)
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/events", h.handleRunEvents)
 	h.mux.HandleFunc("/api/web/v1/runs/{run_id}/approval", h.handleRunApproval)
 	h.mux.HandleFunc("/api/web/v1/cloud/connection", h.handleCloudConnection)

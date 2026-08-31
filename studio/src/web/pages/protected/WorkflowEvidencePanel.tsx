@@ -1,56 +1,19 @@
 import type { ReactNode } from 'react'
 
+import type {
+  DeterministicEvidence,
+  ModelCallEvidence,
+  WorkflowEvidenceProjection,
+} from '../../features/workflow-evidence'
 import { PixelIcon } from '../../shared/ui'
 import './workflow-evidence.css'
 
-type NodeState = 'queued' | 'running' | 'interrupted' | 'succeeded' | 'failed' | 'cancelled'
-type ApprovalKind = 'simulation_approval' | 'production_approval'
-
-interface PersistedEntry {
-  readonly sequence: number
-  readonly eventId: string
-  readonly persisted: true
-  readonly state: NodeState
-  readonly checkpointRef?: string
-  readonly evidenceDigest: string
-}
-
-export interface ModelCallEvidence extends PersistedEntry {
-  readonly kind: 'node'
-  readonly workClass: 'model_call'
-  readonly modelCall: true
-  readonly nodePath: string
-  readonly agentId: string
-}
-
-export interface DeterministicEvidence extends PersistedEntry {
-  readonly kind: 'node'
-  readonly workClass: 'deterministic_function' | 'control_flow'
-  readonly modelCall: false
-  readonly nodePath: string
-  readonly deterministicComponentId: string
-}
-
-export interface ApprovalInterruptEvidence extends PersistedEntry {
-  readonly kind: 'approval_interrupt'
-  readonly approvalKind: ApprovalKind
-  readonly interruptId: string
-  readonly resumeChannel: 'approval_endpoint'
-  readonly subjectDigest: string
-  readonly decision: 'pending' | 'approved' | 'rejected'
-  readonly approvalId?: string
-}
-
-export type WorkflowEvidenceEntry = ModelCallEvidence | DeterministicEvidence | ApprovalInterruptEvidence
-
-export type WorkflowEvidenceProjection =
-  | { readonly status: 'unavailable' }
-  | {
-      readonly status: 'ready'
-      readonly replayCursor: string
-      readonly complete: boolean
-      readonly entries: readonly WorkflowEvidenceEntry[]
-    }
+export type {
+  ApprovalInterruptEvidence,
+  DeterministicEvidence,
+  ModelCallEvidence,
+  WorkflowEvidenceProjection,
+} from '../../features/workflow-evidence'
 
 const DIGEST = /^sha256:[a-f0-9]{64}$/
 const IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._:/-]{2,255}$/

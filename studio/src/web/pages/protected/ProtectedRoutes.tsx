@@ -20,6 +20,7 @@ import type {
 import { WEB_SCHEMA_VERSION } from '../../contracts.generated'
 import { useAuth } from '../../features/auth'
 import { useTerminalFrameStream } from '../../features/terminal'
+import { useWorkflowEvidenceProjection } from '../../features/workflow-evidence'
 import { CloudSettingsPage } from './CloudSettingsPage'
 import { DashboardPage } from './DashboardPage'
 import { SourceDetailPage, type SourcePane } from './SourceDetailPage'
@@ -129,11 +130,12 @@ export function SourceDetailRoute() {
   const query = useQuery({ queryKey: ['live-source', runId, validSourceId], queryFn: () => client.getSource(runId!, validSourceId!), enabled: Boolean(runId && validSourceId), refetchInterval: 10_000 })
   const stream = useRunEvents(client, runId)
   const terminal = useTerminalFrameStream(client, runId, validSourceId)
+  const workflowEvidence = useWorkflowEvidenceProjection(client, runId)
   const [pane, setPane] = useState<SourcePane>('source')
   const invalid: ResourceState<LiveSourceResponse> = { status: 'error', connection: 'offline', message: 'The route does not identify a supported migration source.' }
   const state = validSourceId ? queryState(query) : invalid
   const connectedState = state.status === 'ready' ? { ...state, connection: stream.connection } : state
-  return <SourceDetailPage source={connectedState} events={stream.events} terminal={terminal} activePane={pane} onActivePaneChange={setPane} onRetry={() => void query.refetch()} onCopy={(value) => void navigator.clipboard.writeText(value)} />
+  return <SourceDetailPage source={connectedState} events={stream.events} terminal={terminal} workflowEvidence={workflowEvidence.evidence} activePane={pane} onActivePaneChange={setPane} onRetry={() => { void query.refetch(); void workflowEvidence.refetch() }} onCopy={(value) => void navigator.clipboard.writeText(value)} />
 }
 
 const emptyCloudSetup: CloudSetupRequest = { schemaVersion: WEB_SCHEMA_VERSION, projectId: '', region: '', datasetPrefix: '' }
