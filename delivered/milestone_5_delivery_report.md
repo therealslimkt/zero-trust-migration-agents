@@ -1,7 +1,7 @@
 # Enterprise Fleet Milestone 5 delivery report
 
-Status: **complete for the bounded, locally verified M5 slice; awaiting
-merge to `main` and reviewer checkout**
+Status: **complete for the bounded, locally verified M5 slice; merged to
+`main`**
 
 M5 makes Keraun testable as an authenticated local Mission Control surface
 without presenting fixture activity as cloud execution. It adds an inert
@@ -60,8 +60,10 @@ control-plane API nor the frozen three-route v2 contract was changed. See
 ### 3. Testable local authenticated Mission Control
 
 `npm run dev:demo` now works with no manually-created state file. It allocates
-a temporary durable control-plane path and a free loopback backend port,
-passes that port to the Vite proxy, and prints both URLs. The local profile
+a temporary durable control-plane path, keeps port 5173 when available, and
+automatically selects a free loopback UI port when 5173 is already occupied.
+It also allocates a free loopback backend port, passes both endpoints to the
+Vite proxy/BFF allowlist, and prints their URLs. The local profile
 creates exactly one owned canonical three-source portfolio only when state is
 empty; a restart reuses it.
 
@@ -129,6 +131,12 @@ npm run dev:demo -- --port 5183
 It selected a disposable backend port, served the UI, and returned one
 authenticated owned run with all migration counters zero. The temporary Vite
 and Go processes were stopped after the check.
+
+The remediation gate additionally reserves the preferred frontend port before
+launch. `npm run dev:demo` must select and print a different loopback UI URL
+while that port is occupied, and the BFF must admit that exact selected Origin.
+This prevents the M4 fixture lab and the authenticated M5 demo from blocking
+one another.
 
 ## Branches and commits
 

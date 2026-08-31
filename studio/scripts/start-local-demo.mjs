@@ -48,13 +48,25 @@ export async function prepareLocalDemoState(stateArgument, environment = process
   }
 }
 
-/** Select a currently unused loopback port for the disposable local backend. */
-export async function findLoopbackPort() {
+/**
+ * Select a currently unused loopback port. A preferred port preserves the
+ * familiar default when it is free; an occupied preferred port falls back to
+ * an ephemeral port so a separate local surface (such as the M4 lab) is never
+ * displaced.
+ */
+export async function findLoopbackPort(preferredPort) {
   const server = createServer()
-  await new Promise((resolvePromise, reject) => {
-    server.once('error', reject)
-    server.listen({ host: '127.0.0.1', port: 0 }, resolvePromise)
-  })
+  try {
+    await new Promise((resolvePromise, reject) => {
+      server.once('error', reject)
+      server.listen({ host: '127.0.0.1', port: preferredPort ?? 0 }, resolvePromise)
+    })
+  } catch (error) {
+    if (preferredPort !== undefined && error && typeof error === 'object' && error.code === 'EADDRINUSE') {
+      return findLoopbackPort()
+    }
+    throw error
+  }
   const address = server.address()
   await new Promise((resolvePromise, reject) => server.close((error) => error ? reject(error) : resolvePromise()))
   if (!address || typeof address === 'string' || !Number.isInteger(address.port) || address.port < 1) {
@@ -69,7 +81,7 @@ export async function main(argv = process.argv, processEnvironment = process.env
   let backendPort
   try {
     prepared = await prepareLocalDemoState(option('--state', argv), processEnvironment)
-    port = option('--port', argv) || '5173'
+    port = option('--port', argv) || await findLoopbackPort(5173)
     backendPort = processEnvironment.MISSION_CONTROL_LOCAL_DEMO_PORT?.trim() || await findLoopbackPort()
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error))
@@ -91,6 +103,10 @@ export async function main(argv = process.argv, processEnvironment = process.env
     MISSION_CONTROL_LOCAL_DEMO: 'true',
     MISSION_CONTROL_LOCAL_DEMO_PORT: backendPort,
     MISSION_CONTROL_LOCAL_DEMO_RUN_IDS: runIds.join(','),
+    // The BFF requires an exact browser Origin match. The launcher owns this
+    // ephemeral loopback origin, so it may safely constrain the local server
+    // to precisely the UI it starts.
+    MISSION_CONTROL_ALLOWED_ORIGINS: `http://127.0.0.1:${port}`,
     MISSION_CONTROL_PROXY_TARGET: `http://127.0.0.1:${backendPort}`,
     VITE_LOCAL_DEMO: 'true',
   }

@@ -52,3 +52,12 @@ exact mutation and the user separately approves it.
 
 An agent never approves its own work. No task may claim a deployment, data
 transfer, agent action, or verification step without durable evidence.
+
+## Runnable command preflight rule
+
+Before handing a user a command that starts a local service, the integrator
+must execute that exact command (or the exact documented occupied-resource
+variant) from the documented directory. The check must cover the collision
+conditions the command claims to handle, confirm the printed endpoint is
+usable, and stop only processes it started. If the check discovers a conflict,
+the launcher or documentation must be repaired before the command is shared.
