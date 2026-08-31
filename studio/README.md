@@ -2,7 +2,7 @@
 
 ## Local working demo
 
-## M4 cartridge lab (no backend or credentials)
+## Plugin Factory preflight (no backend or credentials)
 
 To review the three local synthetic fixture packets without configuring the
 Mission Control proxy, run:
@@ -11,9 +11,10 @@ Mission Control proxy, run:
 npm run dev:m4
 ```
 
-Open `http://127.0.0.1:5173/lab/m4`. This exposes only the M4 local evidence
-screen; it does not start a backend or make a cloud, customer-data, or plugin
-claim.
+Open `http://127.0.0.1:5173/factory`. This exposes only the local synthetic
+candidate-verification surface; it does not start a backend, execute Beam or
+BigQuery, access customer data, or produce a deployable plugin. The legacy
+`/lab/m4` route redirects to `/factory` for existing bookmarks.
 
 ## Full local working demo
 
@@ -27,7 +28,7 @@ npm run dev:demo -- --state /private/tmp/ztm-hitl-YYYYMMDD-a/synthetic-control-p
 Open the **Local demo UI** address printed by the command, choose **Sign in**,
 then **Enter as local demo operator**. The launcher uses `5173` when it is
 free and automatically selects another loopback port when it is occupied (for
-example, by the M4 cartridge lab). The dashboard lists the exact runs in the
+example, by the Plugin Factory preflight). The dashboard lists the exact runs in the
 supplied state file; it does not fabricate progress or publish them as public
 replays. The local demo credential is intentionally non-secret and is accepted
 only while the Go server is explicitly bound to loopback in this development

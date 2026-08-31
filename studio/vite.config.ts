@@ -90,7 +90,7 @@ function localCartridgeAgentProxy(): ProxyOptions {
 }
 
 export default defineConfig(({ command }) => {
-  // The M4 cartridge lab is a static, synthetic-fixture evidence surface. It
+  // The Plugin Factory preflight is a static, synthetic-fixture evidence surface. It
   // has no API dependency, so local reviewers can inspect it without holding
   // a Mission Control service credential or starting the Go backend.
   const localFixtureLab = process.env.MISSION_CONTROL_LOCAL_FIXTURE_LAB === 'true'
