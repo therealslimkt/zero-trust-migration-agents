@@ -17,6 +17,7 @@ import { PixelIcon, TerminalWindow, type PixelIconName, type TerminalAccent } fr
 
 import { CodeValue, Metric, PageScaffold, StatePanel } from './PageScaffold'
 import type { ResourceState } from './state'
+import { WorkflowEvidencePanel, type WorkflowEvidenceProjection } from './WorkflowEvidencePanel'
 
 export type SourcePane = 'source' | 'plan' | 'evidence'
 
@@ -240,7 +241,7 @@ function EventTimeline({ events }: { readonly events: readonly LiveRunEvent[] })
   )
 }
 
-function EvidencePaneContent({ replay, events }: { readonly replay: SourceReplay; readonly events: readonly LiveRunEvent[] }) {
+function EvidencePaneContent({ replay, events, workflowEvidence }: { readonly replay: SourceReplay; readonly events: readonly LiveRunEvent[]; readonly workflowEvidence: WorkflowEvidenceProjection }) {
   const destination = replay.destination
   const reconciliation = destination.reconciliation
   return (
@@ -274,6 +275,7 @@ function EvidencePaneContent({ replay, events }: { readonly replay: SourceReplay
         <h3>Persisted event timeline</h3>
         <EventTimeline events={events} />
       </section>
+      <WorkflowEvidencePanel evidence={workflowEvidence} />
     </>
   )
 }
@@ -424,7 +426,7 @@ function EdgeLane({ terminal }: { readonly terminal: TerminalFeed }) {
   )
 }
 
-function ProgressOnlyPanes({ source, events, activePane, terminal, maximizedPane, onMaximizedPaneChange }: { readonly source: LiveSourceResponse; readonly events: readonly LiveRunEvent[]; readonly activePane: SourcePane } & PaneLayoutProps) {
+function ProgressOnlyPanes({ source, events, workflowEvidence, activePane, terminal, maximizedPane, onMaximizedPaneChange }: { readonly source: LiveSourceResponse; readonly events: readonly LiveRunEvent[]; readonly workflowEvidence: WorkflowEvidenceProjection; readonly activePane: SourcePane } & PaneLayoutProps) {
   const progress = source.progress
   return (
     <div className="source-three-pane">
@@ -461,6 +463,7 @@ function ProgressOnlyPanes({ source, events, activePane, terminal, maximizedPane
           <h3>Destination status</h3>
           <p>{progress.recordsWritten > 0 ? `${progress.recordsWritten.toLocaleString()} records reported written.` : 'No verified destination writes have been reported.'}</p>
         </section>
+        <WorkflowEvidencePanel evidence={workflowEvidence} />
       </TerminalPane>
     </div>
   )
@@ -470,13 +473,14 @@ export interface SourceDetailPageProps {
   readonly source: ResourceState<LiveSourceResponse>
   readonly events?: readonly LiveRunEvent[]
   readonly terminal?: TerminalFeed
+  readonly workflowEvidence?: WorkflowEvidenceProjection
   readonly activePane: SourcePane
   readonly onActivePaneChange: (pane: SourcePane) => void
   readonly onRetry?: () => void
   readonly onCopy?: (value: string) => void
 }
 
-export function SourceDetailPage({ source, events = [], terminal = EMPTY_TERMINAL_FEED, activePane, onActivePaneChange, onRetry, onCopy }: SourceDetailPageProps) {
+export function SourceDetailPage({ source, events = [], terminal = EMPTY_TERMINAL_FEED, workflowEvidence = { status: 'unavailable' }, activePane, onActivePaneChange, onRetry, onCopy }: SourceDetailPageProps) {
   const [maximizedPane, setMaximizedPane] = useState<SourcePane>()
   const ready = source.status === 'ready' ? source.data : undefined
   const replay = ready?.detail
@@ -543,7 +547,7 @@ export function SourceDetailPage({ source, events = [], terminal = EMPTY_TERMINA
           </div>
           <LiveNarration event={relevantEvents.at(-1)} />
           {!replay ? (
-            <ProgressOnlyPanes source={ready} events={relevantEvents} activePane={activePane} terminal={terminal} maximizedPane={maximizedPane} onMaximizedPaneChange={setMaximizedPane} />
+            <ProgressOnlyPanes source={ready} events={relevantEvents} workflowEvidence={workflowEvidence} activePane={activePane} terminal={terminal} maximizedPane={maximizedPane} onMaximizedPaneChange={setMaximizedPane} />
           ) : (
               <div className="source-three-pane">
                 <TerminalPane {...paneLayout({ terminal, maximizedPane, onMaximizedPaneChange: setMaximizedPane }, 'source')} lane="source" id="source" activePane={activePane} number="01" title="Source system / Google VM" breadcrumb={`${replay.hostname}/${replay.sourceId}`} icon="compute-engine" accent="google-blue" tools={replay.source.exampleQueries.length ? <QueryList queries={replay.source.exampleQueries} onCopy={onCopy} /> : <MissingCapture>No read-only source queries were captured</MissingCapture>}>
@@ -553,7 +557,7 @@ export function SourceDetailPage({ source, events = [], terminal = EMPTY_TERMINA
                   <PlanPaneContent replay={replay} />
                 </TerminalPane>
                 <TerminalPane {...paneLayout({ terminal, maximizedPane, onMaximizedPaneChange: setMaximizedPane }, 'evidence')} lane="destination" id="evidence" activePane={activePane} number="03" title="Google BigQuery" breadcrumb={`${replay.destination.dataset}/${replay.destination.table}`} icon="bigquery" accent="google-green" tools={replay.destination.suggestedQueries.length ? <QueryList queries={replay.destination.suggestedQueries} onCopy={onCopy} /> : <MissingCapture>No destination query was captured</MissingCapture>}>
-                  <EvidencePaneContent replay={replay} events={relevantEvents} />
+                  <EvidencePaneContent replay={replay} events={relevantEvents} workflowEvidence={workflowEvidence} />
                 </TerminalPane>
               </div>
           )}
