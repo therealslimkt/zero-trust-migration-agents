@@ -201,3 +201,42 @@ def apply_provisioning(
             raise CartridgeProvisioningError("provisioning_command_failed")
         command_digests.append("sha256:" + hashlib.sha256("\0".join(command).encode()).hexdigest())
     return tuple(command_digests)
+
+
+def repair_commands(plan: CartridgeHostPlan, *, bootstrap_script: Path) -> tuple[tuple[str, ...], ...]:
+    """Return the only allowed repair: update sealed metadata, then restart.
+
+    It cannot alter the VM type, service account, network, ports, or image
+    identities. A replacement bootstrap therefore requires a distinct approved
+    plan digest while preserving the original zero-trust topology.
+    """
+
+    _require(bootstrap_digest(bootstrap_script) == plan.bootstrap_digest, "bootstrap_changed")
+    metadata = (
+        f"keraun-jde-image={plan.jde_image},"
+        f"keraun-ax-image={plan.ax_image},"
+        f"keraun-ebs-image={plan.ebs_image},"
+        f"keraun-runner-image={plan.runner_image},"
+        f"keraun-plan-digest={plan.plan_digest}"
+    )
+    return (
+        ("gcloud", "compute", "instances", "add-metadata", HOST, "--project", PROJECT, "--zone", ZONE, "--metadata", metadata, "--metadata-from-file", f"startup-script={bootstrap_script}"),
+        ("gcloud", "compute", "instances", "reset", HOST, "--project", PROJECT, "--zone", ZONE),
+    )
+
+
+def apply_repair(
+    plan: CartridgeHostPlan,
+    *,
+    bootstrap_script: Path,
+    runner: CommandRunner = subprocess.run,
+) -> tuple[str, ...]:
+    """Apply the sealed repair and return only command fingerprints."""
+
+    command_digests: list[str] = []
+    for command in repair_commands(plan, bootstrap_script=bootstrap_script):
+        result = runner(command, check=False, text=True, capture_output=True)
+        if result.returncode != 0:
+            raise CartridgeProvisioningError("repair_command_failed")
+        command_digests.append("sha256:" + hashlib.sha256("\0".join(command).encode()).hexdigest())
+    return tuple(command_digests)

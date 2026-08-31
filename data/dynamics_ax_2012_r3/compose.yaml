@@ -8,6 +8,6 @@ services:
       POSTGRES_USER: keraun
       POSTGRES_PASSWORD: synthetic-only-admin
     ports: ["127.0.0.1:15433:5432"]
-    volumes: [ax-data:/var/lib/postgresql/data]
+    volumes: ["ax-data:/var/lib/postgresql/data"]
 volumes:
   ax-data:

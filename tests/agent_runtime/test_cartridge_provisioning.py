@@ -17,6 +17,7 @@ from agent_runtime.workflows.cartridge_provisioning import (
     apply_provisioning,
     bootstrap_digest,
     provision_commands,
+    repair_commands,
 )
 
 
@@ -129,3 +130,15 @@ def test_apply_observes_and_skips_preexisting_create_steps(tmp_path):
     assert len(creates) == 1
     assert creates[0][1:4] == ("artifacts", "repositories", "add-iam-policy-binding")
     assert len(output) == 1
+
+
+def test_repair_can_only_replace_sealed_metadata_then_reset(tmp_path):
+    plan, bootstrap = _plan(tmp_path)
+    commands = repair_commands(plan, bootstrap_script=bootstrap)
+    assert len(commands) == 2
+    assert commands[0][1:4] == ("compute", "instances", "add-metadata")
+    assert commands[1][1:4] == ("compute", "instances", "reset")
+    flattened = "\n".join(" ".join(command) for command in commands)
+    assert "--machine-type" not in flattened
+    assert "--service-account" not in flattened
+    assert "--network" not in flattened

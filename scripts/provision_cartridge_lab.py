@@ -35,6 +35,7 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--ebs-image", required=True)
     value.add_argument("--runner-image", required=True)
     value.add_argument("--apply", action="store_true")
+    value.add_argument("--repair", action="store_true")
     value.add_argument("--approved-plan-digest")
     return value
 
@@ -49,11 +50,19 @@ def main() -> int:
         runner_image=args.runner_image,
         bootstrap_digest=bootstrap_digest(BOOTSTRAP),
     )
-    if args.apply:
+    if args.apply or args.repair:
         if args.approved_plan_digest != plan.plan_digest:
             raise SystemExit("approved plan digest does not bind this image set")
-        command_digests = apply_provisioning(plan, bootstrap_script=BOOTSTRAP)
-        print(json.dumps({"status": "submitted", "planDigest": plan.plan_digest, "commandDigests": command_digests}, sort_keys=True))
+        if args.apply and args.repair:
+            raise SystemExit("select only one sealed action")
+        if args.repair:
+            from agent_runtime.workflows.cartridge_provisioning import apply_repair
+            command_digests = apply_repair(plan, bootstrap_script=BOOTSTRAP)
+            status = "repair_submitted"
+        else:
+            command_digests = apply_provisioning(plan, bootstrap_script=BOOTSTRAP)
+            status = "submitted"
+        print(json.dumps({"status": status, "planDigest": plan.plan_digest, "commandDigests": command_digests}, sort_keys=True))
     else:
         print(json.dumps({"status": "dry_run", "planDigest": plan.plan_digest, "bootstrapDigest": plan.bootstrap_digest}, sort_keys=True))
     return 0
