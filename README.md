@@ -1,8 +1,21 @@
-# Zero-Trust Migration Agents
+# Keraun — Open Enterprise Migration Plugin Factory
 
-A governed agent fleet that migrates three legacy data formats—JDE/AS400,
-SAP MaxDB, and Accpac/Btrieve—into BigQuery under one human approval. The
-system is built for the **All Things Agentic Hackathon**.
+Keraun is an open-source enterprise agentic control plane that helps authorized
+engineers discover, build, verify, test, and package portable migration agents
+for difficult legacy data systems. It is being built for the **All Things
+Agentic Hackathon** under the **Fortified Enterprise Fleet** category.
+
+The current preloaded demonstration target is **JD Edwards EnterpriseOne on
+IBM i, Microsoft Dynamics AX 2012 R3, and Oracle EBS on Oracle 19c**. Their
+synthetic source emulators exercise CYYDDD/UPMJ date handling, `RecId`
+inheritance, and descriptive-flexfield translation respectively. See
+[the next-session hackathon handoff](docs/hackathon/NEXT_SESSION_HANDOFF.md)
+for the authoritative product path and proof gates.
+
+> Historical note: the older local M3/M4 control-plane baseline below still
+> refers to SAP MaxDB and Accpac/Btrieve. Those are retained implementation
+> artifacts, not the current demo scope or submission narrative. Do not use
+> them in the final video, Devpost copy, or newly built Mission Control flow.
 
 The business problem is not merely parsing old files. Enterprises otherwise
 maintain three middleware and licensing paths to move the same class of legacy

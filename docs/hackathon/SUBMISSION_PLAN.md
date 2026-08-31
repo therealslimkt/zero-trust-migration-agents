@@ -19,6 +19,8 @@ Product direction and truthful factory/run boundaries are maintained in
 [Plugin Factory North-Star Handoff](PLUGIN_FACTORY_NORTH_STAR_HANDOFF.md).
 Use that document when implementing the preloaded demonstrations, Mission
 Control run experience, A2A Agent Cards, and portable Agent Plugin package.
+The immediate execution order and clean-session starting point are in
+[Next-Session Hackathon Handoff](NEXT_SESSION_HANDOFF.md).
 
 ## Corrected eligibility and stack answers
 
@@ -27,25 +29,31 @@ Control run experience, A2A Agent Cards, and portable Agent Plugin package.
 | New project built during the submission period | **Yes** | First repository commit: August 23, 2026. Do not imply any project code existed before the event unless later audit finds otherwise. |
 | Gemini 3.5 or newer | **Pending live proof** | The architecture and code target Gemini 3.5 Flash or newer. Check this only after an actual Vertex AI invocation records the deployed model name and trace/log evidence. A fallback to Gemini 2.5 does not meet the requirement. |
 | Google agent framework | **Yes in source; deployment proof pending** | Python package `google-antigravity==0.1.14` is pinned and imported by the runtime planner. Antigravity CLI 1.1.19 is build tooling, not the product SDK answer. |
-| Google Cloud infrastructure | **Yes, with final proof pending** | Compute Engine hosts the three private source VMs. The final video must additionally prove the hosted backend and final Vertex/Dataflow/BigQuery services that actually ran. Never list a planned service as deployed. |
+| Google Cloud infrastructure | **Yes, with final proof pending** | One private Compute Engine VM hosts the three synthetic source-emulator containers under gVisor. The final video must additionally prove the hosted backend and final Vertex/Dataflow/BigQuery services that actually ran. Never list a planned service as deployed. |
 | One category selected | **Yes** | Use the exact label **Fortified Enterprise Fleet**. |
 | Team invitations | **Not applicable: solo entrant** | Katie is the only Devpost teammate. Codex, Claude, Gemini, and Gemma are tools/agents, not eligible human teammates. Disclose build assistance in the write-up; keep the video focused on the product-runtime fleet. |
 
 ## Truthful source description
 
-The demo uses three live private Google Compute Engine VMs reached through
-Tailscale MagicDNS. The VMs hold synthetic/deidentified binary fixtures that
-exercise distinct legacy formats:
+The currently verified deployment is one private Google Compute Engine VM,
+`keraun-cartridge-lab`, with no external IP. It hosts three gVisor-confined,
+synthetic/deidentified source-emulator containers:
 
-- JDE-style `F0101` EBCDIC/COMP-3 export on `legacy-jde-db`
-- SAP MaxDB-style clustered `KNA1` export on `legacy-maxdb`
-- Accpac/Btrieve-style `ARCUS` MKD pages on `legacy-btrieve-db`
+- JDE EnterpriseOne / IBM i — CYYDDD/UPMJ invalid-date detection
+- Microsoft Dynamics AX 2012 R3 / SQL Server — orphan-derived `RecId` detection
+- Oracle EBS / Oracle 19c — unmapped descriptive-flexfield detection
 
-Do not describe these as licensed production JDE, SAP, or Accpac databases.
+Do not describe these as licensed production JDE, Dynamics, or Oracle EBS databases.
 Do not say the project “circumvents” licensing or application controls. The
 safe value proposition is that authorized owners can migrate exported legacy
 data without purchasing three permanent middleware paths, while retaining a
 governed approval and audit trail.
+
+> **Supersession guard:** legacy draft sections later in this document that
+> name SAP MaxDB, Accpac/Btrieve, MagicDNS, or three separate VMs are historic
+> storyboard material. They must be rewritten around JDE, Dynamics AX and
+> Oracle EBS before the final submission; they are not current deployment
+> claims.
 
 ## P0 submission gate
 
