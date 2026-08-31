@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "oracle-ebs-19c-fixture/v1",
+  "cartridgeId": "oracle_ebs_19c",
+  "displayName": "Oracle EBS on Oracle 19c",
+  "sourceSystem": "oracle_ebs_19c",
+  "readiness": "synthetic_fixture",
+  "oracleDatabaseVersion": "19c",
+  "metadataVersion": "FND_DFF_2026_08_01",
+  "watermark": "2026-08-01T00:00:00Z",
+  "transformSpec": {
+    "kind": "resolve_fnd_descriptive_flexfield",
+    "metadataKey": [
+      "application",
+      "table",
+      "context",
+      "segment",
+      "metadataVersion"
+    ],
+    "incrementalColumn": "LAST_UPDATE_DATE",
+    "deleteMode": "explicit_tombstone",
+    "unknownContext": "reject"
+  }
+}

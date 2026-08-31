@@ -1,0 +1,26 @@
+[
+  {
+    "partyId": "1001",
+    "sourceKey": "AR:HZ_PARTIES:1001",
+    "context": "CUSTOMER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-08-02T08:00:00Z",
+    "attributes": {"customerTier": "PLATINUM", "regulatoryRegion": "NA"}
+  },
+  {
+    "partyId": "1003",
+    "sourceKey": "AR:HZ_PARTIES:1003",
+    "context": "CUSTOMER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-07-31T16:45:00Z",
+    "attributes": {"customerTier": "SILVER", "regulatoryRegion": "EU"}
+  },
+  {
+    "partyId": "1004",
+    "sourceKey": "AR:HZ_PARTIES:1004",
+    "context": "SUPPLIER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-08-03T10:00:00Z",
+    "attributes": {"paymentProfile": "NET45"}
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "caseId": "missing_context",
+    "expectedCode": "context_missing",
+    "duplicateMetadata": false,
+    "record": {
+      "partyId": "9001",
+      "application": "AR",
+      "table": "HZ_PARTIES",
+      "context": null,
+      "metadataVersion": "FND_DFF_2026_08_01",
+      "lastUpdateDate": "2026-08-05T00:00:00Z",
+      "segments": {"ATTRIBUTE1": "GOLD"}
+    }
+  },
+  {
+    "caseId": "ambiguous_context",
+    "expectedCode": "context_ambiguous",
+    "duplicateMetadata": true,
+    "record": {
+      "partyId": "9002",
+      "application": "AR",
+      "table": "HZ_PARTIES",
+      "context": "CUSTOMER_EXT",
+      "metadataVersion": "FND_DFF_2026_08_01",
+      "lastUpdateDate": "2026-08-05T00:00:00Z",
+      "segments": {"ATTRIBUTE1": "GOLD"}
+    }
+  },
+  {
+    "caseId": "metadata_version_mismatch",
+    "expectedCode": "metadata_version_mismatch",
+    "duplicateMetadata": false,
+    "record": {
+      "partyId": "9003",
+      "application": "AR",
+      "table": "HZ_PARTIES",
+      "context": "CUSTOMER_EXT",
+      "metadataVersion": "FND_DFF_2026_07_01",
+      "lastUpdateDate": "2026-08-05T00:00:00Z",
+      "segments": {"ATTRIBUTE1": "GOLD"}
+    }
+  }
+]
