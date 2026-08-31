@@ -1,0 +1,9 @@
+[
+  {"case": "boolean", "upmj": true, "expectedError": "JDE_UPMJ_INVALID"},
+  {"case": "string", "upmj": "124060", "expectedError": "JDE_UPMJ_INVALID"},
+  {"case": "negative", "upmj": -1, "expectedError": "JDE_UPMJ_INVALID"},
+  {"case": "day_zero", "upmj": 101000, "expectedError": "JDE_UPMJ_INVALID"},
+  {"case": "non_leap_day_366", "upmj": 101366, "expectedError": "JDE_UPMJ_INVALID"},
+  {"case": "day_367", "upmj": 100367, "expectedError": "JDE_UPMJ_INVALID"},
+  {"case": "century_out_of_range", "upmj": 300001, "expectedError": "JDE_UPMJ_INVALID"}
+]
