@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { BrandBolt, PixelIcon, TerminalWindow } from "../../shared/ui";
 import fixtureData from "./m4FixtureData.json";
+import { PixelPortrait, type PortraitId } from "./PixelPortrait";
 import "./m4-fixture-lab.css";
 
 export interface M4FixtureSummary {
@@ -64,6 +65,56 @@ interface LocalRunnerResponse {
   readonly evidence?: LocalEvidence;
   readonly code?: string;
 }
+
+const BAD_GUYS: ReadonlyArray<{
+  cartridgeId: string;
+  alias: string;
+  portrait: PortraitId;
+  source: string;
+  crime: string;
+  tell: string;
+  team: ReadonlyArray<{ id: PortraitId; name: string; role: string }>;
+}> = [
+  {
+    cartridgeId: "jde",
+    alias: "DAY ZERO",
+    portrait: "day-zero",
+    source: "JD Edwards EnterpriseOne 9.2 / IBM i",
+    crime: "Dates that are not dates.",
+    tell: "CYYDDD julian integers — 124001 is not January 24th, and 100000 is not a date at all.",
+    team: [
+      { id: "analyst", name: "source_analyst_jde", role: "frozen single-turn profiler" },
+      { id: "prisma", name: "PRISMA", role: "compiles the declarative cast" },
+      { id: "vale", name: "VALE", role: "rejects any lossy narrowing" },
+    ],
+  },
+  {
+    cartridgeId: "dynamics_ax",
+    alias: "THE HEIR",
+    portrait: "the-heir",
+    source: "Microsoft Dynamics AX 2012 R3 / SQL Server",
+    crime: "Children of parents that no longer exist.",
+    tell: "64-bit RecId table inheritance — a derived row whose base row is gone still looks valid.",
+    team: [
+      { id: "analyst", name: "source_analyst_ax", role: "resolves the inheritance chain" },
+      { id: "vale", name: "VALE", role: "fails closed on orphan-derived rows" },
+      { id: "ledger", name: "LEDGER", role: "reconciles accepted vs rejected" },
+    ],
+  },
+  {
+    cartridgeId: "oracle_ebs_19c",
+    alias: "ALIAS",
+    portrait: "alias",
+    source: "Oracle E-Business Suite / Oracle 19c",
+    crime: "Real columns wearing a disguise.",
+    tell: "ATTRIBUTE1..15 descriptive flexfields whose meaning lives in a separate FND catalog.",
+    team: [
+      { id: "analyst", name: "source_analyst_oracle", role: "reads FND flexfield context" },
+      { id: "prisma", name: "PRISMA", role: "emits typed output columns" },
+      { id: "atlas", name: "ATLAS", role: "coordinates, never approves" },
+    ],
+  },
+];
 
 const LOCAL_AGENT_ENABLED = import.meta.env.DEV && import.meta.env.VITE_LOCAL_CARTRIDGE_AGENT === "true";
 
@@ -185,6 +236,39 @@ export function M4FixtureLabPage() {
             <span>Invalid rejected <strong>{selected.invalidRecords ?? "—"}</strong></span>
           </div>
         </TerminalWindow>
+      </section>
+
+      <section className="m4-lab__badguys" aria-label="The three legacy adversaries">
+        <header className="m4-lab__badguys-head">
+          <h2>The three bad guys</h2>
+          <p>Each preloaded cartridge exists to defeat one specific, well-documented legacy data pathology. The fleet assigns a least-authority team per adversary.</p>
+        </header>
+        <div className="m4-lab__badguys-grid">
+          {BAD_GUYS.map((v) => (
+            <article
+              key={v.cartridgeId}
+              className={selected.cartridgeId === v.cartridgeId ? "m4-lab__villain m4-lab__villain--active" : "m4-lab__villain"}
+            >
+              <div className="m4-lab__villain-top">
+                <PixelPortrait id={v.portrait} size={104} title={v.alias} />
+                <div>
+                  <h3>{v.alias}</h3>
+                  <p className="m4-lab__villain-src">{v.source}</p>
+                </div>
+              </div>
+              <p className="m4-lab__villain-crime">{v.crime}</p>
+              <p className="m4-lab__villain-tell">{v.tell}</p>
+              <ul className="m4-lab__team" aria-label={`Fleet team assigned to ${v.alias}`}>
+                {v.team.map((a) => (
+                  <li key={`${v.cartridgeId}-${a.name}`}>
+                    <PixelPortrait id={a.id} size={40} title={a.name} />
+                    <span><b>{a.name}</b>{a.role}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
       </section>
 
       <footer className="m4-lab__footer">
