@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "bronzeRows": 11,
+    "deleteTombstones": 2,
+    "deltaRows": 5,
+    "insertedIdentities": 2,
+    "matchedIdentityUpdates": 1,
+    "silverRows": 6,
+    "snapshotRows": 6,
+    "unmatchedDeletes": 0
+  },
+  "countsDigest": "sha256:7d3716b0fb56b3796b04c813bf61992e41703c5caa1beecbbe9353134c5257f4",
+  "finalIdentityDigest": "sha256:5d4fe5f051b602bc291c137a3d472f742d962ccf72984c8064f56c32d3fd165d",
+  "status": "reconciled"
+}

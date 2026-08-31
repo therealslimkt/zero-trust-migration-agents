@@ -1,0 +1,25 @@
+{
+  "fixtureKind": "synthetic_ax_metadata_v1",
+  "identityFields": ["company", "partition", "table", "recId"],
+  "inheritance": {
+    "baseLinkField": "baseIdentity",
+    "scopeRule": "same_company_partition_and_recid"
+  },
+  "tables": [
+    {
+      "extends": null,
+      "kind": "base",
+      "table": "SyntheticAxPartyBase"
+    },
+    {
+      "extends": "SyntheticAxPartyBase",
+      "kind": "derived",
+      "table": "SyntheticAxCustomerDerived"
+    }
+  ],
+  "watermark": {
+    "fields": ["modifiedDateTime", "recId"],
+    "order": "ascending",
+    "semantics": "strictly_after_last_committed"
+  }
+}

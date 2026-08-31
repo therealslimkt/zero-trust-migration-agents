@@ -1,0 +1,13 @@
+[
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxPartyBase","recId":1001},"operation":"snapshot","recordDigest":"sha256:f0bfcc918d3d30b4dab81a8eb7d751807ff43eec7cddcae89845c74b2108c220","sequence":1},
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxCustomerDerived","recId":1001},"operation":"snapshot","recordDigest":"sha256:9054dcf34b5fdf40c0d5d1cf88de9cbf3322c1aa6310e4406b5da6cf9e8afb36","sequence":2},
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxPartyBase","recId":1002},"operation":"snapshot","recordDigest":"sha256:c89b86ae5054fe2cae2ddb5aa3eeeecabcd9f4f4b80a52439b665c3d50b54b9e","sequence":3},
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxCustomerDerived","recId":1002},"operation":"snapshot","recordDigest":"sha256:d4fb59d4be552a576a55d0016f9b3aa66dcee3668357d0db6cb725fa86517084","sequence":4},
+  {"identity":{"company":"SYN02","partition":"synthetic_partition_01","table":"SyntheticAxPartyBase","recId":1001},"operation":"snapshot","recordDigest":"sha256:15f8c732ba48f291aabc4b33bf9fc734ae6e47cc262bbc9a0fe64b3035998a25","sequence":5},
+  {"identity":{"company":"SYN02","partition":"synthetic_partition_01","table":"SyntheticAxCustomerDerived","recId":1001},"operation":"snapshot","recordDigest":"sha256:f6ee00e613f8754d8181e9090c708906803d4b08150cca24f4fa2de2a2b8510e","sequence":6},
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxCustomerDerived","recId":1001},"operation":"upsert","recordDigest":"sha256:95a788abd4d04af8956794e90da8842191301aa63a5fa33eef942f82b83ae179","sequence":7},
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxPartyBase","recId":1003},"operation":"upsert","recordDigest":"sha256:ab04eab69bdf3a616119a6693b4a85637d0b3e42863c5796b7733f5e7f623643","sequence":8},
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxCustomerDerived","recId":1003},"operation":"upsert","recordDigest":"sha256:5430bd738da17304e434c3b89e5bdac6e5e3140af5395a56e1f20e9c79afa9f4","sequence":9},
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxCustomerDerived","recId":1002},"operation":"delete","recordDigest":null,"sequence":10},
+  {"identity":{"company":"SYN01","partition":"synthetic_partition_01","table":"SyntheticAxPartyBase","recId":1002},"operation":"delete","recordDigest":null,"sequence":11}
+]
