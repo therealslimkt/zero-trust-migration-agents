@@ -1,0 +1,95 @@
+[
+  {
+    "case": "orphan_derived",
+    "expectedCode": "ax_orphan_derived",
+    "records": [
+      {
+        "baseIdentity": {
+          "company": "SYN01",
+          "partition": "synthetic_partition_01",
+          "table": "SyntheticAxPartyBase",
+          "recId": 9001
+        },
+        "identity": {
+          "company": "SYN01",
+          "partition": "synthetic_partition_01",
+          "table": "SyntheticAxCustomerDerived",
+          "recId": 9001
+        },
+        "modifiedDateTime": "2026-08-30T03:00:00Z",
+        "values": {
+          "accountLabel": "SYN-INVALID-ORPHAN"
+        }
+      }
+    ]
+  },
+  {
+    "case": "duplicate_identity",
+    "expectedCode": "ax_duplicate_identity",
+    "records": [
+      {
+        "baseIdentity": null,
+        "identity": {
+          "company": "SYN01",
+          "partition": "synthetic_partition_01",
+          "table": "SyntheticAxPartyBase",
+          "recId": 9002
+        },
+        "modifiedDateTime": "2026-08-30T03:00:01Z",
+        "values": {
+          "displayName": "Synthetic Duplicate A"
+        }
+      },
+      {
+        "baseIdentity": null,
+        "identity": {
+          "company": "SYN01",
+          "partition": "synthetic_partition_01",
+          "table": "SyntheticAxPartyBase",
+          "recId": 9002
+        },
+        "modifiedDateTime": "2026-08-30T03:00:02Z",
+        "values": {
+          "displayName": "Synthetic Duplicate B"
+        }
+      }
+    ]
+  },
+  {
+    "case": "cross_company_inheritance",
+    "expectedCode": "ax_cross_scope_inheritance",
+    "records": [
+      {
+        "baseIdentity": null,
+        "identity": {
+          "company": "SYN01",
+          "partition": "synthetic_partition_01",
+          "table": "SyntheticAxPartyBase",
+          "recId": 9003
+        },
+        "modifiedDateTime": "2026-08-30T03:00:03Z",
+        "values": {
+          "displayName": "Synthetic Cross Scope Base"
+        }
+      },
+      {
+        "baseIdentity": {
+          "company": "SYN01",
+          "partition": "synthetic_partition_01",
+          "table": "SyntheticAxPartyBase",
+          "recId": 9003
+        },
+        "identity": {
+          "company": "SYN02",
+          "partition": "synthetic_partition_01",
+          "table": "SyntheticAxCustomerDerived",
+          "recId": 9003
+        },
+        "modifiedDateTime": "2026-08-30T03:00:04Z",
+        "values": {
+          "accountLabel": "SYN-INVALID-CROSS-COMPANY"
+        }
+      }
+    ]
+  }
+]

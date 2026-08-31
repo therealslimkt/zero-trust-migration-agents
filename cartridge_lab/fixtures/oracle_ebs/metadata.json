@@ -1,0 +1,32 @@
+[
+  {
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "CUSTOMER_EXT",
+    "segment": "ATTRIBUTE1",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "outputField": "customerTier",
+    "dataType": "string",
+    "allowedValues": ["BRONZE", "SILVER", "GOLD", "PLATINUM"]
+  },
+  {
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "CUSTOMER_EXT",
+    "segment": "ATTRIBUTE2",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "outputField": "regulatoryRegion",
+    "dataType": "string",
+    "allowedValues": ["APAC", "EU", "NA"]
+  },
+  {
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "SUPPLIER_EXT",
+    "segment": "ATTRIBUTE1",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "outputField": "paymentProfile",
+    "dataType": "string",
+    "allowedValues": ["NET15", "NET30", "NET45"]
+  }
+]

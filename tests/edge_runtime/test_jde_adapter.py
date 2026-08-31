@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import unittest
+from datetime import date
 
-from edge_runtime.adapters.jde import decode
+from edge_runtime.adapters.jde import JDEDecodeError, decode, decode_upmj, encode_upmj
 from edge_runtime.types import SOURCE_SPECS, SourcePayload, SourceSpec
 
 
@@ -33,6 +34,40 @@ def _payload(data: bytes) -> SourcePayload:
 
 
 class JdeAdapterTests(unittest.TestCase):
+    def test_upmj_decodes_zero_boundaries_and_leap_day(self) -> None:
+        self.assertIsNone(decode_upmj(0))
+        self.assertEqual(decode_upmj(1), date(1900, 1, 1))
+        self.assertEqual(decode_upmj(99365), date(1999, 12, 31))
+        self.assertEqual(decode_upmj(100001), date(2000, 1, 1))
+        self.assertEqual(decode_upmj(100366), date(2000, 12, 31))
+        self.assertEqual(decode_upmj(101365), date(2001, 12, 31))
+        self.assertEqual(decode_upmj(299365), date(2199, 12, 31))
+
+    def test_upmj_round_trips_across_supported_centuries(self) -> None:
+        values = (
+            date(1900, 1, 1),
+            date(1999, 12, 31),
+            date(2000, 2, 29),
+            date(2024, 3, 1),
+            date(2199, 12, 31),
+        )
+        self.assertEqual(encode_upmj(None), 0)
+        for value in values:
+            with self.subTest(value=value):
+                self.assertEqual(decode_upmj(encode_upmj(value)), value)
+
+    def test_upmj_rejects_wrong_types_and_impossible_dates(self) -> None:
+        invalid = (True, "124060", -1, 101000, 101366, 100367, 300001)
+        for value in invalid:
+            with self.subTest(value=value):
+                with self.assertRaises(JDEDecodeError):
+                    decode_upmj(value)  # type: ignore[arg-type]
+
+        for value in (True, "2024-01-01", date(1899, 12, 31)):
+            with self.subTest(encoded=value):
+                with self.assertRaises(JDEDecodeError):
+                    encode_upmj(value)  # type: ignore[arg-type]
+
     def test_decodes_multiple_records_with_ordered_fields(self) -> None:
         raw = _record(1001, "Example Industries", "TIN-EXAMPLE-01") + _record(
             1002, "Sample Logistics", "TIN-EXAMPLE-02"

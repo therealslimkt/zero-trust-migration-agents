@@ -1,0 +1,108 @@
+[
+  {
+    "sequence": 0,
+    "operation": "SNAPSHOT",
+    "row": {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700001,
+      "lineNumber": 1,
+      "ledgerType": "AA",
+      "upmj": 124060,
+      "account": "1000.CASH",
+      "amountMinor": 125000,
+      "currency": "USD",
+      "explanation": "Synthetic opening debit"
+    }
+  },
+  {
+    "sequence": 0,
+    "operation": "SNAPSHOT",
+    "row": {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700001,
+      "lineNumber": 2,
+      "ledgerType": "AA",
+      "upmj": 124060,
+      "account": "4000.REVENUE",
+      "amountMinor": -125000,
+      "currency": "USD",
+      "explanation": "Synthetic opening credit"
+    }
+  },
+  {
+    "sequence": 0,
+    "operation": "SNAPSHOT",
+    "row": {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700002,
+      "lineNumber": 1,
+      "ledgerType": "AA",
+      "upmj": 123365,
+      "account": "9999.SUSPENSE",
+      "amountMinor": 0,
+      "currency": "USD",
+      "explanation": "Synthetic row awaiting delete"
+    }
+  },
+  {
+    "sequence": 1,
+    "operation": "UPDATE",
+    "key": {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700001,
+      "lineNumber": 1,
+      "ledgerType": "AA"
+    },
+    "row": {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700001,
+      "lineNumber": 1,
+      "ledgerType": "AA",
+      "upmj": 124060,
+      "account": "1000.CASH",
+      "amountMinor": 125000,
+      "currency": "USD",
+      "explanation": "Synthetic reviewed debit"
+    }
+  },
+  {
+    "sequence": 2,
+    "operation": "DELETE",
+    "key": {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700002,
+      "lineNumber": 1,
+      "ledgerType": "AA"
+    },
+    "row": null
+  },
+  {
+    "sequence": 3,
+    "operation": "INSERT",
+    "key": {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700003,
+      "lineNumber": 1,
+      "ledgerType": "AA"
+    },
+    "row": {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700003,
+      "lineNumber": 1,
+      "ledgerType": "AA",
+      "upmj": 124061,
+      "account": "9999.SUSPENSE",
+      "amountMinor": 0,
+      "currency": "USD",
+      "explanation": "Synthetic replacement row"
+    }
+  }
+]

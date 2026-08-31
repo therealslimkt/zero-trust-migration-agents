@@ -1,0 +1,101 @@
+[
+  {
+    "baseIdentity": null,
+    "identity": {
+      "company": "SYN01",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxPartyBase",
+      "recId": 1001
+    },
+    "modifiedDateTime": "2026-08-30T01:00:00Z",
+    "values": {
+      "displayName": "Synthetic Party 1001",
+      "partyKind": "organization"
+    }
+  },
+  {
+    "baseIdentity": {
+      "company": "SYN01",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxPartyBase",
+      "recId": 1001
+    },
+    "identity": {
+      "company": "SYN01",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxCustomerDerived",
+      "recId": 1001
+    },
+    "modifiedDateTime": "2026-08-30T01:00:01Z",
+    "values": {
+      "accountLabel": "SYN-CUST-1001",
+      "creditBand": "synthetic_standard"
+    }
+  },
+  {
+    "baseIdentity": null,
+    "identity": {
+      "company": "SYN01",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxPartyBase",
+      "recId": 1002
+    },
+    "modifiedDateTime": "2026-08-30T01:00:02Z",
+    "values": {
+      "displayName": "Synthetic Party 1002",
+      "partyKind": "organization"
+    }
+  },
+  {
+    "baseIdentity": {
+      "company": "SYN01",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxPartyBase",
+      "recId": 1002
+    },
+    "identity": {
+      "company": "SYN01",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxCustomerDerived",
+      "recId": 1002
+    },
+    "modifiedDateTime": "2026-08-30T01:00:03Z",
+    "values": {
+      "accountLabel": "SYN-CUST-1002",
+      "creditBand": "synthetic_hold"
+    }
+  },
+  {
+    "baseIdentity": null,
+    "identity": {
+      "company": "SYN02",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxPartyBase",
+      "recId": 1001
+    },
+    "modifiedDateTime": "2026-08-30T01:00:04Z",
+    "values": {
+      "displayName": "Synthetic Party 2001",
+      "partyKind": "organization"
+    }
+  },
+  {
+    "baseIdentity": {
+      "company": "SYN02",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxPartyBase",
+      "recId": 1001
+    },
+    "identity": {
+      "company": "SYN02",
+      "partition": "synthetic_partition_01",
+      "table": "SyntheticAxCustomerDerived",
+      "recId": 1001
+    },
+    "modifiedDateTime": "2026-08-30T01:00:05Z",
+    "values": {
+      "accountLabel": "SYN-CUST-2001",
+      "creditBand": "synthetic_standard"
+    }
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "artifactDigests": {
+    "bronze": "sha256:d04ef0ad8ed490ba1d23c3745cb26726a2ed2f55725b1d22dc46fc69ab0314b5",
+    "delta": "sha256:21a72a8e47881d1f595f0cb16a778d98099a16421798c94922d008795c6fac7f",
+    "invalid": "sha256:376d406ee0bc8d9e3d0baa8b3283e7bbe8259057247ab2517a84ce21a07e1cb3",
+    "metadata": "sha256:1b264e30b3e0c0ffb73c2b32a7442c8136737a25800d0e2448fea35770e40c24",
+    "reconciliation": "sha256:aceccb767cfab01c81d8f8b1c91b4fb70bf45e56c7455be7d55023ecb469b793",
+    "silver": "sha256:ca77ba4ab1f569b17e8a8865c98225c6d560458497c41dbe52ed4c3c306243d4",
+    "snapshot": "sha256:196d19aa99fa5d29376415786e323f402aed46ac2c071217bd7b6d1b50e50795"
+  },
+  "cartridgeId": "dynamics_ax",
+  "fixtureId": "synthetic_ax_packet_v1",
+  "readiness": "synthetic_fixture",
+  "snapshotHighWatermark": {
+    "modifiedDateTime": "2026-08-30T01:00:05Z",
+    "recId": 1001
+  },
+  "transformSpecDigest": "sha256:7f875b9bfc9fce91f311e2dd60c3172e45ac3a1860f47d979470621248111b80"
+}

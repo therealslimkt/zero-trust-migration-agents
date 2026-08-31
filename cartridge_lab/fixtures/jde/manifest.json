@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "jde_f0911_hero_v1",
+  "artifactFiles": {
+    "metadata": "metadata.json",
+    "snapshot": "snapshot.json",
+    "delta": "delta.json",
+    "invalid": "invalid.json",
+    "bronze": "bronze.json",
+    "silver": "silver.json",
+    "reconciliation": "reconciliation.json"
+  },
+  "artifactDigests": {
+    "metadata": "sha256:2cfed5680309c0df5a140c6132aa5898a7347958f988c22316c6a2fc1cd58f48",
+    "snapshot": "sha256:19bfbdd5e7bc76567bdbf3a104b746275f828429c146575b650a04d6a7a8495a",
+    "delta": "sha256:c5a2ff1d50e3db814985171eb87b12afba042dfd3bbeaa48ef9186abffb9a451",
+    "invalid": "sha256:48d4cd058b7831219e446b0542bc362e6d76d7ec5ed58b0c77ce96a6d0c10f1b",
+    "bronze": "sha256:4ea4dcf6bd28d7d636b014b9660bcddc98c41e05e3290024d51141c7a96cdfbd",
+    "silver": "sha256:74415acbfa08352c9668f18a1b2b53428ef8157c3671e544ff7ece06f01a632c",
+    "reconciliation": "sha256:101fd6b52d0a397ffe1fda2c04589d58fa74c71b2653b23b9a98fe2c1c2006ad"
+  }
+}

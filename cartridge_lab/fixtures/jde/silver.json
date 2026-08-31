@@ -1,0 +1,38 @@
+[
+  {
+    "documentCompany": "00001",
+    "documentType": "JE",
+    "documentNumber": 700001,
+    "lineNumber": 1,
+    "ledgerType": "AA",
+    "account": "1000.CASH",
+    "amountMinor": 125000,
+    "currency": "USD",
+    "explanation": "Synthetic reviewed debit",
+    "postingDate": "2024-02-29"
+  },
+  {
+    "documentCompany": "00001",
+    "documentType": "JE",
+    "documentNumber": 700001,
+    "lineNumber": 2,
+    "ledgerType": "AA",
+    "account": "4000.REVENUE",
+    "amountMinor": -125000,
+    "currency": "USD",
+    "explanation": "Synthetic opening credit",
+    "postingDate": "2024-02-29"
+  },
+  {
+    "documentCompany": "00001",
+    "documentType": "JE",
+    "documentNumber": 700003,
+    "lineNumber": 1,
+    "ledgerType": "AA",
+    "account": "9999.SUSPENSE",
+    "amountMinor": 0,
+    "currency": "USD",
+    "explanation": "Synthetic replacement row",
+    "postingDate": "2024-03-01"
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "jde_f0911_hero_v1",
+  "sourceSystem": "jd_edwards",
+  "sourceTable": "F0911",
+  "readiness": "synthetic_fixture",
+  "synthetic": true,
+  "transformSpec": {
+    "dateEncoding": "UPMJ_CYYDDD",
+    "keyFields": [
+      "documentCompany",
+      "documentType",
+      "documentNumber",
+      "lineNumber",
+      "ledgerType"
+    ],
+    "amountUnit": "minor_currency_unit",
+    "deltaOrder": "strict_contiguous_sequence",
+    "deleteMode": "hard_delete"
+  }
+}

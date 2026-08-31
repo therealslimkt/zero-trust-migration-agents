@@ -1,0 +1,13 @@
+{
+  "snapshotRecords": 3,
+  "deltaUpserts": 2,
+  "deltaDeletes": 1,
+  "finalRecords": 3,
+  "deletedSourceKeys": ["AR:HZ_PARTIES:1002"],
+  "inputDigest": "sha256:370dfe55b44a09903ab3b0d187164e5f742044a0d3f310070e6d4897f9b4287c",
+  "bronzeDigest": "sha256:a31eb04eb411f80d93335281fd17937e8111bafb60b3aa09210aab6b7dc99cdb",
+  "silverDigest": "sha256:767965ee10b319c71997cd74e40a9359d37573e4506d1d8d94de192fd8ee1874",
+  "metadataDigest": "sha256:ff0470dd85568dbb913dd3299f0f5ec442db2490ee2c10134cb5c70312b8d8b6",
+  "transformSpecDigest": "sha256:d579858dce034f9090a7485d10b46c40fc974a9604c33566417bf607d1c4dffc",
+  "lineageDigest": "sha256:02306ab380536a76ef970dfdee21b39954b8115655e2f17147046521bee3de03"
+}

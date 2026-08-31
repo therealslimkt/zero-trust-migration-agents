@@ -1,0 +1,29 @@
+[
+  {
+    "partyId": "1001",
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "CUSTOMER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-07-28T09:15:00Z",
+    "segments": {"ATTRIBUTE1": "GOLD", "ATTRIBUTE2": "NA"}
+  },
+  {
+    "partyId": "1002",
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "SUPPLIER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-07-29T11:30:00Z",
+    "segments": {"ATTRIBUTE1": "NET30"}
+  },
+  {
+    "partyId": "1003",
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "CUSTOMER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-07-31T16:45:00Z",
+    "segments": {"ATTRIBUTE1": "SILVER", "ATTRIBUTE2": "EU"}
+  }
+]

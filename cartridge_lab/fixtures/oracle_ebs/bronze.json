@@ -1,0 +1,29 @@
+[
+  {
+    "partyId": "1001",
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "CUSTOMER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-08-02T08:00:00Z",
+    "segments": {"ATTRIBUTE1": "PLATINUM", "ATTRIBUTE2": "NA"}
+  },
+  {
+    "partyId": "1003",
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "CUSTOMER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-07-31T16:45:00Z",
+    "segments": {"ATTRIBUTE1": "SILVER", "ATTRIBUTE2": "EU"}
+  },
+  {
+    "partyId": "1004",
+    "application": "AR",
+    "table": "HZ_PARTIES",
+    "context": "SUPPLIER_EXT",
+    "metadataVersion": "FND_DFF_2026_08_01",
+    "lastUpdateDate": "2026-08-03T10:00:00Z",
+    "segments": {"ATTRIBUTE1": "NET45"}
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "status": "matched",
+  "snapshotCount": 3,
+  "deltaCount": 3,
+  "insertCount": 1,
+  "updateCount": 1,
+  "deleteCount": 1,
+  "finalCount": 3,
+  "deletedKeys": [
+    {
+      "documentCompany": "00001",
+      "documentType": "JE",
+      "documentNumber": 700002,
+      "lineNumber": 1,
+      "ledgerType": "AA"
+    }
+  ],
+  "snapshotDigest": "sha256:19bfbdd5e7bc76567bdbf3a104b746275f828429c146575b650a04d6a7a8495a",
+  "journalDigest": "sha256:c5a2ff1d50e3db814985171eb87b12afba042dfd3bbeaa48ef9186abffb9a451",
+  "bronzeDigest": "sha256:4ea4dcf6bd28d7d636b014b9660bcddc98c41e05e3290024d51141c7a96cdfbd",
+  "silverDigest": "sha256:74415acbfa08352c9668f18a1b2b53428ef8157c3671e544ff7ece06f01a632c"
+}
