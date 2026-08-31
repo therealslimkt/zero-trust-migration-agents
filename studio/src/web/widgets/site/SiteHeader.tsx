@@ -53,8 +53,8 @@ function isPublishedReplay(demo?: PublishedDemoDescriptor): demo is PublishedDem
 export function SiteHeader({
   activeRoute = "/",
   onNavigate,
-  brandTitle = "SPARKY",
-  tagline = "GOVERNED DATA MOVEMENT",
+  brandTitle = "KERAUN",
+  tagline = "THUNDERBOLT GOVERNANCE",
   mode = "public",
   authStatus = "unconfigured",
   userName,
@@ -109,7 +109,7 @@ export function SiteHeader({
       <header role="banner" className={`site-header ${className}`.trim()}>
         <div className="site-header__container">
           <a href="/" className="site-header__brand" onClick={(event) => navigate(event, "/")} aria-label={`${brandTitle} home`}>
-            <span className="site-header__brand-icon"><BrandBolt title="Sparky" /></span>
+            <span className="site-header__brand-icon"><BrandBolt title="Keraun" /></span>
             <span className="site-header__brand-text"><span className="site-header__brand-title">{brandTitle}</span><span className="site-header__brand-tag">{tagline}{mode === "recorded_demo" ? " · REPLAY" : ""}</span></span>
           </a>
           <nav className="site-header__nav" aria-label="Main navigation"><ul className="site-header__nav-list">{navItems.map((item) => <li key={item.id}>{navLink(item)}</li>)}</ul></nav>
