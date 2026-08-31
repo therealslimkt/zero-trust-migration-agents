@@ -1,0 +1,38 @@
+[
+  {
+    "cartridgeId": "jde",
+    "displayName": "JD Edwards EnterpriseOne",
+    "sourceSystem": "jd_edwards",
+    "readiness": "synthetic_fixture",
+    "packetDigest": "sha256:0c9ed1675da61372541a5535438949135a994e6563d4674d3a91cad7d9a4adee",
+    "transformSpecDigest": "sha256:9c591c9f0da5b666c90dd2fd2962ee2cc23cd98a1edfbbd6900b707636193ed5",
+    "reconciliationDigest": "sha256:101fd6b52d0a397ffe1fda2c04589d58fa74c71b2653b23b9a98fe2c1c2006ad",
+    "snapshotRecords": 3,
+    "silverRecords": 3,
+    "invalidRecords": 7
+  },
+  {
+    "cartridgeId": "dynamics_ax",
+    "displayName": "Microsoft Dynamics AX",
+    "sourceSystem": "microsoft_dynamics_ax",
+    "readiness": "synthetic_fixture",
+    "packetDigest": "sha256:5ce2bde2f9878e248cb8423d08512703779b28994aebb963f660246c53cfb826",
+    "transformSpecDigest": "sha256:7f875b9bfc9fce91f311e2dd60c3172e45ac3a1860f47d979470621248111b80",
+    "reconciliationDigest": "sha256:aceccb767cfab01c81d8f8b1c91b4fb70bf45e56c7455be7d55023ecb469b793",
+    "snapshotRecords": 6,
+    "silverRecords": 6,
+    "invalidRecords": 3
+  },
+  {
+    "cartridgeId": "oracle_ebs_19c",
+    "displayName": "Oracle EBS on Oracle 19c",
+    "sourceSystem": "oracle_ebs_19c",
+    "readiness": "synthetic_fixture",
+    "packetDigest": "sha256:d76bb58632956605b48d6d8c31e57064c0f0592c75b7784d864a275051ffe5eb",
+    "transformSpecDigest": "sha256:fe5eedeebe8ca3d4ac958d20573451224ec3b319b403997cd2d89a2220cdaaa6",
+    "reconciliationDigest": "sha256:e3f9ab0dd3f9d7bb6c5fe811624ec0f15799f783c6b0a43ee5def903c93d100e",
+    "snapshotRecords": 3,
+    "silverRecords": 3,
+    "invalidRecords": 3
+  }
+]
