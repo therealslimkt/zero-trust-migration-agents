@@ -79,6 +79,7 @@ function localCartridgeAgentProxy(): ProxyOptions {
     target: LOCAL_CARTRIDGE_AGENT_TARGET,
     changeOrigin: false,
     ws: false,
+    rewrite: (path) => path.replace(/^\/api\/local-cartridge/, ''),
     configure(proxy) {
       proxy.on('proxyReq', (request) => {
         request.removeHeader('authorization')

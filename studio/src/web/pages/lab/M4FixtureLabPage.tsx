@@ -91,7 +91,7 @@ export function LocalCartridgeRunner({ enabled = LOCAL_AGENT_ENABLED }: { readon
     try {
       const response = await fetch("/api/local-cartridge/v1/evidence-runs", { method: "POST", cache: "no-store" });
       const body: unknown = await response.json();
-      if (!response.ok || !isRunnerResponse(body)) throw new Error("local_agent_unavailable");
+      if ((!response.ok && response.status !== 409) || !isRunnerResponse(body)) throw new Error("local_agent_unavailable");
       setState(body);
     } catch {
       setState({ status: "failed", code: "local_agent_unavailable" });

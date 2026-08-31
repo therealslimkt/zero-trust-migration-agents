@@ -9,7 +9,7 @@
     var(--pixel-bg-viewport);
 }
 
-.m4-lab__header, .m4-lab__truth, .m4-lab__guide, .m4-lab__tabs, .m4-lab__grid, .m4-lab__footer { max-width: 1240px; margin-inline: auto; }
+.m4-lab__header, .m4-lab__truth, .m4-lab__guide, .m4-lab__runner, .m4-lab__tabs, .m4-lab__grid, .m4-lab__footer { max-width: 1240px; margin-inline: auto; }
 
 .m4-lab__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 28px; padding: 28px 0 20px; }
 .m4-lab__header > div { max-width: 790px; }
