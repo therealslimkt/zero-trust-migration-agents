@@ -1,0 +1,13 @@
+services:
+  jde-e1-ibmi:
+    build:
+      context: ../..
+      dockerfile: data/jde_e1_ibmi/Dockerfile
+    environment:
+      POSTGRES_DB: keraun_jde
+      POSTGRES_USER: keraun
+      POSTGRES_PASSWORD: synthetic-only-admin
+    ports: ["127.0.0.1:15432:5432"]
+    volumes: ["jde-data:/var/lib/postgresql/data"]
+volumes:
+  jde-data:

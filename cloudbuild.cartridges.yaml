@@ -1,0 +1,34 @@
+# Builds only project-owned synthetic cartridge images. Deployment is a separate
+# reviewed ADK-provisioner action, and image digests—not this mutable tag—are
+# the only accepted host inputs.
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: sparky-services
+  _TAG: required
+
+steps:
+  - id: build-jde-emulator
+    name: gcr.io/cloud-builders/docker
+    waitFor: ['-']
+    args: ["build", "--file=data/jde_e1_ibmi/Dockerfile", "--tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-jde-e1-ibmi:${_TAG}", "."]
+  - id: build-ax-emulator
+    name: gcr.io/cloud-builders/docker
+    waitFor: ['-']
+    args: ["build", "--file=data/dynamics_ax_2012_r3/Dockerfile", "--tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-dynamics-ax:${_TAG}", "."]
+  - id: build-ebs-emulator
+    name: gcr.io/cloud-builders/docker
+    waitFor: ['-']
+    args: ["build", "--file=data/oracle_ebs_19c/Dockerfile", "--tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-oracle-ebs-19c:${_TAG}", "."]
+  - id: build-sandboxed-evidence-runner
+    name: gcr.io/cloud-builders/docker
+    waitFor: ['-']
+    args: ["build", "--file=cartridge_runtime/runner/Dockerfile", "--tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-cartridge-evidence-runner:${_TAG}", "."]
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-jde-e1-ibmi:${_TAG}
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-dynamics-ax:${_TAG}
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-oracle-ebs-19c:${_TAG}
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-cartridge-evidence-runner:${_TAG}
+
+options:
+  logging: CLOUD_LOGGING_ONLY

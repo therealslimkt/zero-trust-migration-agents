@@ -1,0 +1,13 @@
+services:
+  oracle-ebs-19c:
+    build:
+      context: ../..
+      dockerfile: data/oracle_ebs_19c/Dockerfile
+    environment:
+      POSTGRES_DB: keraun_ebs
+      POSTGRES_USER: keraun
+      POSTGRES_PASSWORD: synthetic-only-admin
+    ports: ["127.0.0.1:15434:5432"]
+    volumes: ["ebs-data:/var/lib/postgresql/data"]
+volumes:
+  ebs-data:

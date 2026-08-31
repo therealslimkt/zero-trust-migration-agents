@@ -1,0 +1,16 @@
+# Never upload developer-local Firebase configuration with a Cloud Build source bundle.
+.git
+.gitignore
+.gcloudignore
+.firebaserc
+firebase.json
+firestore.rules
+node_modules
+**/node_modules
+dist
+**/dist
+venv
+.venv
+.env
+.env.*
+*.log
