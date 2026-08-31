@@ -314,6 +314,9 @@ func (r *M3PostgresRepository) appendEvent(
 		(code != "" && !m3CodeRE.MatchString(code)) {
 		return 0, ErrM3Invalid
 	}
+	if evidenceRefs == nil {
+		evidenceRefs = []string{}
+	}
 	var sequence int64
 	err := tx.QueryRowContext(ctx, `
 		UPDATE mission_control_v2.runs
