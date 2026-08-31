@@ -99,7 +99,7 @@ To inspect it locally:
 
 ```sh
 cd studio
-npm run dev
+npm run dev:m4
 # open http://localhost:5173/lab/m4
 ```
 
