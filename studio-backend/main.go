@@ -277,6 +277,46 @@ func configuredWebBFF(controlPlane http.Handler) (http.Handler, error) {
 		if !ok {
 			return nil, errWebBFFConfiguration
 		}
+		// A credential-free local demo must be useful from an empty durable
+		// state without pretending that any cloud work ran. Create exactly one
+		// canonical three-source run in its real initial state, atomically bound
+		// to the fixed loopback demo identity. Any existing owned control-plane
+		// run or explicit run list disables seeding, so restarts are create-once.
+		hasOwnedRun := false
+		for _, binding := range store.RunOwnershipsForOwner(identity.Subject) {
+			if _, _, snapshotErr := runs.WebRunSnapshot(binding.RunID); snapshotErr == nil {
+				hasOwnedRun = true
+				break
+			}
+		}
+		if len(localRunIDs) == 0 && !hasOwnedRun {
+			const portfolioName = "Local Demo Portfolio"
+			actor, actorOK := webActorForUID(identity.Subject)
+			if !actorOK {
+				return nil, errWebBFFConfiguration
+			}
+			sources := make([]cpSourceDescriptor, 0, len(cpCanonicalSources))
+			for _, canonical := range cpCanonicalSources {
+				sources = append(sources, cpSourceDescriptor{
+					SourceID: canonical.SourceID,
+					Hostname: canonical.Hostname,
+				})
+			}
+			_, seedErr := runs.CreateRunWithOwnership(&cpCreateRequest{
+				SchemaVersion: cpSchemaVersion,
+				PortfolioName: webScopedPortfolioName(identity.Subject, portfolioName),
+				Sources:       sources,
+				RequestedBy:   actor,
+			}, func(created *ControlPlaneRun) error {
+				return store.PutRunOwnership(WebRunOwnershipRecord{
+					RunID: created.RunID, OwnerUID: identity.Subject,
+					PortfolioName: portfolioName, Owner: owner, CreatedAt: created.CreatedAt,
+				})
+			})
+			if seedErr != nil {
+				return nil, errWebBFFConfiguration
+			}
+		}
 		for _, runID := range localRunIDs {
 			run, _, snapshotErr := runs.WebRunSnapshot(runID)
 			if snapshotErr != nil || !webValidPortfolioName(run.PortfolioName) {

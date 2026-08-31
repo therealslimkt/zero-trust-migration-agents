@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -116,6 +117,70 @@ func TestConfiguredLocalDemoBindsExplicitDurableRunsToLoopbackIdentity(t *testin
 	handler.ServeHTTP(response, request)
 	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), run.RunID) {
 		t.Fatalf("local demo run response = %d %s", response.Code, response.Body.String())
+	}
+}
+
+func TestConfiguredLocalDemoSeedsExactlyOneTruthfulCreatedRunFromEmptyState(t *testing.T) {
+	directory := t.TempDir()
+	controlPlane, err := NewControlPlaneHandler(filepath.Join(directory, "control.json"), "api-token")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cpHandler := controlPlane.(*ControlPlaneHandler)
+
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO", "true")
+	t.Setenv("MISSION_CONTROL_WEB_STATE_PATH", filepath.Join(directory, "web.json"))
+	t.Setenv("MISSION_CONTROL_FIRESTORE_PROJECT_ID", "")
+	t.Setenv("MISSION_CONTROL_FIREBASE_PROJECT_ID", "")
+	t.Setenv("MISSION_CONTROL_LOCAL_DEMO_RUN_IDS", "")
+
+	handler, err := configuredWebBFF(controlPlane)
+	if err != nil {
+		t.Fatalf("first configuredWebBFF: %v", err)
+	}
+	// A restart against both durable files must reuse the ownership binding,
+	// not create another portfolio.
+	handler, err = configuredWebBFF(controlPlane)
+	if err != nil {
+		t.Fatalf("second configuredWebBFF: %v", err)
+	}
+
+	cpHandler.store.mu.Lock()
+	runCount := len(cpHandler.store.snap.Runs)
+	eventCount := len(cpHandler.store.snap.Events)
+	approvalCount := len(cpHandler.store.snap.Approvals)
+	cpHandler.store.mu.Unlock()
+	if runCount != 1 || eventCount != 1 || approvalCount != 0 {
+		t.Fatalf("seeded durable state runs=%d events=%d approvals=%d", runCount, eventCount, approvalCount)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/api/web/v1/runs", nil)
+	request.Header.Set("Authorization", "Bearer "+localDemoWebToken)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusOK {
+		t.Fatalf("local demo list response = %d %s", response.Code, response.Body.String())
+	}
+	var body WebListLiveRunsResponse
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Runs) != 1 {
+		t.Fatalf("local demo run count = %d", len(body.Runs))
+	}
+	run := body.Runs[0]
+	if run.PortfolioName != "Local Demo Portfolio" || run.State != WebRunState(ControlPlaneStateCreated) ||
+		run.PortfolioPlanDigest != "" || len(run.Sources) != len(cpCanonicalSources) {
+		t.Fatalf("seeded run is not truthful initial state: %#v", run)
+	}
+	for index, source := range run.Sources {
+		canonical := cpCanonicalSources[index]
+		if string(source.SourceID) != canonical.SourceID || source.Hostname != canonical.Hostname ||
+			source.State != WebRunState(ControlPlaneStateCreated) || source.RecordsRead != 0 ||
+			source.RecordsWritten != 0 || source.RecordsRejected != 0 || source.PlanDigest != "" ||
+			len(source.EvidenceReferences) != 0 {
+			t.Fatalf("seeded source %d has fabricated progress: %#v", index, source)
+		}
 	}
 }
 

@@ -1,82 +1,129 @@
-import { randomBytes } from 'node:crypto'
-import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
 import { spawn } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
+import { mkdtemp, readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
-function option(name) {
-  const index = process.argv.indexOf(name)
-  return index >= 0 ? process.argv[index + 1] : undefined
+function option(name, argv = process.argv) {
+  const index = argv.indexOf(name)
+  if (index < 0) return undefined
+
+  const value = argv[index + 1]
+  if (!value || value.startsWith('--')) {
+    throw new Error(`${name} requires a value`)
+  }
+  return value
 }
 
-const stateArgument = option('--state') || process.env.MISSION_CONTROL_STATE_PATH
-if (!stateArgument) {
-  console.error('Usage: npm run dev:demo -- --state /absolute/path/to/control-plane.json')
-  process.exit(2)
+function runIdsFromSnapshot(snapshot) {
+  return Array.isArray(snapshot?.runs)
+    ? snapshot.runs.map((run) => run?.runId).filter((runId) => typeof runId === 'string')
+    : []
 }
 
-const statePath = resolve(stateArgument)
-let snapshot
-try {
-  snapshot = JSON.parse(await readFile(statePath, 'utf8'))
-} catch {
-  console.error(`Local demo state could not be read: ${statePath}`)
-  process.exit(2)
-}
-
-const runIds = Array.isArray(snapshot?.runs)
-  ? snapshot.runs.map((run) => run?.runId).filter((runId) => typeof runId === 'string')
-  : []
-const apiToken = process.env.MISSION_CONTROL_API_TOKEN || randomBytes(32).toString('hex')
-const webStatePath = process.env.MISSION_CONTROL_WEB_STATE_PATH || `${statePath}.web-demo.json`
-const port = option('--port') || '5173'
-const studioDirectory = resolve(import.meta.dirname, '..')
-const repositoryDirectory = resolve(studioDirectory, '..')
-
-const environment = {
-  ...process.env,
-  MISSION_CONTROL_STATE_PATH: statePath,
-  MISSION_CONTROL_API_TOKEN: apiToken,
-  MISSION_CONTROL_WEB_STATE_PATH: webStatePath,
-  MISSION_CONTROL_LOCAL_DEMO: 'true',
-  MISSION_CONTROL_LOCAL_DEMO_RUN_IDS: runIds.join(','),
-  VITE_LOCAL_DEMO: 'true',
-}
-delete environment.MISSION_CONTROL_FIREBASE_PROJECT_ID
-
-console.log(`Local demo: ${runIds.length} durable run${runIds.length === 1 ? '' : 's'} from ${statePath}`)
-console.log(`Local demo UI: http://127.0.0.1:${port}`)
-
-const backend = spawn('go', ['run', '.'], {
-  cwd: resolve(repositoryDirectory, 'studio-backend'),
-  env: environment,
-  stdio: 'inherit',
-})
-const frontend = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', port], {
-  cwd: studioDirectory,
-  env: environment,
-  stdio: 'inherit',
-})
-
-let closing = false
-function close(signal = 'SIGTERM') {
-  if (closing) return
-  closing = true
-  backend.kill(signal)
-  frontend.kill(signal)
-}
-
-for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => close(signal))
-}
-
-for (const [name, child] of [['backend', backend], ['frontend', frontend]]) {
-  child.on('exit', (code, signal) => {
-    if (!closing) {
-      console.error(`${name} stopped unexpectedly (${signal || code}).`)
-      close()
-      process.exitCode = code || 1
+export async function prepareLocalDemoState(stateArgument, environment = process.env) {
+  const configuredState = stateArgument || environment.MISSION_CONTROL_STATE_PATH
+  if (!configuredState) {
+    const directory = await mkdtemp(join(tmpdir(), 'mission-control-local-demo-'))
+    return {
+      runIds: [],
+      statePath: join(directory, 'control-plane.json'),
+      temporary: true,
     }
-  })
+  }
+
+  const statePath = resolve(configuredState)
+  let snapshot
+  try {
+    snapshot = JSON.parse(await readFile(statePath, 'utf8'))
+  } catch {
+    throw new Error(`Local demo state could not be read: ${statePath}`)
+  }
+  return {
+    runIds: runIdsFromSnapshot(snapshot),
+    statePath,
+    temporary: false,
+  }
 }
 
-await new Promise(() => {})
+export async function main(argv = process.argv, processEnvironment = process.env) {
+  let prepared
+  let port
+  try {
+    prepared = await prepareLocalDemoState(option('--state', argv), processEnvironment)
+    port = option('--port', argv) || '5173'
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exitCode = 2
+    return
+  }
+
+  const { runIds, statePath, temporary } = prepared
+  const apiToken = processEnvironment.MISSION_CONTROL_API_TOKEN || randomBytes(32).toString('hex')
+  const webStatePath = processEnvironment.MISSION_CONTROL_WEB_STATE_PATH || `${statePath}.web-demo.json`
+  const studioDirectory = resolve(import.meta.dirname, '..')
+  const repositoryDirectory = resolve(studioDirectory, '..')
+
+  const environment = {
+    ...processEnvironment,
+    MISSION_CONTROL_STATE_PATH: statePath,
+    MISSION_CONTROL_API_TOKEN: apiToken,
+    MISSION_CONTROL_WEB_STATE_PATH: webStatePath,
+    MISSION_CONTROL_LOCAL_DEMO: 'true',
+    MISSION_CONTROL_LOCAL_DEMO_RUN_IDS: runIds.join(','),
+    VITE_LOCAL_DEMO: 'true',
+  }
+  delete environment.MISSION_CONTROL_FIREBASE_PROJECT_ID
+
+  console.log(`Local demo state: ${statePath}${temporary ? ' (temporary)' : ''}`)
+  console.log(`Local demo: ${runIds.length} existing durable run${runIds.length === 1 ? '' : 's'}`)
+  console.log(`Local demo UI: http://127.0.0.1:${port}`)
+
+  const backend = spawn('go', ['run', '.'], {
+    cwd: resolve(repositoryDirectory, 'studio-backend'),
+    env: environment,
+    stdio: 'inherit',
+  })
+  const frontend = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', port], {
+    cwd: studioDirectory,
+    env: environment,
+    stdio: 'inherit',
+  })
+
+  let closing = false
+  let childrenStopped = 0
+  let finish
+  const childrenFinished = new Promise((resolveFinished) => {
+    finish = resolveFinished
+  })
+  function close(signal = 'SIGTERM') {
+    if (closing) return
+    closing = true
+    backend.kill(signal)
+    frontend.kill(signal)
+  }
+
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => close(signal))
+  }
+
+  for (const [name, child] of [['backend', backend], ['frontend', frontend]]) {
+    child.on('exit', (code, signal) => {
+      childrenStopped += 1
+      if (!closing) {
+        console.error(`${name} stopped unexpectedly (${signal || code}).`)
+        close()
+        process.exitCode = code || 1
+      }
+      if (childrenStopped === 2) finish()
+    })
+  }
+
+  await childrenFinished
+}
+
+const invokedPath = process.argv[1] ? pathToFileURL(resolve(process.argv[1])).href : ''
+if (import.meta.url === invokedPath) {
+  await main()
+}
