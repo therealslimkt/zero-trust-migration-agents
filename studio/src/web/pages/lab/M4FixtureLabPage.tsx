@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { PixelIcon, StatusBeacon, TerminalWindow } from "../../shared/ui";
+import { BrandBolt, PixelIcon, TerminalWindow } from "../../shared/ui";
 import fixtureData from "./m4FixtureData.json";
 import "./m4-fixture-lab.css";
 
@@ -59,16 +59,20 @@ export function M4FixtureLabPage() {
     <main className="m4-lab" aria-labelledby="m4-lab-title">
       <header className="m4-lab__header">
         <div>
-          <p className="m4-lab__eyebrow">Milestone 4 / fixture evidence</p>
-          <h1 id="m4-lab-title">Three-cartridge local lab</h1>
-          <p>JDE, Dynamics AX, and Oracle EBS synthetic packets are inspected locally before any future cloud or plugin claim.</p>
+          <p className="m4-lab__eyebrow">KERAUN / LOCAL CARTRIDGE LAB</p>
+          <h1 id="m4-lab-title">Explore three migration recipes, safely.</h1>
+          <p>Each cartridge turns one legacy source pattern into a deterministic migration recipe. Pick a system to inspect synthetic inputs, expected outputs, and the checks that must pass before a live connection.</p>
         </div>
-        <StatusBeacon status="warning" label="LOCAL SYNTHETIC FIXTURE" mode="steady" size="sm" />
+        <span className="m4-lab__badge"><BrandBolt /><span>LOCAL FIXTURE LAB</span></span>
       </header>
 
-      <section className="m4-lab__truth" aria-label="Truth boundary">
-        <PixelIcon name="shield-check" size="sm" color="google-yellow" />
-        <p>No Dataflow job, BigQuery table, hosted backend, customer data, or production plugin is represented here.</p>
+      <section className="m4-lab__truth" aria-label="What this local lab proves">
+        <span className="m4-lab__truth-icon"><BrandBolt /></span>
+        <div><strong>What you can explore here</strong><p>Three checked-in synthetic migration recipes and their deterministic evidence. No sign-in is required to inspect this read-only lab; no live source, customer data, cloud job, hosted backend, or production plugin is represented.</p></div>
+      </section>
+
+      <section className="m4-lab__guide" aria-label="How to use this lab">
+        <span><b>01</b>Choose a legacy system</span><span><b>02</b>Read its identity and output evidence</span><span><b>03</b>Inspect the checks that keep it honest</span>
       </section>
 
       <div className="m4-lab__tabs" role="tablist" aria-label="Fixture cartridges">

@@ -6,11 +6,12 @@ import { M4FixtureLabPage } from './M4FixtureLabPage'
 describe('M4FixtureLabPage', () => {
   it('shows three local synthetic cartridges without cloud-success claims', () => {
     render(<M4FixtureLabPage />)
-    expect(screen.getByText('LOCAL SYNTHETIC FIXTURE')).toBeInTheDocument()
+    expect(screen.getByText('LOCAL FIXTURE LAB')).toBeInTheDocument()
     expect(screen.getByText('JD Edwards EnterpriseOne')).toBeInTheDocument()
     expect(screen.getByText('Microsoft Dynamics AX')).toBeInTheDocument()
     expect(screen.getByText('Oracle EBS on Oracle 19c')).toBeInTheDocument()
-    expect(screen.getByText(/No Dataflow job, BigQuery table/)).toBeInTheDocument()
+    expect(screen.getByText(/read-only lab; no live source, customer data, cloud job/)).toBeInTheDocument()
+    expect(screen.getByText('Choose a legacy system')).toBeInTheDocument()
   })
 
   it('switches only local fixture evidence', () => {
