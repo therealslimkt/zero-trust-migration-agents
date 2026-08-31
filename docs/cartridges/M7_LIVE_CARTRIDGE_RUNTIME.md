@@ -68,5 +68,19 @@ Artifact Registry image must be separately digest-bound before Dataflow launch.
 5. Operators retrieve only `/var/log/keraun-cartridge-evidence.json` via IAP;
    no database endpoint is published.
 
+## Verified M7 evidence
+
+On 2026-08-31, the Docker Desktop preflight and the live private VM both
+produced this deliberately minimal result:
+
+```json
+{"schemaVersion":"keraun.cartridge-evidence/v1","synthetic":true,"checks":{"jdeInvalidCyyddd":1,"axOrphanDerived":2,"ebsUnmappedFlexfield":1}}
+```
+
+The VM has `runsc` registered with Docker and its `cartridge-internal` network
+is internal with the fixed `172.28.0.0/24` range. This is evidence that the
+sealed runner completed under the configured gVisor runtime; it is not a claim
+of a customer-source connection or a licensed vendor database.
+
 Every cloud mutation is reflected in `cloud_architecture/CLOUD_RESOURCE_MANIFEST.md`
 before the M7 delivery report is written.
