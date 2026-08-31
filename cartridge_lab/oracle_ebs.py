@@ -188,12 +188,14 @@ def _compile_rows(
     watermark: dt.datetime,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]], int, int]:
     current: dict[tuple[str, str, str], dict[str, object]] = {}
+    latest_timestamp: dict[tuple[str, str, str], dt.datetime] = {}
     for raw in snapshot:
         bronze, _ = _resolve_record(raw, metadata)
         key = _record_key(bronze)
         if key in current:
             _fail("snapshot_duplicate_key")
         current[key] = bronze
+        latest_timestamp[key] = _timestamp(bronze["lastUpdateDate"])
 
     upserts = 0
     deletes = 0
@@ -204,21 +206,31 @@ def _compile_rows(
         operation = raw["operation"]
         record = {key: value for key, value in raw.items() if key != "operation"}
         _validate_record_shape(record, allow_empty_segments=operation == "delete")
-        if _timestamp(record["lastUpdateDate"]) <= watermark:
+        updated_at = _timestamp(record["lastUpdateDate"])
+        if updated_at <= watermark:
             _fail("delta_not_after_watermark")
-        versioned_key = (*_record_key(record), record["lastUpdateDate"])
+        record_key = _record_key(record)
+        versioned_key = (*record_key, record["lastUpdateDate"])
         if versioned_key in seen_delta:
             _fail("delta_duplicate_key")
         seen_delta.add(versioned_key)
+        if updated_at <= latest_timestamp.get(record_key, watermark):
+            _fail("delta_not_after_current")
         if operation == "upsert":
             bronze, _ = _resolve_record(record, metadata)
-            current[_record_key(bronze)] = bronze
+            current[record_key] = bronze
+            latest_timestamp[record_key] = updated_at
             upserts += 1
         elif operation == "delete":
             if record["segments"] != {}:
                 _fail("delete_payload")
-            if current.pop(_record_key(record), None) is None:
+            existing = current.get(record_key)
+            if existing is None:
                 _fail("delete_missing_key")
+            if any(existing[field] != record[field] for field in ("application", "table", "partyId", "context", "metadataVersion")):
+                _fail("delete_identity_mismatch")
+            current.pop(record_key)
+            latest_timestamp[record_key] = updated_at
             deletes += 1
         else:
             _fail("delta_operation")
@@ -299,8 +311,13 @@ def build_oracle_ebs_packet(fixture_root: str | Path = FIXTURE_ROOT) -> Cartridg
         _fail("manifest_metadata_version")
     _metadata_index(metadata)
     watermark = _timestamp(manifest["watermark"])
+    metadata_digest = canonical_digest(metadata)
     transform_spec_digest = canonical_digest(
-        {"metadataVersion": metadata_version, "transformSpec": manifest["transformSpec"]}
+        {
+            "metadataDigest": metadata_digest,
+            "metadataVersion": metadata_version,
+            "transformSpec": manifest["transformSpec"],
+        }
     )
 
     _verify_invalid_cases(invalid, metadata)
@@ -323,12 +340,14 @@ def build_oracle_ebs_packet(fixture_root: str | Path = FIXTURE_ROOT) -> Cartridg
         "inputDigest": canonical_digest({"snapshot": snapshot, "delta": delta}),
         "bronzeDigest": canonical_digest(bronze),
         "silverDigest": canonical_digest(silver),
+        "metadataDigest": metadata_digest,
         "transformSpecDigest": transform_spec_digest,
         "lineageDigest": canonical_digest(
             {
                 "input": canonical_digest({"snapshot": snapshot, "delta": delta}),
                 "bronze": canonical_digest(bronze),
                 "silver": canonical_digest(silver),
+                "metadata": metadata_digest,
                 "transform": transform_spec_digest,
             }
         ),

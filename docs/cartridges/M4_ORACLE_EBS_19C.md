@@ -28,7 +28,7 @@ The packet includes the exact shared artifact set:
 - `invalid`: missing-context, ambiguous-context, and metadata-version failures;
 - `bronze`: deterministic final source-shaped state after applying the delta;
 - `silver`: context-resolved fields with stable source keys;
-- `reconciliation`: counts, deleted key, input/bronze/silver/transform digests,
+- `reconciliation`: counts, deleted key, input/metadata/bronze/silver/transform digests,
   and a lineage digest binding the entire local transformation.
 
 ## Concrete result
@@ -41,7 +41,7 @@ region `NA`; `1004` resolves to supplier payment profile `NET45`.
 
 Two independent builds from identical fixture bytes must produce identical
 packet and reconciliation digests. The reconciliation artifact separately
-binds the input, expected bronze, expected silver, and transform-spec digests;
+binds the input, actual FND metadata, expected bronze, expected silver, and transform-spec digests;
 any modified expected artifact fails closed rather than silently regenerating
 new "expected" evidence.
 
@@ -52,13 +52,13 @@ The verified local UI projection is:
   "cartridgeId": "oracle_ebs_19c",
   "displayName": "Oracle EBS on Oracle 19c",
   "invalidRecords": 3,
-  "packetDigest": "sha256:d76bb58632956605b48d6d8c31e57064c0f0592c75b7784d864a275051ffe5eb",
+  "packetDigest": "sha256:ecebcff7bc1414753460bc3e8da17c215d76617372a9d2206ae34db777b985b4",
   "readiness": "synthetic_fixture",
-  "reconciliationDigest": "sha256:e3f9ab0dd3f9d7bb6c5fe811624ec0f15799f783c6b0a43ee5def903c93d100e",
+  "reconciliationDigest": "sha256:ff9ce11d9afdbf9e3d17636fe296ed4892da3bf131dfa8d07753c7a0a858f1a4",
   "silverRecords": 3,
   "snapshotRecords": 3,
   "sourceSystem": "oracle_ebs_19c",
-  "transformSpecDigest": "sha256:fe5eedeebe8ca3d4ac958d20573451224ec3b319b403997cd2d89a2220cdaaa6"
+  "transformSpecDigest": "sha256:d579858dce034f9090a7485d10b46c40fc974a9604c33566417bf607d1c4dffc"
 }
 ```
 
@@ -93,7 +93,7 @@ Implemented here:
 
 - deterministic local Oracle EBS/19c fixture compilation;
 - full five-part FND flexfield lookup;
-- strict `LAST_UPDATE_DATE` watermark semantics;
+- strict global-watermark and per-key-monotonic `LAST_UPDATE_DATE` semantics;
 - explicit delete reconciliation;
 - expected bronze/silver comparison and repeatable digest evidence;
 - adversarial fixture tests for context, metadata version, delta, delete, and

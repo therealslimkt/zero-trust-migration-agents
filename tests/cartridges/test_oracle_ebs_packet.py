@@ -95,6 +95,14 @@ def test_snapshot_metadata_version_mismatch_fails_closed(tmp_path) -> None:
         build_oracle_ebs_packet(root)
 
 
+def test_metadata_content_tampering_changes_lineage_and_fails_closed(tmp_path) -> None:
+    root = _fixture_copy(tmp_path)
+    _mutate(root, "metadata", lambda rows: rows[0]["allowedValues"].append("DIAMOND"))
+
+    with pytest.raises(OracleEbsPacketError, match="^reconciliation_mismatch$"):
+        build_oracle_ebs_packet(root)
+
+
 def test_missing_context_case_cannot_be_weakened(tmp_path) -> None:
     root = _fixture_copy(tmp_path)
     _mutate(root, "invalid", lambda rows: rows[0].update(expectedCode="segment_unmapped"))
@@ -111,11 +119,32 @@ def test_delta_at_watermark_is_not_incremental(tmp_path) -> None:
         build_oracle_ebs_packet(root)
 
 
+def test_reverse_ordered_delta_for_one_key_fails_closed(tmp_path) -> None:
+    root = _fixture_copy(tmp_path)
+
+    def append_stale_event(rows):
+        stale = rows[0].copy()
+        stale["lastUpdateDate"] = "2026-08-02T07:00:00Z"
+        rows.append(stale)
+
+    _mutate(root, "delta", append_stale_event)
+    with pytest.raises(OracleEbsPacketError, match="^delta_not_after_current$"):
+        build_oracle_ebs_packet(root)
+
+
 def test_delete_for_unknown_source_key_fails_closed(tmp_path) -> None:
     root = _fixture_copy(tmp_path)
     _mutate(root, "delta", lambda rows: rows[2].update(partyId="9999"))
 
     with pytest.raises(OracleEbsPacketError, match="^delete_missing_key$"):
+        build_oracle_ebs_packet(root)
+
+
+def test_delete_with_mismatched_context_fails_closed(tmp_path) -> None:
+    root = _fixture_copy(tmp_path)
+    _mutate(root, "delta", lambda rows: rows[2].update(context="CUSTOMER_EXT"))
+
+    with pytest.raises(OracleEbsPacketError, match="^delete_identity_mismatch$"):
         build_oracle_ebs_packet(root)
 
 

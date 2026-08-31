@@ -29,6 +29,20 @@ def test_packet_digest_is_repeatable_and_ui_summary_is_bounded() -> None:
     assert "bigquery" not in value.ui_summary()
 
 
+def test_packet_evidence_is_defensively_immutable_and_digest_domain_is_portable() -> None:
+    value = packet()
+    before = value.digest
+    exposed = value.artifacts
+    exposed["silver"].append({"tampered": True})
+
+    assert value.digest == before
+    assert value.artifacts["silver"] == []
+    with pytest.raises(CartridgePacketError, match="packet_noncanonical_value"):
+        canonical_digest({"notPortable": float("nan")})
+    with pytest.raises(CartridgePacketError, match="packet_noncanonical_value"):
+        canonical_digest({"notPortable": 1 << 63})
+
+
 def test_packet_rejects_non_synthetic_readiness_and_missing_artifacts() -> None:
     with pytest.raises(CartridgePacketError):
         CartridgePacket("jde", "JD Edwards", "jd_edwards", "cloud", canonical_digest({}), {})
