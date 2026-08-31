@@ -1,6 +1,6 @@
 # Enterprise Fleet Milestone 3 delivery report
 
-Status: **complete and ready for user review**
+Status: **complete, merged, and ready for user review**
 
 Milestone 3 delivers the local, deterministic trust and execution spine that
 sits after the Milestone 2 planning graph. It preserves v1, keeps the frozen
@@ -242,6 +242,8 @@ does not remain. That planning revision is not an M3 cloud claim.
 
 ## Review handoff
 
-Milestone 3 is ready to merge into an origin-current local `main`, push, and
-pause. Before starting M4, the user should review this report and the final
+The integration tip `78c923f` was merged with `--no-ff` into an origin-current
+local `main` as `5f3c658` (`merge: deliver enterprise fleet milestone 3`). The
+remote equality check is performed after this final report metadata commit and
+push. Before starting M4, the user should review this report and the final
 security-review evidence, then explicitly approve the next milestone.
