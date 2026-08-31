@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import hashlib
+import re
 from collections.abc import Awaitable, Callable
 from typing import Protocol
 
@@ -70,22 +71,35 @@ class CatalogGraphKernel:
         self._callbacks = callbacks
         self._after_commit = after_commit
 
-    async def run(self, *, tenant_id: str, run_id: str) -> GraphSnapshot:
+    async def run(
+        self, *, tenant_id: str, run_id: str, binding_digest: str
+    ) -> GraphSnapshot:
+        identity = GraphSnapshot(
+            tenant_id=tenant_id, run_id=run_id, binding_digest=binding_digest
+        )
         state = await self._store.load(tenant_id=tenant_id, run_id=run_id)
         if state is None:
-            state = GraphSnapshot(tenant_id=tenant_id, run_id=run_id)
+            state = identity
             state = await self._commit(None, state, "run_started", "catalog_graph")
+        elif (
+            state.tenant_id != tenant_id
+            or state.run_id != run_id
+            or state.binding_digest != binding_digest
+        ):
+            raise GraphConflictError("run_binding_mismatch")
         if self._is_terminal(state) or state.phase is GraphPhase.PAUSED:
             return state
         if state.phase is GraphPhase.NEW:
-            await self._callbacks.validate_intent(self._operation(run_id, "validate_intent"))
+            await self._callbacks.validate_intent(
+                self._operation(state, "validate_intent")
+            )
             state = dataclasses.replace(state, phase=GraphPhase.VALIDATED)
             state = await self._commit(
                 state.revision,
                 state,
                 "node_succeeded",
                 "validate_intent",
-                operation_id=self._operation(run_id, "validate_intent"),
+                operation_id=self._operation(state, "validate_intent"),
             )
         if state.phase is GraphPhase.VALIDATED:
             state = await self._run_probes(state)
@@ -127,10 +141,11 @@ class CatalogGraphKernel:
         *,
         tenant_id: str,
         run_id: str,
+        binding_digest: str,
         kind: InterruptKind,
         subject_digest: str | None = None,
     ) -> GraphSnapshot:
-        state = await self._require_state(tenant_id, run_id)
+        state = await self._require_state(tenant_id, run_id, binding_digest)
         if state.pending_interrupt is not None:
             if (
                 state.pending_interrupt.kind is kind
@@ -148,11 +163,12 @@ class CatalogGraphKernel:
         *,
         tenant_id: str,
         run_id: str,
+        binding_digest: str,
         value: PlanRouteInput,
     ) -> GraphSnapshot:
         """Apply a deterministic plan edge and persist bounded repair progress."""
 
-        state = await self._require_state(tenant_id, run_id)
+        state = await self._require_state(tenant_id, run_id, binding_digest)
         self._ensure_mutable(state)
         if state.phase is not GraphPhase.PLANNING:
             raise GraphConflictError("plan_phase")
@@ -193,12 +209,13 @@ class CatalogGraphKernel:
         *,
         tenant_id: str,
         run_id: str,
+        binding_digest: str,
         agent_id: str,
         invocation_id: str,
     ) -> GraphSnapshot:
         """Record exactly one observed call from an allowlisted model agent."""
 
-        state = await self._require_state(tenant_id, run_id)
+        state = await self._require_state(tenant_id, run_id, binding_digest)
         self._ensure_mutable(state)
         allowed = {
             "atlas",
@@ -218,8 +235,7 @@ class CatalogGraphKernel:
             raise GraphInvariantError("model_agent_id")
         if (
             type(invocation_id) is not str
-            or not invocation_id.startswith("inv_")
-            or len(invocation_id) < 16
+            or re.fullmatch(r"inv_[A-Za-z0-9]{12,64}", invocation_id) is None
         ):
             raise GraphInvariantError("model_invocation_id")
         if invocation_id in state.model_invocation_ids:
@@ -233,7 +249,7 @@ class CatalogGraphKernel:
             state,
             "model_call_observed",
             agent_id,
-            operation_id=invocation_id,
+            operation_id=self._operation(state, f"{agent_id}_{invocation_id}"),
             model_calls=1,
             detail={"invocation_id": invocation_id},
         )
@@ -250,10 +266,13 @@ class CatalogGraphKernel:
             event.event_type == "interrupt_requested" for event in state.events
         )
         interrupt = InterruptRequest(
-            interrupt_id=self._interrupt_id(state.run_id, kind, ordinal),
+            interrupt_id=self._interrupt_id(state, kind, ordinal, subject_digest),
             kind=kind,
             checkpoint_id=state.checkpoint_id,
             ordinal=ordinal,
+            tenant_id=state.tenant_id,
+            run_id=state.run_id,
+            binding_digest=state.binding_digest,
             subject_digest=subject_digest,
         )
         status = (
@@ -281,9 +300,7 @@ class CatalogGraphKernel:
             sequence=state.next_sequence,
             event_type="route_selected",
             node_id=route_node,
-            operation_id=self._operation(
-                state.run_id, f"{route_node}_{state.next_sequence}"
-            ),
+            operation_id=self._operation(state, f"{route_node}_{state.next_sequence}"),
             detail={"selected_edge": selected_edge},
         )
         interrupt_event = GraphEvent(
@@ -291,7 +308,7 @@ class CatalogGraphKernel:
             event_type="interrupt_requested",
             node_id="request_input",
             operation_id=self._operation(
-                state.run_id, f"request_input_{state.next_sequence + 1}"
+                state, f"request_input_{state.next_sequence + 1}"
             ),
             detail={"interrupt_id": interrupt.interrupt_id, "kind": kind.value},
         )
@@ -307,11 +324,20 @@ class CatalogGraphKernel:
             await self._after_commit(persisted)
         return persisted
 
-    async def resume(self, *, tenant_id: str, run_id: str, value: ResumeInput) -> GraphSnapshot:
-        state = await self._require_state(tenant_id, run_id)
-        if value.idempotency_key in state.consumed_idempotency_keys:
+    async def resume(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        binding_digest: str,
+        value: ResumeInput,
+    ) -> GraphSnapshot:
+        state = await self._require_state(tenant_id, run_id, binding_digest)
+        receipt_key = self._resume_key(state, value)
+        request_digest = self._resume_request_digest(state, value)
+        if receipt_key in state.consumed_idempotency_keys:
             receipts = dict(state.resume_digests)
-            if receipts[value.idempotency_key] != value.request_digest:
+            if receipts[receipt_key] != request_digest:
                 raise GraphConflictError("idempotency_key_reused")
             return state
         if self._is_terminal(state):
@@ -325,6 +351,11 @@ class CatalogGraphKernel:
             raise GraphConflictError("interrupt_mismatch")
         if value.checkpoint_id != pending.checkpoint_id:
             raise GraphConflictError("checkpoint_mismatch")
+        expected_interrupt_id = self._interrupt_id(
+            state, pending.kind, pending.ordinal, pending.subject_digest
+        )
+        if pending.interrupt_id != expected_interrupt_id:
+            raise GraphConflictError("interrupt_binding_mismatch")
         if state.revision < 1 or pending.checkpoint_id != state.checkpoint_id_for_revision(
             state.revision - 1
         ):
@@ -340,9 +371,9 @@ class CatalogGraphKernel:
             pending_interrupt=None,
             paused_from_phase=None,
             consumed_idempotency_keys=state.consumed_idempotency_keys
-            | {value.idempotency_key},
+            | {receipt_key},
             resume_digests=state.resume_digests
-            + ((value.idempotency_key, value.request_digest),),
+            + ((receipt_key, request_digest),),
         )
         return await self._commit(
             state.revision,
@@ -366,9 +397,7 @@ class CatalogGraphKernel:
                 for kind, callback in pending:
                     tasks[kind] = group.create_task(
                         callback(
-                            self._operation(
-                                state.run_id, f"catalog_{kind.value}"
-                            )
+                            self._operation(state, f"catalog_{kind.value}")
                         ),
                         name=f"catalog_{kind.value}",
                     )
@@ -392,9 +421,7 @@ class CatalogGraphKernel:
                 state,
                 "node_succeeded",
                 f"catalog_{kind.value}",
-                operation_id=self._operation(
-                    state.run_id, f"catalog_{kind.value}"
-                ),
+                operation_id=self._operation(state, f"catalog_{kind.value}"),
             )
         state = dataclasses.replace(state, phase=GraphPhase.PROBED)
         return await self._commit(
@@ -416,10 +443,21 @@ class CatalogGraphKernel:
             detail={"reason_code": code},
         )
 
-    async def _require_state(self, tenant_id: str, run_id: str) -> GraphSnapshot:
+    async def _require_state(
+        self, tenant_id: str, run_id: str, binding_digest: str
+    ) -> GraphSnapshot:
+        GraphSnapshot(
+            tenant_id=tenant_id, run_id=run_id, binding_digest=binding_digest
+        )
         state = await self._store.load(tenant_id=tenant_id, run_id=run_id)
         if state is None:
             raise GraphConflictError("run_not_found")
+        if (
+            state.tenant_id != tenant_id
+            or state.run_id != run_id
+            or state.binding_digest != binding_digest
+        ):
+            raise GraphConflictError("run_binding_mismatch")
         return state
 
     async def _commit(
@@ -438,9 +476,7 @@ class CatalogGraphKernel:
             event_type=event_type,
             node_id=node_id,
             operation_id=operation_id
-            or self._operation(
-                state.run_id, f"{node_id}_{state.next_sequence}"
-            ),
+            or self._operation(state, f"{node_id}_{state.next_sequence}"),
             model_calls=model_calls,
             detail=detail or {},
         )
@@ -486,11 +522,51 @@ class CatalogGraphKernel:
             raise GraphConflictError("checkpoint_not_resumable")
 
     @staticmethod
-    def _operation(run_id: str, node_id: str) -> str:
-        digest = hashlib.sha256(f"{run_id}:{node_id}".encode()).hexdigest()[:20]
+    def _operation(state: GraphSnapshot, node_id: str) -> str:
+        digest = hashlib.sha256(
+            (
+                "graph.operation.v2\x00"
+                f"{state.tenant_id}\x00{state.run_id}\x00{state.binding_digest}\x00{node_id}"
+            ).encode()
+        ).hexdigest()
         return f"op_{digest}"
 
     @staticmethod
-    def _interrupt_id(run_id: str, kind: InterruptKind, ordinal: int) -> str:
-        digest = hashlib.sha256(f"{run_id}:{kind.value}:{ordinal}".encode()).hexdigest()[:20]
+    def _interrupt_id(
+        state: GraphSnapshot,
+        kind: InterruptKind,
+        ordinal: int,
+        subject_digest: str | None,
+    ) -> str:
+        digest = hashlib.sha256(
+            (
+                "graph.interrupt.v2\x00"
+                f"{state.tenant_id}\x00{state.run_id}\x00{state.binding_digest}\x00"
+                f"{kind.value}\x00{ordinal}\x00{subject_digest or '-'}"
+            ).encode()
+        ).hexdigest()
         return f"int_{digest}"
+
+    @staticmethod
+    def _resume_key(state: GraphSnapshot, value: ResumeInput) -> str:
+        digest = hashlib.sha256(
+            (
+                "graph.resume.idempotency.v2\x00"
+                f"{state.tenant_id}\x00{state.run_id}\x00{state.binding_digest}\x00"
+                f"{value.interrupt_id}\x00{value.checkpoint_id}\x00{value.idempotency_key}"
+            ).encode()
+        ).hexdigest()
+        return f"rsm_{digest}"
+
+    @staticmethod
+    def _resume_request_digest(state: GraphSnapshot, value: ResumeInput) -> str:
+        material = "\x00".join(
+            (
+                "graph.resume.request.v2",
+                state.tenant_id,
+                state.run_id,
+                state.binding_digest,
+                value.request_digest,
+            )
+        )
+        return hashlib.sha256(material.encode()).hexdigest()

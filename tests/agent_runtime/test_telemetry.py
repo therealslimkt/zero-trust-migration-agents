@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from agent_runtime.telemetry import (
+    DeterministicRoute,
     NodeObservation,
     ObservationStatus,
     SanitizedEventBridge,
@@ -33,6 +34,7 @@ def observation(sequence: int, *, model_driven: bool = False) -> NodeObservation
         payload_digest="sha256:" + "b" * 64,
         timestamp="2026-08-30T13:00:00Z",
         agent_id="source_analyst_jde" if model_driven else None,
+        implementation_id=None if model_driven else "vale.route_catalog",
     )
 
 
@@ -101,3 +103,50 @@ def test_bridge_projects_digest_only_and_publishes_closed_document():
     ).validate(thaw(document.payload))
     assert asyncio.run(bridge.publish(item)) == 7
     assert sink.events == [document]
+
+
+def test_bridge_projects_closed_route_and_deterministic_component_identity():
+    item = NodeObservation(
+        **{
+            **dataclass_values(observation(1)),
+            "route": DeterministicRoute(
+                router_node_id="route_catalog",
+                selected_edge="migrate",
+                candidate_edges=("existing_asset", "needs_input", "migrate", "fail_closed"),
+                reason_code="MIGRATE",
+            ),
+        }
+    )
+    payload = thaw(SanitizedEventBridge.project(item).payload)
+    assert payload["from"] == "mission_control"
+    assert payload["contextRefs"] == ["implementationId:vale.route_catalog"]
+    assert payload["orchestration"]["route"] == {
+        "routerNodeId": "route_catalog",
+        "selectedEdge": "migrate",
+        "candidateEdges": ["existing_asset", "needs_input", "migrate", "fail_closed"],
+        "deterministic": True,
+        "reasonCode": "MIGRATE",
+    }
+    ContractValidator(Path("contracts/v2/schemas/a2a-event.schema.json")).validate(payload)
+
+
+def test_approval_required_event_is_blocked_and_cannot_be_falsely_marked_complete():
+    blocked = NodeObservation(
+        **{
+            **dataclass_values(observation(1)),
+            "status": ObservationStatus.BLOCKED,
+            "approval_required": True,
+        }
+    )
+    payload = thaw(SanitizedEventBridge.project(blocked).payload)
+    assert payload["requiresHumanApproval"] is True
+    assert payload["type"] == "orchestration.approval_required"
+    assert payload["payload"]["payloadKind"] == "interrupt_request"
+    ContractValidator(Path("contracts/v2/schemas/a2a-event.schema.json")).validate(payload)
+    with pytest.raises(TelemetryViolation, match="observation_approval"):
+        NodeObservation(
+            **{
+                **dataclass_values(observation(1)),
+                "approval_required": True,
+            }
+        )
