@@ -52,3 +52,24 @@ test('terminal frame fetch is source-scoped, authenticated, and resumes from the
   expect(request?.headers.get('Accept')).toBe('text/event-stream')
   expect(request?.headers.get('Last-Event-ID')).toBe('frm_terminalframe001')
 })
+
+test('workflow evidence is unavailable without the optional endpoint configuration', async () => {
+  const fetchImpl: typeof fetch = async () => { throw new Error('must not fetch') }
+  const client = new LiveWebClient(async () => 'verified-id-token', { fetchImpl })
+  await expect(client.getWorkflowEvidenceProjection('mig_evidence001')).resolves.toEqual({ status: 'unavailable' })
+})
+
+test('workflow evidence carries auth and fails closed on a missing or malformed optional endpoint', async () => {
+  const calls: Request[] = []
+  const missing: typeof fetch = async (input, init) => {
+    calls.push(new Request(String(input).startsWith('/') ? `http://localhost${String(input)}` : String(input), init))
+    return new Response('', { status: 404 })
+  }
+  const client = new LiveWebClient(async () => 'verified-id-token', { fetchImpl: missing, workflowEvidencePath: '/api/web/v1/runs/:runId/workflow-evidence' })
+  await expect(client.getWorkflowEvidenceProjection('mig_evidence001')).resolves.toEqual({ status: 'unavailable' })
+  expect(calls[0]?.url).toBe('http://localhost/api/web/v1/runs/mig_evidence001/workflow-evidence')
+  expect(calls[0]?.headers.get('Authorization')).toBe('Bearer verified-id-token')
+
+  const malformed = new LiveWebClient(async () => 'verified-id-token', { fetchImpl: async () => jsonResponse({ status: 'ready', entries: [] }), workflowEvidencePath: '/api/web/v1/runs/:runId/workflow-evidence' })
+  await expect(malformed.getWorkflowEvidenceProjection('mig_evidence001')).resolves.toEqual({ status: 'unavailable' })
+})

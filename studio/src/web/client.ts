@@ -23,6 +23,7 @@ import type {
   SessionResponse,
   SourceId,
 } from "./contracts.generated.js";
+import { parseWorkflowEvidenceProjection, WORKFLOW_EVIDENCE_UNAVAILABLE, type WorkflowEvidenceProjection } from './features/workflow-evidence/projection.js';
 
 export type IdentityTokenProvider = () => Promise<string>;
 
@@ -41,6 +42,8 @@ export class WebApiError extends Error {
 interface ClientOptions {
   readonly baseUrl?: string;
   readonly fetchImpl?: typeof fetch;
+  /** Optional, private extension: excluded from the frozen web contract. */
+  readonly workflowEvidencePath?: string;
 }
 
 function cleanBaseUrl(value: string): string {
@@ -88,11 +91,13 @@ export class LiveWebClient {
   readonly #baseUrl: string;
   readonly #fetch: typeof fetch;
   readonly #token: IdentityTokenProvider;
+  readonly #workflowEvidencePath?: string;
 
   constructor(tokenProvider: IdentityTokenProvider, options: ClientOptions = {}) {
     this.#token = tokenProvider;
     this.#baseUrl = cleanBaseUrl(options.baseUrl ?? "");
     this.#fetch = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
+    this.#workflowEvidencePath = options.workflowEvidencePath;
   }
 
   async #response(path: string, init: RequestInit = {}): Promise<Response> {
@@ -125,6 +130,23 @@ export class LiveWebClient {
 
   getSource(runId: string, sourceId: SourceId): Promise<LiveSourceResponse> {
     return this.#request(`/api/web/v1/runs/${segment(runId)}/sources/${segment(sourceId)}`);
+  }
+
+  /**
+   * Reads an opt-in persisted-evidence extension. The endpoint is intentionally
+   * absent from the frozen API contract; an unconfigured, missing, malformed,
+   * or failed response supplies no evidence rather than a guessed projection.
+   */
+  async getWorkflowEvidenceProjection(runId: string): Promise<WorkflowEvidenceProjection> {
+    if (!this.#workflowEvidencePath || !runId) return WORKFLOW_EVIDENCE_UNAVAILABLE;
+    const path = this.#workflowEvidencePath.replace(':runId', segment(runId));
+    try {
+      const response = await this.#response(path, { headers: { Accept: 'application/json' } });
+      if (!response.ok) return WORKFLOW_EVIDENCE_UNAVAILABLE;
+      return parseWorkflowEvidenceProjection(await response.json());
+    } catch {
+      return WORKFLOW_EVIDENCE_UNAVAILABLE;
+    }
   }
 
   async openRunEvents(runId: string, lastEventId?: string, signal?: AbortSignal): Promise<Response> {
