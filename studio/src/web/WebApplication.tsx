@@ -14,7 +14,7 @@ const LoginPage = lazy(() => import('./pages/public/LoginPage').then((module) =>
 const AboutPage = lazy(() => import('./pages/public/AboutPage').then((module) => ({ default: module.AboutPage })))
 const NotFoundPage = lazy(() => import('./pages/public/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 const RecordedDemoRoute = lazy(() => import('./pages/replay/RecordedDemoRoute').then((module) => ({ default: module.RecordedDemoRoute })))
-const M4FixtureLabPage = lazy(() => import('./pages/lab/M4FixtureLabPage').then((module) => ({ default: module.M4FixtureLabPage })))
+const PluginFactoryPage = lazy(() => import('./pages/lab/M4FixtureLabPage').then((module) => ({ default: module.M4FixtureLabPage })))
 const DashboardRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.DashboardRoute })))
 const LiveRunRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.LiveRunRoute })))
 const SourceDetailRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.SourceDetailRoute })))
@@ -142,7 +142,8 @@ const router = createBrowserRouter([
   { path: "/login", element: <LoginRoute /> },
   { path: "/about", element: <AboutRoute /> },
   { path: "/demo/:demoId", element: <RecordedDemoRoute /> },
-  { path: "/lab/m4", element: <M4FixtureLabPage /> },
+  { path: "/factory", element: <PluginFactoryPage /> },
+  { path: "/lab/m4", element: <Navigate to="/factory" replace /> },
   { path: "/internal-hitl", element: <InternalHITLRoute /> },
   { path: "/dashboard", element: <Protected><DashboardRoute /></Protected> },
   { path: "/runs/:runId", element: <Protected><LiveRunRoute /></Protected> },

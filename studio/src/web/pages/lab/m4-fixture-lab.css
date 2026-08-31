@@ -26,7 +26,7 @@
 .m4-lab__truth strong { display: block; margin-bottom: 3px; color: var(--pixel-text-primary); font: 800 .88rem var(--font-sans-mission); }
 .m4-lab__truth p { max-width: 900px; margin: 0; color: var(--pixel-text-secondary); font: 500 .86rem/1.55 var(--font-sans-mission); }
 
-.m4-lab__guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 15px; overflow: hidden; border: 1px solid var(--pixel-border-muted); border-radius: 12px; background: var(--pixel-border-muted); }
+.m4-lab__guide { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 15px; overflow: hidden; border: 1px solid var(--pixel-border-muted); border-radius: 12px; background: var(--pixel-border-muted); }
 .m4-lab__guide span { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 11px 13px; background: var(--pixel-surface-panel); color: var(--pixel-text-secondary); font: 650 11px/1.35 var(--font-sans-mission); }
 .m4-lab__guide b { color: #e2b0e8; font: 800 10px var(--font-mono-tactical); letter-spacing: .08em; }
 

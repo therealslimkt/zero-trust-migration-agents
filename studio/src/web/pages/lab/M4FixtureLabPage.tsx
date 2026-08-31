@@ -40,7 +40,7 @@ const FIXTURE_DETAILS = {
   },
 } as const;
 
-export const M4_FIXTURE_SUMMARIES: readonly M4FixtureSummary[] = fixtureData.map((packet) => {
+const M4_FIXTURE_SUMMARIES: readonly M4FixtureSummary[] = fixtureData.map((packet) => {
   const cartridgeId = packet.cartridgeId as M4FixtureSummary["cartridgeId"];
   const detail = FIXTURE_DETAILS[cartridgeId];
   return { ...packet, cartridgeId, ...detail, fixtureStatus: "validated_fixture" };
@@ -100,20 +100,20 @@ export function LocalCartridgeRunner({ enabled = LOCAL_AGENT_ENABLED }: { readon
   const evidence = state.evidence;
   return <section className="m4-lab__runner" aria-labelledby="local-runner-title">
     <div>
-      <p className="m4-lab__runner-eyebrow">LOOPBACK RUNNER AGENT</p>
-      <h2 id="local-runner-title">Run the three synthetic cartridges for real.</h2>
-      <p>This local-only action asks a sealed agent to run the fixed Docker evidence command. It has no cloud endpoint, no source credentials, and accepts no browser-supplied command or image.</p>
+      <p className="m4-lab__runner-eyebrow">SEALED SANDBOX PREFLIGHT</p>
+      <h2 id="local-runner-title">Verify the preloaded three-cartridge portfolio.</h2>
+      <p>This local-only gate asks a sealed agent to run the fixed Docker evidence command. It has no cloud endpoint, source credentials, or browser-supplied command or image. A pass certifies the synthetic fixture boundary before a candidate is promoted into Mission Control.</p>
     </div>
     <div className="m4-lab__runner-action">
       <button type="button" className="m4-lab__runner-button" onClick={() => void start()} disabled={state.status === "running"}>
         <PixelIcon name="play" size="xs" color="white" />
-        {state.status === "running" ? "Running cartridges…" : "Run local evidence"}
+        {state.status === "running" ? "Verifying cartridges…" : "Verify local evidence"}
       </button>
       <p className={`m4-lab__runner-status m4-lab__runner-status--${state.status}`} aria-live="polite">
-        {state.status === "idle" ? "Ready: Docker Desktop stays local." : null}
-        {state.status === "running" ? "Agent is building, waiting for source health, and certifying counts." : null}
+        {state.status === "idle" ? "Ready: Docker Desktop stays local; no migration is launched." : null}
+        {state.status === "running" ? "Agent is building, waiting for source health, and certifying count-only guardrails." : null}
         {state.status === "failed" ? `Runner did not complete (${state.code ?? "unknown"}).` : null}
-        {state.status === "succeeded" ? "Evidence complete: count-only result returned." : null}
+        {state.status === "succeeded" ? "Preflight passed: this is not yet Beam or BigQuery execution proof." : null}
       </p>
     </div>
     {evidence ? <pre className="m4-lab__runner-result">{JSON.stringify(evidence, null, 2)}</pre> : null}
@@ -129,25 +129,25 @@ export function M4FixtureLabPage() {
     <main className="m4-lab" aria-labelledby="m4-lab-title">
       <header className="m4-lab__header">
         <div>
-          <p className="m4-lab__eyebrow">KERAUN / LOCAL CARTRIDGE LAB</p>
-          <h1 id="m4-lab-title">Explore three migration recipes, safely.</h1>
-          <p>Each cartridge turns one legacy source pattern into a deterministic migration recipe. Pick a system to inspect synthetic inputs, expected outputs, and the checks that must pass before a live connection.</p>
+          <p className="m4-lab__eyebrow">KERAUN / OPEN PLUGIN FACTORY</p>
+          <h1 id="m4-lab-title">Turn a sticky source into a portable migration agent.</h1>
+          <p>Start with a vetted cartridge or ask the research fleet to discover one. The three preloaded examples show the deterministic source contracts, translation rules, and evidence gates that a candidate must satisfy before Mission Control can authorize a migration test.</p>
         </div>
-        <span className="m4-lab__badge"><BrandBolt /><span>LOCAL FIXTURE LAB</span></span>
+        <span className="m4-lab__badge"><BrandBolt /><span>PRELOADED DEMOS</span></span>
       </header>
 
-      <section className="m4-lab__truth" aria-label="What this local lab proves">
+      <section className="m4-lab__truth" aria-label="What this preflight proves">
         <span className="m4-lab__truth-icon"><BrandBolt /></span>
-        <div><strong>What you can explore here</strong><p>Three checked-in synthetic migration recipes and their deterministic evidence. No sign-in is required to inspect this read-only lab; no live source, customer data, cloud job, hosted backend, or production plugin is represented.</p></div>
+        <div><strong>This is a plugin verification gate—not a second product.</strong><p>These are synthetic source emulators and deterministic evidence packets for three preloaded demo cartridges. No customer data, live source, Apache Beam job, or BigQuery write occurs on this page. Passing the gate produces a candidate for the authenticated Mission Control run, where its sandbox, compiler, and warehouse evidence must be reviewed.</p></div>
       </section>
 
-      <section className="m4-lab__guide" aria-label="How to use this lab">
-        <span><b>01</b>Choose a legacy system</span><span><b>02</b>Read its identity and output evidence</span><span><b>03</b>Inspect the checks that keep it honest</span>
+      <section className="m4-lab__guide" aria-label="Plugin factory lifecycle">
+        <span><b>01</b>Discover or research a cartridge</span><span><b>02</b>Verify its source contract</span><span><b>03</b>Review a sealed Mission Control run</span><span><b>04</b>Download the portable plugin</span>
       </section>
 
       <LocalCartridgeRunner />
 
-      <div className="m4-lab__tabs" role="tablist" aria-label="Fixture cartridges">
+      <div className="m4-lab__tabs" role="tablist" aria-label="Preloaded demo cartridges">
         {M4_FIXTURE_SUMMARIES.map((fixture) => (
           <button
             key={fixture.cartridgeId}
@@ -158,24 +158,24 @@ export function M4FixtureLabPage() {
             onClick={() => setSelectedId(fixture.cartridgeId)}
           >
             <span>{fixture.title}</span>
-            <small>{fixture.fixtureStatus === "validated_fixture" ? "validated local packet" : "packet integration pending"}</small>
+            <small>{fixture.fixtureStatus === "validated_fixture" ? "verified synthetic contract" : "packet integration pending"}</small>
           </button>
         ))}
       </div>
 
-      <section className="m4-lab__grid" aria-label={`${selected.title} local fixture evidence`}>
-        <TerminalWindow title={`${selected.title} fixture packet`} breadcrumb={`lab/m4/${selected.cartridgeId}`} accent="google-blue" variant="glass" scanlines cornerBrackets>
+      <section className="m4-lab__grid" aria-label={`${selected.title} preloaded cartridge evidence`}>
+        <TerminalWindow title={`${selected.title} source contract`} breadcrumb={`factory/preloaded/${selected.cartridgeId}`} accent="google-blue" variant="glass" scanlines cornerBrackets>
           <dl className="m4-lab__facts">
             <div><dt>Legacy source</dt><dd>{selected.legacy}</dd></div>
             <div><dt>Identity boundary</dt><dd>{selected.identity}</dd></div>
-            <div><dt>Readiness</dt><dd>{validated ? "synthetic_fixture / validated" : "synthetic_fixture / awaiting packet"}</dd></div>
+            <div><dt>Readiness</dt><dd>{validated ? "synthetic_contract / verified" : "synthetic_contract / awaiting packet"}</dd></div>
             <div><dt>Packet digest</dt><dd>{digest(selected.packetDigest)}</dd></div>
             <div><dt>Transform spec digest</dt><dd>{digest(selected.transformSpecDigest)}</dd></div>
             <div><dt>Reconciliation digest</dt><dd>{digest(selected.reconciliationDigest)}</dd></div>
           </dl>
         </TerminalWindow>
 
-        <TerminalWindow title="Deterministic checks" breadcrumb="lab/m4/checks" accent="google-yellow" variant="elevated" scanlines>
+        <TerminalWindow title="Deterministic gates" breadcrumb="factory/preflight/gates" accent="google-yellow" variant="elevated" scanlines>
           <ul className="m4-lab__checks">
             {selected.checks.map((check) => <li key={check}><PixelIcon name="check-pixel" size="xs" color="google-green" />{check}</li>)}
           </ul>
@@ -188,7 +188,7 @@ export function M4FixtureLabPage() {
       </section>
 
       <footer className="m4-lab__footer">
-        <span>Evidence surface: canonical local fixture packet + deterministic reconciliation</span>
+        <span>Candidate stage: synthetic source contract + deterministic reconciliation. Mission Control, Beam, BigQuery, and plugin download remain separate auditable stages.</span>
         <a href="/">Return to overview</a>
       </footer>
     </main>

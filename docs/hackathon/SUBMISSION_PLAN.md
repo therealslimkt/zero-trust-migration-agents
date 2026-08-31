@@ -15,6 +15,11 @@ Official references:
 - [Rules](https://allthingsagentichackathon.devpost.com/rules)
 - [Submission FAQ](https://allthingsagentichackathon.devpost.com/details/faqs)
 
+Product direction and truthful factory/run boundaries are maintained in
+[Plugin Factory North-Star Handoff](PLUGIN_FACTORY_NORTH_STAR_HANDOFF.md).
+Use that document when implementing the preloaded demonstrations, Mission
+Control run experience, A2A Agent Cards, and portable Agent Plugin package.
+
 ## Corrected eligibility and stack answers
 
 | Submission question | Answer | Evidence or remaining action |

@@ -73,7 +73,7 @@ export function LandingPage({
             <div className="landing-hero__actions">
               {replayAvailable ? <a href={demo.route} className="landing-hero__btn landing-hero__btn--primary" onClick={(event) => navigate(event, demo.route)}><PixelIcon name="play" size="xs" color="black" /><span>Open exact recorded replay</span></a> : null}
               {dashboardRoute ? <a href={dashboardRoute} className="landing-hero__btn landing-hero__btn--outline" onClick={(event) => navigate(event, dashboardRoute)}><PixelIcon name="satellite" size="xs" color="google-blue" /><span>Open mission control</span></a> : null}
-              <a href="/lab/m4" className="landing-hero__btn landing-hero__btn--outline" onClick={(event) => navigate(event, "/lab/m4")}><PixelIcon name="database" size="xs" color="google-yellow" /><span>Open local cartridge lab</span></a>
+              <a href="/factory" className="landing-hero__btn landing-hero__btn--outline" onClick={(event) => navigate(event, "/factory")}><PixelIcon name="database" size="xs" color="google-yellow" /><span>Explore plugin factory</span></a>
               <a href={aboutRoute} className="landing-hero__btn landing-hero__btn--outline" onClick={(event) => navigate(event, aboutRoute)}><PixelIcon name="radar" size="xs" color="muted" /><span>Read architecture</span></a>
             </div>
           </section>
