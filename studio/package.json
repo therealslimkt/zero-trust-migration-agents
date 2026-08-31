@@ -6,6 +6,7 @@
   "scripts": {
     "assets:pixel": "node scripts/build-pixel-assets.mjs",
     "dev": "vite",
+    "dev:m4": "MISSION_CONTROL_LOCAL_FIXTURE_LAB=true vite --host 127.0.0.1 --port 5173",
     "dev:demo": "node scripts/start-local-demo.mjs",
     "build": "npm run assets:pixel && tsc -b && vite build",
     "lint": "oxlint",

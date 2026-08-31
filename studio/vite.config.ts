@@ -70,7 +70,11 @@ function webBffProxy(): ProxyOptions {
 }
 
 export default defineConfig(({ command }) => {
-  const proxy = command === 'serve'
+  // The M4 cartridge lab is a static, synthetic-fixture evidence surface. It
+  // has no API dependency, so local reviewers can inspect it without holding
+  // a Mission Control service credential or starting the Go backend.
+  const localFixtureLab = process.env.MISSION_CONTROL_LOCAL_FIXTURE_LAB === 'true'
+  const proxy = command === 'serve' && !localFixtureLab
     ? {
         '/api/v1': missionControlProxy(),
         '/api/web/v1': webBffProxy(),
@@ -78,7 +82,7 @@ export default defineConfig(({ command }) => {
     : undefined
   const localServer = {
     host: LOOPBACK_HOST,
-    strictPort: true,
+    strictPort: !localFixtureLab,
     allowedHosts: ['127.0.0.1', 'localhost'],
     cors: false,
     proxy,

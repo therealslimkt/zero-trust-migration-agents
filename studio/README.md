@@ -2,6 +2,21 @@
 
 ## Local working demo
 
+## M4 cartridge lab (no backend or credentials)
+
+To review the three local synthetic fixture packets without configuring the
+Mission Control proxy, run:
+
+```bash
+npm run dev:m4
+```
+
+Open `http://127.0.0.1:5173/lab/m4`. This exposes only the M4 local evidence
+screen; it does not start a backend or make a cloud, customer-data, or plugin
+claim.
+
+## Full local working demo
+
 Run the modern site, loopback-only demo identity, browser BFF, and a durable
 control-plane snapshot together with one command:
 
