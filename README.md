@@ -35,6 +35,99 @@ migration portfolio:
 Generated code is never evaluated. See [ARCHITECTURE.md](ARCHITECTURE.md) and
 [the trusted cloud runtime](docs/execution/MILESTONE_4_TRUSTED_CLOUD_RUNTIME.md).
 
+## For judges — start here
+
+**There is no hosted judge URL.** Keraun runs in *your* Google Cloud project by design: the
+whole premise is that legacy source data never leaves the owner's perimeter, so we do not
+host a multi-tenant instance holding anyone's source access. No login is required for the
+path below — it runs entirely on your machine plus your own Vertex AI project.
+
+Everything in these three steps was executed and captured on 2026-08-31; see
+[`docs/evidence/`](docs/evidence/).
+
+### Step 1 — install (≈3 min)
+
+Prerequisites: Python 3.11+, Node.js 24+, npm, Docker Desktop (running).
+
+```bash
+git clone https://github.com/therealslimkt/zero-trust-migration-agents
+cd zero-trust-migration-agents
+python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+(cd studio && npm install)
+```
+
+### Step 2 — see the three legacy cartridges detect their signature defect (≈2 min)
+
+```bash
+./scripts/start_local_cartridge_ui.sh
+```
+
+Open **<http://127.0.0.1:5173/factory>** and press **Run evidence**.
+
+This is live execution, not a fixture: the browser calls a loopback-only sealed agent, which
+starts three synthetic source emulators on an **internal-only Docker network with no egress**,
+plus one evidence runner that is the only container permitted to query them. Expect:
+
+```json
+{"schemaVersion":"keraun.cartridge-evidence/v1","synthetic":true,
+ "checks":{"jdeInvalidCyyddd":1,"axOrphanDerived":2,"ebsUnmappedFlexfield":1}}
+```
+
+| Cartridge | Emulated source | Defect detected |
+| --- | --- | --- |
+| JDE | JD Edwards EnterpriseOne 9.2 / IBM i | invalid `CYYDDD` Julian date |
+| AX | Dynamics AX 2012 R3 / SQL Server | orphan-derived `RecId` |
+| EBS | Oracle E-Business Suite / Oracle 19c | unmapped descriptive flexfield |
+
+Only **counts** cross the boundary — never raw records, credentials, or connection strings.
+The payload asserts `synthetic: true`: these are deidentified emulators reproducing the
+structural pathologies of those systems, not licensed vendor databases.
+
+You can also run the same pass headlessly:
+
+```bash
+./scripts/run_local_cartridge_evidence.sh
+```
+
+### Step 3 — confirm Gemini 3.5 on Vertex AI (≈1 min)
+
+Requires your own Google Cloud project with the Vertex AI API enabled, and
+`gcloud auth application-default login`.
+
+```bash
+GOOGLE_CLOUD_PROJECT=<your-project> venv/bin/python - <<'EOF'
+import asyncio, os
+from google.antigravity import Agent, LocalAgentConfig
+async def main():
+    cfg = LocalAgentConfig(model="gemini-3.5-flash", vertex=True,
+                           project=os.environ["GOOGLE_CLOUD_PROJECT"],
+                           location="us", tools=[],
+                           system_instructions="Reply with exactly the token you are asked for.")
+    async with Agent(config=cfg) as a:
+        r = await a.chat("Reply with exactly: KERAUN_VERTEX_OK")
+        print((await r.text()).strip())
+asyncio.run(main())
+EOF
+```
+
+Expected output: `KERAUN_VERTEX_OK`.
+
+> `gemini-3.5-flash` is served from the `global`, `us`, and `eu` endpoints — **not**
+> `us-central1`. A request pinned to `us-central1` returns 404.
+
+### What is and is not proven
+
+| Claim | Status |
+| --- | --- |
+| Gemini 3.5 Flash executes on Vertex AI | **proven** — [evidence](docs/evidence/VERTEX_GEMINI_3_5_PROOF.md) |
+| Three cartridges detect their signature defect in sealed sandboxes | **proven** — [evidence](docs/evidence/THREE_CARTRIDGE_EVIDENCE.md) |
+| gVisor-isolated private source host on Compute Engine, no external IP | **deployed** — `keraun-cartridge-lab` |
+| ADK 2 collaborative / dynamic / graph orchestration | **implemented and unit-tested**; not yet exercised end-to-end in one cloud run |
+| Dataflow job, migration writes to BigQuery, portable plugin download | **not executed** — do not treat as complete |
+
+We would rather show you a smaller proven surface than a larger claimed one.
+
 ## Local verification
 
 Prerequisites are Python 3.11+, Node.js 24+, npm, and Go 1.24+.
@@ -56,6 +149,12 @@ not create cloud resources. The Dataflow image/spec build, IAM, APIs, buckets,
 tables, and live jobs remain a separate deployment/cost approval.
 
 ## Run the real three-lane approval flow
+
+> **Not the judge path.** This section requires private Tailscale/MagicDNS reachability to
+> source hosts that are not part of the current demonstration set, so it cannot be reproduced
+> from a clean clone. It is retained for contributors with that environment. Judges should use
+> [For judges — start here](#for-judges--start-here) instead.
+
 
 Use independent printable tokens for browser/API traffic and the loopback-only
 Python orchestration bridge:

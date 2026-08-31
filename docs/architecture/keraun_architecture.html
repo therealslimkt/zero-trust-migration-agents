@@ -1,0 +1,250 @@
+<title>Keraun Architecture</title>
+<style>
+  :root{
+    --bg:#070a0f; --panel:#0b111a; --panel2:#0e1622;
+    --ink:#eaf1fa; --dim:#a9bbd0; --faint:#8497ad;
+    --blue:#8cb2f8; --yellow:#fde193; --green:#82c996; --red:#d73027; --rose:#fad2cf;
+    --accent:#79acd0;
+  }
+  html,body{background:var(--bg);color:var(--ink);margin:0;padding:0;}
+  body{font-family:"Berkeley Mono","IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .wrap{padding:24px;max-width:1760px;margin:0 auto;}
+  svg{width:100%;height:auto;display:block;image-rendering:pixelated;shape-rendering:crispEdges;}
+  text{font-family:"Berkeley Mono","IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+</style>
+<div class="wrap">
+<svg viewBox="0 0 1680 1300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keraun architecture diagram">
+  <defs>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="2" fill="#ffffff" opacity="0.014"/>
+    </pattern>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,1 L7,4 L0,7 Z" fill="#a9bbd0"/>
+    </marker>
+    <marker id="arG" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,1 L7,4 L0,7 Z" fill="#82c996"/>
+    </marker>
+    <marker id="arR" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,1 L7,4 L0,7 Z" fill="#d73027"/>
+    </marker>
+  </defs>
+
+  <rect width="1680" height="1300" fill="#070a0f"/>
+
+  <!-- ══ HEADER ══ -->
+  <rect x="40" y="26" width="10" height="34" fill="#fde193"/>
+  <text x="66" y="54" font-size="30" font-weight="700" fill="#eaf1fa" letter-spacing="3">KERAUN</text>
+  <text x="212" y="54" font-size="15" fill="#8497ad">GOVERNED AGENT FLEET FOR STICKY LEGACY ERP DATA</text>
+  <text x="66" y="78" font-size="13" fill="#a9bbd0">google cloud project <tspan fill="#8cb2f8">ztm-agent-9049c3</tspan>  ·  ADK 2.7.1  ·  Antigravity SDK 0.1.14  ·  Gemini 3.5 Flash on Vertex AI</text>
+
+  <!-- legend -->
+  <g transform="translate(1046,28)">
+    <rect x="0" y="0" width="598" height="62" fill="#0b111a" stroke="#1d2a3c" stroke-width="2"/>
+    <rect x="14" y="14" width="12" height="12" fill="#8cb2f8"/><text x="34" y="25" font-size="11.5" fill="#a9bbd0">LLM agent node — reasoning</text>
+    <rect x="14" y="36" width="12" height="12" fill="#82c996"/><text x="34" y="47" font-size="11.5" fill="#a9bbd0">function node — 0 LLM, deterministic</text>
+    <rect x="336" y="14" width="12" height="12" fill="#fde193"/><text x="356" y="25" font-size="11.5" fill="#a9bbd0">human decision</text>
+    <rect x="336" y="36" width="12" height="12" fill="#d73027"/><text x="356" y="47" font-size="11.5" fill="#a9bbd0">trust boundary</text>
+  </g>
+
+  <!-- ══ BAND 1 : PRIVATE LEGACY PERIMETER ══ -->
+  <rect x="36" y="108" width="1608" height="252" fill="#0b111a" stroke="#d73027" stroke-width="2" stroke-dasharray="8 5"/>
+  <rect x="36" y="108" width="1608" height="252" fill="url(#scan)"/>
+  <rect x="48" y="120" width="8" height="8" fill="#d73027"/>
+  <text x="68" y="129" font-size="13" font-weight="700" fill="#fad2cf" letter-spacing="1.5">PRIVATE LEGACY PERIMETER</text>
+  <text x="330" y="129" font-size="11.5" fill="#8497ad">Compute Engine host keraun-cartridge-lab · gVisor (runsc) · internal-only network · NO EXTERNAL IP</text>
+
+  <!-- three sealed emulators -->
+  <g>
+    <rect x="76" y="152" width="330" height="112" fill="#12202e"/><rect x="72" y="148" width="330" height="112" fill="#0e1622" stroke="#8cb2f8" stroke-width="2"/>
+    <text x="90" y="174" font-size="14" font-weight="700" fill="#8cb2f8">JDE E1 9.2 / IBM i</text>
+    <text x="90" y="196" font-size="11.5" fill="#a9bbd0">sealed synthetic emulator</text>
+    <text x="90" y="216" font-size="11.5" fill="#eaf1fa">defect: CYYDDD julian date</text>
+    <text x="90" y="236" font-size="11.5" fill="#82c996">detected: 1</text>
+
+    <rect x="446" y="152" width="330" height="112" fill="#12202e"/><rect x="442" y="148" width="330" height="112" fill="#0e1622" stroke="#8cb2f8" stroke-width="2"/>
+    <text x="460" y="174" font-size="14" font-weight="700" fill="#8cb2f8">DYNAMICS AX 2012 R3</text>
+    <text x="460" y="196" font-size="11.5" fill="#a9bbd0">sealed synthetic emulator</text>
+    <text x="460" y="216" font-size="11.5" fill="#eaf1fa">defect: orphan-derived RecId</text>
+    <text x="460" y="236" font-size="11.5" fill="#82c996">detected: 2</text>
+
+    <rect x="816" y="152" width="330" height="112" fill="#12202e"/><rect x="812" y="148" width="330" height="112" fill="#0e1622" stroke="#8cb2f8" stroke-width="2"/>
+    <text x="830" y="174" font-size="14" font-weight="700" fill="#8cb2f8">ORACLE EBS / 19c</text>
+    <text x="830" y="196" font-size="11.5" fill="#a9bbd0">sealed synthetic emulator</text>
+    <text x="830" y="216" font-size="11.5" fill="#eaf1fa">defect: unmapped flexfield</text>
+    <text x="830" y="236" font-size="11.5" fill="#82c996">detected: 1</text>
+
+    <!-- gemma -->
+    <rect x="1190" y="152" width="410" height="112" fill="#1e1a12"/><rect x="1186" y="148" width="410" height="112" fill="#161206" stroke="#fde193" stroke-width="2"/>
+    <text x="1204" y="174" font-size="14" font-weight="700" fill="#fde193">GEMMA 2 · edge-local</text>
+    <text x="1204" y="196" font-size="11.5" fill="#a9bbd0">residual privacy reviewer</text>
+    <text x="1204" y="216" font-size="11.5" fill="#eaf1fa">runs beside the source, never in cloud</text>
+    <text x="1204" y="236" font-size="11.5" fill="#a9bbd0">any uncertainty → fail closed</text>
+  </g>
+
+  <!-- evidence runner -->
+  <path d="M237 264 L237 292 L601 292" stroke="#a9bbd0" stroke-width="2" fill="none"/>
+  <path d="M607 264 L607 292" stroke="#a9bbd0" stroke-width="2" fill="none"/>
+  <path d="M977 264 L977 292 L613 292" stroke="#a9bbd0" stroke-width="2" fill="none"/>
+  <path d="M607 292 L607 306" stroke="#a9bbd0" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <rect x="384" y="310" width="446" height="38" fill="#12261c"/><rect x="380" y="306" width="446" height="38" fill="#0d1a13" stroke="#82c996" stroke-width="2"/>
+  <text x="398" y="331" font-size="12.5" font-weight="700" fill="#82c996">EVIDENCE RUNNER — the only container permitted to query</text>
+  <text x="856" y="331" font-size="11.5" fill="#8497ad">emits count-only sanitized results · synthetic:true</text>
+
+  <!-- boundary crossing -->
+  <path d="M607 344 L607 384" stroke="#d73027" stroke-width="2.5" fill="none" marker-end="url(#arR)"/>
+  <text x="626" y="372" font-size="11.5" fill="#fad2cf">sanitized artifacts only — no raw rows, credentials, or connection strings cross this line</text>
+
+  <!-- ══ BAND 2 : GOOGLE CLOUD ══ -->
+  <rect x="36" y="396" width="1608" height="470" fill="#0b111a" stroke="#8cb2f8" stroke-width="2"/>
+  <rect x="36" y="396" width="1608" height="470" fill="url(#scan)"/>
+  <rect x="48" y="408" width="8" height="8" fill="#8cb2f8"/>
+  <text x="68" y="417" font-size="13" font-weight="700" fill="#8cb2f8" letter-spacing="1.5">GOOGLE CLOUD</text>
+  <text x="216" y="417" font-size="11.5" fill="#8497ad">Compute Engine · Firestore · BigQuery · Cloud Run · Artifact Registry · Secret Manager</text>
+
+  <!-- GO CONTROL PLANE -->
+  <rect x="76" y="446" width="392" height="290" fill="#12202e"/><rect x="72" y="442" width="392" height="290" fill="#0e1622" stroke="#82c996" stroke-width="2"/>
+  <text x="90" y="470" font-size="14" font-weight="700" fill="#82c996">GO CONTROL PLANE</text>
+  <text x="90" y="489" font-size="11" fill="#8497ad">studio-backend/ · deterministic, 0 LLM</text>
+  <line x1="90" y1="500" x2="446" y2="500" stroke="#1d2a3c" stroke-width="2"/>
+  <text x="90" y="522" font-size="11.5" fill="#eaf1fa">REST  /api/v1/migrations</text>
+  <text x="90" y="544" font-size="11.5" fill="#eaf1fa">SSE   /migrations/:id/events</text>
+  <text x="90" y="566" font-size="11.5" fill="#eaf1fa">Firestore durable run + event state</text>
+  <text x="90" y="588" font-size="11.5" fill="#eaf1fa">approval ledger · idempotency keys</text>
+  <text x="90" y="610" font-size="11.5" fill="#eaf1fa">lease / heartbeat / dead-letter</text>
+  <text x="90" y="632" font-size="11.5" fill="#eaf1fa">terminal-frame redaction filter</text>
+  <line x1="90" y1="646" x2="446" y2="646" stroke="#1d2a3c" stroke-width="2"/>
+  <text x="90" y="668" font-size="11" fill="#a9bbd0">OWNS: identifiers · digests · authority</text>
+  <text x="90" y="688" font-size="11" fill="#a9bbd0">every UI frame originates in a</text>
+  <text x="90" y="706" font-size="11" fill="#a9bbd0">persisted backend event</text>
+  <text x="90" y="726" font-size="11" fill="#d73027">on disagreement → fail closed</text>
+
+  <!-- ADK 2 FLEET -->
+  <rect x="500" y="446" width="654" height="290" fill="#12202e"/><rect x="496" y="442" width="654" height="290" fill="#0e1622" stroke="#8cb2f8" stroke-width="2"/>
+  <text x="514" y="470" font-size="14" font-weight="700" fill="#8cb2f8">ADK 2 AGENT FLEET — all three orchestration patterns</text>
+  <text x="514" y="489" font-size="11" fill="#8497ad">agent_runtime/ · reasoning is an agent node, predictable work is a function node</text>
+
+  <rect x="514" y="502" width="620" height="66" fill="#101b2a" stroke="#8cb2f8" stroke-width="1.5"/>
+  <rect x="514" y="502" width="5" height="66" fill="#8cb2f8"/>
+  <text x="532" y="522" font-size="12.5" font-weight="700" fill="#8cb2f8">1 · COLLABORATIVE  mode=single_turn</text>
+  <text x="532" y="541" font-size="11" fill="#eaf1fa">ATLAS coordinates · 7 frozen source analysts · SCOUT · MAVEN · JETTY-advisor</text>
+  <text x="532" y="559" font-size="11" fill="#a9bbd0">→ typed discovery_result:  match | review_required | research_required</text>
+
+  <rect x="514" y="576" width="620" height="66" fill="#101b2a" stroke="#8cb2f8" stroke-width="1.5"/>
+  <rect x="514" y="576" width="5" height="66" fill="#8cb2f8"/>
+  <text x="532" y="596" font-size="12.5" font-weight="700" fill="#8cb2f8">2 · DYNAMIC  ctx.run_node recursion</text>
+  <text x="532" y="615" font-size="11" fill="#eaf1fa">unknown source decomposed · width 3–7 · MAX_DEPTH=2 · no depth 3 exists</text>
+  <text x="532" y="633" font-size="11" fill="#a9bbd0">30-call budget · 180 s ceiling · citations required · no source mutation</text>
+
+  <rect x="514" y="650" width="620" height="70" fill="#101b2a" stroke="#82c996" stroke-width="1.5"/>
+  <rect x="514" y="650" width="5" height="70" fill="#82c996"/>
+  <text x="532" y="670" font-size="12.5" font-weight="700" fill="#82c996">3 · GRAPH  deterministic fan-out → JoinNode</text>
+  <text x="532" y="689" font-size="11" fill="#eaf1fa">metadata / policy / template fn nodes  →  JoinNode  →  PRISMA compiles contract</text>
+  <text x="532" y="707" font-size="11" fill="#a9bbd0">→ VALE validator rejects narrowing, unmapped keys, executable output</text>
+
+  <!-- VERTEX -->
+  <rect x="1190" y="446" width="410" height="140" fill="#12202e"/><rect x="1186" y="442" width="410" height="140" fill="#0e1622" stroke="#8cb2f8" stroke-width="2"/>
+  <text x="1204" y="470" font-size="14" font-weight="700" fill="#8cb2f8">VERTEX AI</text>
+  <text x="1204" y="494" font-size="12" fill="#eaf1fa">gemini-3.5-flash</text>
+  <text x="1204" y="515" font-size="11.5" fill="#a9bbd0">location: us  ·  via Antigravity SDK</text>
+  <line x1="1204" y1="528" x2="1580" y2="528" stroke="#1d2a3c" stroke-width="2"/>
+  <text x="1204" y="549" font-size="11" fill="#fde193">may choose: rename · cast · drop</text>
+  <text x="1204" y="569" font-size="11" fill="#d73027">may NOT: emit or execute code</text>
+
+  <!-- MEMORY -->
+  <rect x="1190" y="600" width="410" height="136" fill="#12202e"/><rect x="1186" y="596" width="410" height="136" fill="#0e1622" stroke="#fde193" stroke-width="2"/>
+  <text x="1204" y="620" font-size="14" font-weight="700" fill="#fde193">MEMORY — four explicit tiers</text>
+  <text x="1204" y="644" font-size="11" fill="#eaf1fa">WORKING     ADK Session state</text>
+  <text x="1204" y="665" font-size="11" fill="#eaf1fa">EPISODIC    Cloud SQL + GCS artifacts</text>
+  <text x="1204" y="686" font-size="11" fill="#eaf1fa">SEMANTIC    Memory Bank + governed BQ</text>
+  <text x="1204" y="707" font-size="11" fill="#eaf1fa">PROCEDURAL  versioned policy packs</text>
+  <text x="1204" y="726" font-size="10.5" fill="#8497ad">excludes raw rows, credentials, chain-of-thought</text>
+
+  <!-- connectors within cloud -->
+  <path d="M468 560 L494 560" stroke="#a9bbd0" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <path d="M1154 512 L1184 512" stroke="#a9bbd0" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ══ BAND 3 : GOVERNANCE GATE ══ -->
+  <path d="M840 736 L840 786" stroke="#fde193" stroke-width="2.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="384" y="792" width="916" height="56" fill="#1e1a12"/><rect x="380" y="788" width="916" height="56" fill="#161206" stroke="#fde193" stroke-width="2.5"/>
+  <rect x="380" y="788" width="6" height="56" fill="#fde193"/>
+  <text x="402" y="812" font-size="14" font-weight="700" fill="#fde193">STEWARD — ONE DIGEST-BOUND HUMAN APPROVAL</text>
+  <text x="402" y="833" font-size="11.5" fill="#a9bbd0">approves an exact plan digest · stale digest is refused, never overridden · no agent may self-approve</text>
+
+  <!-- ══ BAND 4 : EXECUTION ══ -->
+  <rect x="36" y="880" width="1608" height="216" fill="#0b111a" stroke="#82c996" stroke-width="2"/>
+  <rect x="36" y="880" width="1608" height="216" fill="url(#scan)"/>
+  <rect x="48" y="892" width="8" height="8" fill="#82c996"/>
+  <text x="68" y="901" font-size="13" font-weight="700" fill="#82c996" letter-spacing="1.5">TRUSTED EXECUTION — only reachable after approval</text>
+
+  <path d="M840 848 L840 924" stroke="#82c996" stroke-width="2.5" fill="none" marker-end="url(#arG)"/>
+
+  <rect x="80" y="936" width="420" height="132" fill="#12261c"/><rect x="76" y="932" width="420" height="132" fill="#0d1a13" stroke="#82c996" stroke-width="2"/>
+  <text x="94" y="958" font-size="13.5" font-weight="700" fill="#82c996">PRE-REGISTERED RUNNER</text>
+  <text x="94" y="980" font-size="11.5" fill="#eaf1fa">allowlisted typed operations only</text>
+  <text x="94" y="1001" font-size="11.5" fill="#eaf1fa">image digest pinned + verified</text>
+  <text x="94" y="1022" font-size="11.5" fill="#d73027">no eval · no shell · no generated code</text>
+  <text x="94" y="1046" font-size="11" fill="#8497ad">interprets the approved document; never authors it</text>
+
+  <path d="M496 998 L556 998" stroke="#82c996" stroke-width="2" fill="none" marker-end="url(#arG)"/>
+
+  <rect x="564" y="936" width="420" height="132" fill="#12261c"/><rect x="560" y="932" width="420" height="132" fill="#0d1a13" stroke="#82c996" stroke-width="2"/>
+  <text x="578" y="958" font-size="13.5" font-weight="700" fill="#82c996">BIGQUERY</text>
+  <text x="578" y="980" font-size="11.5" fill="#eaf1fa">typed staging / final tables</text>
+  <text x="578" y="1001" font-size="11.5" fill="#eaf1fa">explicit schemas — never autodetect</text>
+  <text x="578" y="1022" font-size="11.5" fill="#eaf1fa">migration_audit · lineage rows</text>
+  <text x="578" y="1046" font-size="11" fill="#8497ad">MERGE-based CDC on a named high-water mark</text>
+
+  <path d="M980 998 L1040 998" stroke="#82c996" stroke-width="2" fill="none" marker-end="url(#arG)"/>
+
+  <rect x="1048" y="936" width="552" height="132" fill="#12261c"/><rect x="1044" y="932" width="552" height="132" fill="#0d1a13" stroke="#82c996" stroke-width="2"/>
+  <text x="1062" y="958" font-size="13.5" font-weight="700" fill="#82c996">LEDGER — RECONCILIATION</text>
+  <text x="1062" y="980" font-size="11.5" fill="#eaf1fa">source = accepted + rejected  ·  accepted = destination rows</text>
+  <text x="1062" y="1001" font-size="11.5" fill="#eaf1fa">output digests · trace IDs · job IDs · audit row</text>
+  <text x="1062" y="1022" font-size="11.5" fill="#d73027">counts disagree → verification FAILED, completion blocked</text>
+  <text x="1062" y="1046" font-size="11" fill="#8497ad">a success claim without an evidence link is treated as unproven</text>
+
+  <!-- ══ BAND 5 : DISCOVERY LOOP ══ -->
+  <rect x="36" y="1112" width="1608" height="150" fill="#0b111a" stroke="#fde193" stroke-width="2"/>
+  <rect x="36" y="1112" width="1608" height="150" fill="url(#scan)"/>
+  <rect x="48" y="1124" width="8" height="8" fill="#fde193"/>
+  <text x="68" y="1133" font-size="13" font-weight="700" fill="#fde193" letter-spacing="1.5">DISCOVERY &amp; CATALOGING — the fleet extends itself</text>
+
+  <g>
+    <rect x="80" y="1158" width="268" height="80" fill="#12202e"/><rect x="76" y="1154" width="268" height="80" fill="#0e1622" stroke="#8cb2f8" stroke-width="2"/>
+    <text x="94" y="1180" font-size="12.5" font-weight="700" fill="#8cb2f8">01 · SEARCH REGISTRY</text>
+    <text x="94" y="1201" font-size="11" fill="#a9bbd0">"is there an agent for</text>
+    <text x="94" y="1219" font-size="11" fill="#a9bbd0">my system?"</text>
+
+    <path d="M348 1194 L392 1194" stroke="#a9bbd0" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+    <rect x="404" y="1158" width="268" height="80" fill="#12202e"/><rect x="400" y="1154" width="268" height="80" fill="#0e1622" stroke="#8cb2f8" stroke-width="2"/>
+    <text x="418" y="1180" font-size="12.5" font-weight="700" fill="#8cb2f8">02 · RESEARCH IF MISSING</text>
+    <text x="418" y="1201" font-size="11" fill="#a9bbd0">long-running dynamic worker</text>
+    <text x="418" y="1219" font-size="11" fill="#a9bbd0">parks + resumes across restarts</text>
+
+    <path d="M672 1194 L716 1194" stroke="#a9bbd0" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+    <rect x="728" y="1158" width="268" height="80" fill="#12261c"/><rect x="724" y="1154" width="268" height="80" fill="#0d1a13" stroke="#82c996" stroke-width="2"/>
+    <text x="742" y="1180" font-size="12.5" font-weight="700" fill="#82c996">03 · VERIFY CONTRACT</text>
+    <text x="742" y="1201" font-size="11" fill="#a9bbd0">deterministic gates + sealed</text>
+    <text x="742" y="1219" font-size="11" fill="#a9bbd0">sandbox evidence pass</text>
+
+    <path d="M996 1194 L1040 1194" stroke="#fde193" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+    <rect x="1052" y="1158" width="268" height="80" fill="#1e1a12"/><rect x="1048" y="1154" width="268" height="80" fill="#161206" stroke="#fde193" stroke-width="2"/>
+    <text x="1066" y="1180" font-size="12.5" font-weight="700" fill="#fde193">04 · HUMAN PROMOTION</text>
+    <text x="1066" y="1201" font-size="11" fill="#a9bbd0">no run auto-publishes;</text>
+    <text x="1066" y="1219" font-size="11" fill="#a9bbd0">registration needs approval</text>
+
+    <path d="M1320 1194 L1364 1194" stroke="#a9bbd0" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+    <rect x="1376" y="1158" width="224" height="80" fill="#12202e"/><rect x="1372" y="1154" width="224" height="80" fill="#0e1622" stroke="#8cb2f8" stroke-width="2"/>
+    <text x="1390" y="1180" font-size="12.5" font-weight="700" fill="#8cb2f8">05 · CATALOGED</text>
+    <text x="1390" y="1201" font-size="11" fill="#a9bbd0">A2A Agent Card +</text>
+    <text x="1390" y="1219" font-size="11" fill="#a9bbd0">Agent Plugin 1.0 package</text>
+  </g>
+  <!-- loop back arrow -->
+  <path d="M1484 1154 L1484 1136 L210 1136 L210 1154" stroke="#fde193" stroke-width="2" fill="none" marker-end="url(#ar)" stroke-dasharray="6 4"/>
+  <text x="742" y="1131" font-size="10.5" fill="#fde193">the next engineer's search finds it</text>
+</svg>
+</div>
