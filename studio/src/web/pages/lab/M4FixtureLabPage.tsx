@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BrandBolt, PixelIcon, TerminalWindow } from "../../shared/ui";
 import fixtureData from "./m4FixtureData.json";
@@ -50,6 +50,76 @@ function digest(value?: string) {
   return value ? <code>{value}</code> : <span className="m4-lab__pending-value">Awaiting local packet join</span>;
 }
 
+type LocalRunnerStatus = "idle" | "running" | "succeeded" | "failed";
+
+interface LocalEvidence {
+  readonly schemaVersion: "keraun.cartridge-evidence/v1";
+  readonly synthetic: true;
+  readonly checks: Readonly<Record<"jdeInvalidCyyddd" | "axOrphanDerived" | "ebsUnmappedFlexfield", number>>;
+}
+
+interface LocalRunnerResponse {
+  readonly status: LocalRunnerStatus;
+  readonly requestId?: string;
+  readonly evidence?: LocalEvidence;
+  readonly code?: string;
+}
+
+const LOCAL_AGENT_ENABLED = import.meta.env.DEV && import.meta.env.VITE_LOCAL_CARTRIDGE_AGENT === "true";
+
+function isRunnerResponse(value: unknown): value is LocalRunnerResponse {
+  return Boolean(value && typeof value === "object" && "status" in value && ["idle", "running", "succeeded", "failed"].includes(String(value.status)));
+}
+
+export function LocalCartridgeRunner({ enabled = LOCAL_AGENT_ENABLED }: { readonly enabled?: boolean }) {
+  const [state, setState] = useState<LocalRunnerResponse>({ status: "idle" });
+
+  useEffect(() => {
+    if (!enabled || state.status !== "running") return undefined;
+    const timer = window.setInterval(() => {
+      void fetch("/api/local-cartridge/v1/evidence-runs/current", { cache: "no-store" })
+        .then(async (response) => response.ok ? response.json() : Promise.reject(new Error("local_agent_unavailable")))
+        .then((response: unknown) => { if (isRunnerResponse(response)) setState(response); })
+        .catch(() => setState({ status: "failed", code: "local_agent_unavailable" }));
+    }, 750);
+    return () => window.clearInterval(timer);
+  }, [enabled, state.status]);
+
+  if (!enabled) return null;
+  const start = async () => {
+    setState({ status: "running" });
+    try {
+      const response = await fetch("/api/local-cartridge/v1/evidence-runs", { method: "POST", cache: "no-store" });
+      const body: unknown = await response.json();
+      if (!response.ok || !isRunnerResponse(body)) throw new Error("local_agent_unavailable");
+      setState(body);
+    } catch {
+      setState({ status: "failed", code: "local_agent_unavailable" });
+    }
+  };
+  const evidence = state.evidence;
+  return <section className="m4-lab__runner" aria-labelledby="local-runner-title">
+    <div>
+      <p className="m4-lab__runner-eyebrow">LOOPBACK RUNNER AGENT</p>
+      <h2 id="local-runner-title">Run the three synthetic cartridges for real.</h2>
+      <p>This local-only action asks a sealed agent to run the fixed Docker evidence command. It has no cloud endpoint, no source credentials, and accepts no browser-supplied command or image.</p>
+    </div>
+    <div className="m4-lab__runner-action">
+      <button type="button" className="m4-lab__runner-button" onClick={() => void start()} disabled={state.status === "running"}>
+        <PixelIcon name="play" size="xs" color="white" />
+        {state.status === "running" ? "Running cartridges…" : "Run local evidence"}
+      </button>
+      <p className={`m4-lab__runner-status m4-lab__runner-status--${state.status}`} aria-live="polite">
+        {state.status === "idle" ? "Ready: Docker Desktop stays local." : null}
+        {state.status === "running" ? "Agent is building, waiting for source health, and certifying counts." : null}
+        {state.status === "failed" ? `Runner did not complete (${state.code ?? "unknown"}).` : null}
+        {state.status === "succeeded" ? "Evidence complete: count-only result returned." : null}
+      </p>
+    </div>
+    {evidence ? <pre className="m4-lab__runner-result">{JSON.stringify(evidence, null, 2)}</pre> : null}
+  </section>;
+}
+
 export function M4FixtureLabPage() {
   const [selectedId, setSelectedId] = useState<M4FixtureSummary["cartridgeId"]>("jde");
   const selected = M4_FIXTURE_SUMMARIES.find((fixture) => fixture.cartridgeId === selectedId) ?? M4_FIXTURE_SUMMARIES[0];
@@ -74,6 +144,8 @@ export function M4FixtureLabPage() {
       <section className="m4-lab__guide" aria-label="How to use this lab">
         <span><b>01</b>Choose a legacy system</span><span><b>02</b>Read its identity and output evidence</span><span><b>03</b>Inspect the checks that keep it honest</span>
       </section>
+
+      <LocalCartridgeRunner />
 
       <div className="m4-lab__tabs" role="tablist" aria-label="Fixture cartridges">
         {M4_FIXTURE_SUMMARIES.map((fixture) => (

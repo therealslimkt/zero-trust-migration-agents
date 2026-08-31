@@ -34,3 +34,19 @@ Compose project, prints the sanitized three-cartridge evidence JSON, and then
 removes that temporary project's containers, network, and volumes. It uses the
 explicit `compose.local.yaml` `runc` override because Docker Desktop does not
 provide the production VM's `runsc` gVisor runtime.
+
+## Local UI evidence run
+
+For the same check through the local cartridge-lab UI, with Docker Desktop
+open, run from the repository root:
+
+```bash
+./scripts/start_local_cartridge_ui.sh
+```
+
+Open the loopback URL printed by Vite, choose **Run local evidence**, and wait
+for the count-only JSON result. The launcher starts a token-protected agent on
+`127.0.0.1:4344` and Vite holds that token while proxying only the two fixed
+evidence-run routes. The browser never receives it. Press `Ctrl-C` to stop
+both the UI and agent. This mechanism is deliberately local-development only;
+the production VM uses gVisor and is not exposed to the browser.

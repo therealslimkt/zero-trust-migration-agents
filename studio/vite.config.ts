@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 
 const LOOPBACK_HOST = '127.0.0.1'
 const DEFAULT_API_TARGET = 'http://127.0.0.1:8080'
+const LOCAL_CARTRIDGE_AGENT_TARGET = 'http://127.0.0.1:4344'
 
 function requireProxyToken(): string {
   const token = process.env.MISSION_CONTROL_API_TOKEN
@@ -69,17 +70,39 @@ function webBffProxy(): ProxyOptions {
   }
 }
 
+function localCartridgeAgentProxy(): ProxyOptions {
+  const token = process.env.KERAUN_LOCAL_CARTRIDGE_AGENT_TOKEN
+  if (!token || token.length < 32 || /[^\x21-\x7e]/.test(token)) {
+    throw new Error('Local cartridge agent authentication is not configured.')
+  }
+  return {
+    target: LOCAL_CARTRIDGE_AGENT_TARGET,
+    changeOrigin: false,
+    ws: false,
+    configure(proxy) {
+      proxy.on('proxyReq', (request) => {
+        request.removeHeader('authorization')
+        request.setHeader('Authorization', `Bearer ${token}`)
+      })
+    },
+  }
+}
+
 export default defineConfig(({ command }) => {
   // The M4 cartridge lab is a static, synthetic-fixture evidence surface. It
   // has no API dependency, so local reviewers can inspect it without holding
   // a Mission Control service credential or starting the Go backend.
   const localFixtureLab = process.env.MISSION_CONTROL_LOCAL_FIXTURE_LAB === 'true'
-  const proxy = command === 'serve' && !localFixtureLab
-    ? {
-        '/api/v1': missionControlProxy(),
-        '/api/web/v1': webBffProxy(),
-      }
-    : undefined
+  const proxy: Record<string, ProxyOptions> | undefined = command !== 'serve'
+    ? undefined
+    : localFixtureLab
+      ? process.env.VITE_LOCAL_CARTRIDGE_AGENT === 'true'
+        ? { '/api/local-cartridge': localCartridgeAgentProxy() }
+        : undefined
+      : {
+          '/api/v1': missionControlProxy(),
+          '/api/web/v1': webBffProxy(),
+        }
   const localServer = {
     host: LOOPBACK_HOST,
     strictPort: !localFixtureLab,
