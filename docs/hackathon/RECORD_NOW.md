@@ -25,24 +25,40 @@ the criterion is *"unedited, live execution."* Trim only dead air at the ends.
 
 ---
 
-## Shot list — target 3:50, hard stop 4:00
+## Shot list — target 3:48, hard stop 4:00
 
-**Change from the first draft:** run the evidence pass by **clicking the button in the UI at
-`/factory`**, not in a terminal. That endpoint calls the sealed local agent for real, so it is
-genuine live in-app execution — a much stronger "Proof of Action" than a terminal.
+**Hosted URL (the star of the demo):**
+`https://keraun-mission-control-322558310296.us-central1.run.app`
+
+**Why anything runs locally at all — say this on camera, it is a feature not a gap.**
+The UI and control plane are hosted on Google Cloud. The *sandbox that touches legacy source
+data* runs inside the operator's own perimeter, because the entire premise is that raw legacy
+data never leaves it. A hosted button that could reach into your ERP would contradict the
+product. So: hosted UI, hosted Vertex reasoning, hosted BigQuery destination — local sealed
+sandbox, by design.
+
+### Tab setup before you record
+
+1. `https://keraun-mission-control-322558310296.us-central1.run.app/factory` ← hosted
+2. `https://keraun-mission-control-322558310296.us-central1.run.app/architecture.html` ← hosted
+3. `http://127.0.0.1:5173/factory` ← local, only for the live **Run evidence** click
+4. Cloud Console → BigQuery → `keraun_demo.sap_kna1_clustered`
+5. Cloud Console → Compute Engine → VM instances
+6. Terminal, in the repo, venv ready
+
+**Do not show a sign-in button.** Say "read-only hosted UI, no login required."
 
 | Time | Screen | Say |
 |---|---|---|
-| 0:00–0:20 | `/factory`, three cartridges | "Every legacy ERP migration buys a permanent middleware path. JD Edwards dates aren't dates. Dynamics AX rows inherit from parents that may not exist. Oracle EBS hides real columns behind flexfields. Three systems, three bespoke pipelines, forever." |
-| 0:20–0:40 | Same; the 01–04 lifecycle rail | "Keraun is a governed agent fleet that replaces them. The unlikely hero is the legacy-ERP migration engineer — nobody's idea of a glamorous job, and the person keeping the enterprise's oldest data alive." |
-| 0:40–1:20 | **DISCOVERABLE** — the 01–04 rail, then the three cartridge tabs | "Agents are catalogued, not hard-coded. You search the registry for your system. These three are vetted cartridges. If yours isn't here, a long-running research agent profiles it, and once a human promotes it, the next engineer's search finds it — as an A2A Agent Card and a portable Agent Plugin package." |
-| 1:20–2:05 | **SECURED** — click **Run evidence**, let it run live | "Watch this run for real. Three sealed synthetic emulators on an internal-only network with no egress. One evidence runner is the only thing allowed to query them." — when the result lands — "Invalid CYYDDD date in JDE. Two orphan-derived RecIds in AX. An unmapped flexfield in EBS. Counts only. No raw records, no credentials, and the payload asserts `synthetic: true`." |
-| 2:05–2:35 | **GOVERNED** — the gates panel + page copy | "Deterministic code owns identifiers, digests, and schema validation — the model only proposes. Note what the page itself says: this is a preflight gate, *not* Beam or BigQuery execution proof. Nothing here auto-promotes. Execution and registration each need a human approval bound to an exact plan digest, and a stale digest is refused, not overridden." |
-| 2:35–3:15 | **THE HERO SHOT** — terminal: `venv/bin/python scripts/demo_cluster_to_bigquery.py --load` | "This is the hardest case. A SAP-style cluster export where every record is its own compressed blob — point a warehouse loader at it and you get one opaque BYTES column." — as stages scroll — "Code-owned adapters verify the magic number, then each record's length and CRC32 *before* decompressing. Out come typed columns, each tagged with a data class the redaction policy keys off. And it lands in BigQuery — real load job, four rows decoded, four rows loaded, reconciled." |
-| 3:15–3:30 | Terminal — `bq query` the table back, then Cloud Console BigQuery tab | "Queried straight back out of BigQuery in project ztm-agent-9049c3. Hexadecimal to typed warehouse columns, end to end." |
-| 3:30–3:45 | Terminal — run the Vertex probe live | "The reasoning runs on Gemini 3.5 Flash through Vertex AI in project ztm-agent-9049c3, via the Antigravity SDK. Live call, not a recording. The model may choose rename, cast, or drop — it may never emit or execute code." |
-| 3:45–3:52 | Cloud Console: VMs (no external IP) | "This is the Google Cloud backend. The cartridge lab host runs under gVisor with no external IP. BigQuery holds the sanitized audit stream. Vertex served the call you just watched." |
-| 3:52–3:58 | Architecture diagram | "One governed fleet, three legacy sources, sanitized evidence end to end — instead of three permanent middleware paths. Open source, runs in your own cloud project." |
+| 0:00–0:20 | **Hosted** `/factory` — the three bad guys | "Every legacy ERP migration buys a permanent middleware path. JD Edwards dates aren't dates. Dynamics AX rows inherit from parents that may not exist. Oracle EBS hides real columns behind flexfields. Three systems, three bespoke pipelines, forever." |
+| 0:20–0:45 | **Hosted** — scroll the 01–04 lifecycle rail | "This is Keraun, running on Cloud Run in project ztm-agent-9049c3. The unlikely hero is the legacy-ERP migration engineer. Agents here are catalogued, not hard-coded — you search the registry for your system, and if it isn't there a long-running agent researches it, a human promotes it, and the next engineer's search finds it." |
+| 0:45–1:15 | **Hosted** — click through the three cartridge tabs | "Each cartridge declares a source contract, a transform spec, and a reconciliation digest before it is allowed anywhere near a migration. Note what the page says about itself: this is a preflight gate, and passing it produces a candidate, never a published agent." |
+| 1:15–2:00 | **Switch to local tab**, click **Run evidence**, let it finish | "The UI is hosted, but the sandbox that touches source data runs inside your own perimeter — that's the whole point. Watch it live: three sealed emulators on an internal-only network with no egress, and one evidence runner that is the only thing allowed to query them." — when the JSON lands — "Invalid CYYDDD date in JDE. Two orphan-derived RecIds in AX. An unmapped flexfield in EBS. Counts only, and the payload asserts synthetic true." |
+| 2:00–2:50 | **Terminal** — `venv/bin/python scripts/demo_cluster_to_bigquery.py --load` | "Now the hardest case. A SAP-style cluster export where every record is its own compressed blob — point a warehouse loader at this and you get one opaque BYTES column." — as it scrolls — "Code-owned adapters check the magic number, then each record's length and CRC32 *before* decompressing. Out come typed columns, each tagged with a data class the redaction policy keys off. And it lands in BigQuery: four decoded, four loaded, reconciled." |
+| 2:50–3:10 | **Cloud Console** — BigQuery table, then run the query | "Straight back out of BigQuery in the same project. Hexadecimal to typed warehouse columns, end to end, with a real load job ID." |
+| 3:10–3:30 | **Terminal** — Vertex probe | "The reasoning runs on Gemini 3.5 Flash through Vertex AI, via the Antigravity SDK. Live call. The model may choose rename, cast, or drop — it may never emit or execute code. Deterministic code owns identifiers, digests, and schema validation, and execution is gated behind one human approval bound to an exact plan digest." |
+| 3:30–3:40 | **Cloud Console** — Compute Engine VM list | "And the source host runs under gVisor with no external IP." |
+| 3:40–3:48 | **Hosted** `/architecture.html` | "One governed fleet, three legacy sources, sanitized evidence end to end — instead of three permanent middleware paths. Open source, hosted on Google Cloud, runs in your own project." |
 
 ### The three claims, and where each is proven on screen
 
