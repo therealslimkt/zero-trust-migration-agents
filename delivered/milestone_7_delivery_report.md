@@ -122,6 +122,5 @@ connector, customer credential, customer record, production migration, Kata
 Containers runtime, or full remaining four source families is delivered here.
 The `keraun-demo` Cloud Run manifest row remains planned, not live.
 
-Relevant commits: `8faa4a6` through `6a1a19e` on
-`agent/m7/live-demo-and-manifest`. Merge and push identifiers are appended only
-after the final milestone merge.
+Relevant implementation commits: `8faa4a6` through `6a1a19e`; M7 evidence and
+report commit: `2450e5d`; merge commit pushed to `origin/main`: `0e9d3af`.
