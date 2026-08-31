@@ -52,19 +52,25 @@ services:
   jde-e1-ibmi:
     image: "${KERAUN_JDE_IMAGE:?digest-pinned image required}"
     environment: [POSTGRES_DB=keraun_jde, POSTGRES_USER=keraun, POSTGRES_PASSWORD=synthetic-only-admin]
-    networks: [cartridge-internal]
+    networks:
+      cartridge-internal:
+        ipv4_address: 172.28.0.11
     volumes: ["jde-data:/var/lib/postgresql/data"]
     restart: unless-stopped
   dynamics-ax:
     image: "${KERAUN_AX_IMAGE:?digest-pinned image required}"
     environment: [POSTGRES_DB=keraun_ax, POSTGRES_USER=keraun, POSTGRES_PASSWORD=synthetic-only-admin]
-    networks: [cartridge-internal]
+    networks:
+      cartridge-internal:
+        ipv4_address: 172.28.0.12
     volumes: ["ax-data:/var/lib/postgresql/data"]
     restart: unless-stopped
   oracle-ebs-19c:
     image: "${KERAUN_EBS_IMAGE:?digest-pinned image required}"
     environment: [POSTGRES_DB=keraun_ebs, POSTGRES_USER=keraun, POSTGRES_PASSWORD=synthetic-only-admin]
-    networks: [cartridge-internal]
+    networks:
+      cartridge-internal:
+        ipv4_address: 172.28.0.13
     volumes: ["ebs-data:/var/lib/postgresql/data"]
     restart: unless-stopped
   evidence-runner:
@@ -72,6 +78,7 @@ services:
     runtime: runsc
     depends_on: [jde-e1-ibmi, dynamics-ax, oracle-ebs-19c]
     networks: [cartridge-internal]
+    environment: [KERAUN_JDE_HOST=172.28.0.11, KERAUN_AX_HOST=172.28.0.12, KERAUN_EBS_HOST=172.28.0.13]
     read_only: true
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
@@ -83,6 +90,9 @@ services:
 networks:
   cartridge-internal:
     internal: true
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
 volumes:
   jde-data:
   ax-data:
@@ -96,6 +106,10 @@ docker compose --env-file .env --project-name keraun-cartridge-lab --profile evi
 EOF
 chmod 0700 /opt/keraun/run-evidence.sh
 cd /opt/keraun
+# Recreate the private network on each metadata-driven rollout while preserving
+# the three named synthetic source volumes. This makes any IPAM change explicit
+# and does not publish source ports or delete the seeded datasets.
+docker compose --env-file .env --project-name keraun-cartridge-lab down --remove-orphans
 docker compose --env-file .env --project-name keraun-cartridge-lab up -d jde-e1-ibmi dynamics-ax oracle-ebs-19c
 for attempt in $(seq 1 30); do
   if docker compose --env-file .env --project-name keraun-cartridge-lab --profile evidence run --rm evidence-runner >/var/log/keraun-cartridge-evidence.json 2>/var/log/keraun-cartridge-evidence.err; then

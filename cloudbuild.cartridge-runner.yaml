@@ -1,0 +1,17 @@
+# Rebuilds only the evidence-runner after a reviewed runner repair. Source
+# emulators retain their already-approved immutable digests.
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: sparky-services
+  _TAG: required
+
+steps:
+  - id: build-sandboxed-evidence-runner
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "--file=cartridge_runtime/runner/Dockerfile", "--tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-cartridge-evidence-runner:${_TAG}", "."]
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/keraun-cartridge-evidence-runner:${_TAG}
+
+options:
+  logging: CLOUD_LOGGING_ONLY

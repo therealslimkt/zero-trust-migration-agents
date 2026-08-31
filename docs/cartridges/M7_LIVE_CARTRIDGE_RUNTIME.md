@@ -38,9 +38,11 @@ deployment metadata only: `jt400.jar`/`db2jcc4.jar`, `mssql-jdbc.jar`, and
 - The source host is an `e2-small` private-only Compute Engine VM in a dedicated
   VPC and `/28` subnet; it has no external IP and only IAP TCP/22 ingress.
 - A short-lived Cloud NAT bootstrap path lets the host install Docker and the
-  signed `runsc` package; it is retired after startup verification.
+  signed `runsc` package; it is explicitly tracked for retirement after final
+  startup verification.
 - Source database containers have no host-published ports and communicate only
-  on an internal Docker network.
+  on an internal Docker network. The runner receives three fixed addresses from
+  that private `/24`, avoiding any dependence on Docker DNS inside gVisor.
 - The `evidence-runner` is the only parser/certifier process. It uses
   `runtime: runsc` (gVisor), an unprivileged UID, read-only root, no Linux
   capabilities, `no-new-privileges`, a dedicated tmpfs, 256 MiB memory, half
