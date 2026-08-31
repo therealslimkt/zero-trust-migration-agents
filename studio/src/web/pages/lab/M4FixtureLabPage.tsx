@@ -1,10 +1,11 @@
 import { useState } from "react";
 
 import { PixelIcon, StatusBeacon, TerminalWindow } from "../../shared/ui";
+import fixtureData from "./m4FixtureData.json";
 import "./m4-fixture-lab.css";
 
 export interface M4FixtureSummary {
-  readonly cartridgeId: "jde" | "dynamics_ax" | "oracle_ebs";
+  readonly cartridgeId: "jde" | "dynamics_ax" | "oracle_ebs_19c";
   readonly title: string;
   readonly legacy: string;
   readonly identity: string;
@@ -18,35 +19,32 @@ export interface M4FixtureSummary {
   readonly checks: readonly string[];
 }
 
-// These records intentionally begin in a pending state. Integration replaces
-// each with the canonical local packet result; this page never manufactures a
-// Dataflow job, BigQuery table, or cloud execution outcome.
-export const M4_FIXTURE_SUMMARIES: readonly M4FixtureSummary[] = [
-  {
-    cartridgeId: "jde",
-    title: "JD Edwards",
-    legacy: "IBM i / JDE World hero lane",
-    identity: "F0101 + UPMJ CYYDDD journal semantics",
-    fixtureStatus: "pending_packet",
-    checks: ["EBCDIC + COMP-3", "UPMJ zero/leap/invalid", "delta + delete reconciliation"],
+const FIXTURE_DETAILS = {
+  jde: {
+    title: "JD Edwards EnterpriseOne",
+    legacy: "IBM i / F0911 journal fixture",
+    identity: "company + document type + number + line + ledger",
+    checks: ["UPMJ zero/leap/invalid", "ordered insert/update/delete journal", "bronze + silver reconciliation"],
   },
-  {
-    cartridgeId: "dynamics_ax",
+  dynamics_ax: {
     title: "Microsoft Dynamics AX",
     legacy: "SQL Server application metadata fixture",
     identity: "company + partition + table + RecId",
-    fixtureStatus: "pending_packet",
     checks: ["base/derived metadata", "watermark delta", "orphan and duplicate rejection"],
   },
-  {
-    cartridgeId: "oracle_ebs",
-    title: "Oracle EBS / Oracle 19c",
+  oracle_ebs_19c: {
+    title: "Oracle EBS on Oracle 19c",
     legacy: "E-Business Suite flexfield fixture",
     identity: "application + table + context + segment + metadata version",
-    fixtureStatus: "pending_packet",
     checks: ["FND descriptive flexfields", "LAST_UPDATE_DATE delta", "ambiguous context rejection"],
   },
-];
+} as const;
+
+export const M4_FIXTURE_SUMMARIES: readonly M4FixtureSummary[] = fixtureData.map((packet) => {
+  const cartridgeId = packet.cartridgeId as M4FixtureSummary["cartridgeId"];
+  const detail = FIXTURE_DETAILS[cartridgeId];
+  return { ...packet, cartridgeId, ...detail, fixtureStatus: "validated_fixture" };
+});
 
 function digest(value?: string) {
   return value ? <code>{value}</code> : <span className="m4-lab__pending-value">Awaiting local packet join</span>;
