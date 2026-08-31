@@ -6,9 +6,9 @@ Status: implemented and locally verified against PostgreSQL 18; not deployed
 
 PostgreSQL on Cloud SQL is the v2 transactional authority. It owns tenant/run
 lifecycle, optimistic revisions, approval nonces and decisions, signed
-releases, launch and reconciliation facts, task/attempt history, worker lease
-fences, effect reservations, idempotency results, and the durable event
-outbox.
+releases, trust-spine checkpoints and approval journal entries, launch and
+reconciliation facts, task/attempt history, worker lease fences, effect
+reservations, idempotency results, and the durable event outbox.
 
 Firestore and ADK Session Service may retain compatibility/session views, but
 they are not v2 approval, release, lease, idempotency, or lifecycle authority.
@@ -40,6 +40,16 @@ idempotency record together. A relay crash after commit is recovered by
 reclaiming the outbox delivery lease; it does not reconstruct an event from
 current state.
 
+The production approval boundary is one `SERIALIZABLE`
+`CommitProductionApprovalSeal` transaction. It locks the run and checkpoint,
+compares the exact expected run revision plus checkpoint revision and digest,
+requires the unsealed `simulation_approved` phase, validates distinct approved
+simulation and production authority rows and the simulation journal entry,
+then appends the production journal entry, seals the checkpoint, advances the
+run, appends `checkpoint.sealed`, and stores the idempotency result before
+commit. A duplicate request with the same complete binding returns that result
+without another journal row, revision, or event.
+
 The migration lives at
 `studio-backend/migrations/m3_001_cloud_sql_authority.sql`. The repository is
 `studio-backend/m3_persistence.go` and accepts an injected `*sql.DB`; it never
@@ -51,21 +61,43 @@ opens a database or reads credentials implicitly.
 
 - Tenant is the leading column of every authority key and lookup.
 - Foreign keys include tenant identity, preventing cross-tenant references.
-- Commands require an exact tenant/run scope. SQL never looks up a run by
-  `run_id` alone.
+- The shared identifier domain is lowercase `tnt_...` (8--64 characters,
+  letters/digits/underscore) and `run_...` (16--64 characters,
+  letters/digits/underscore/hyphen). Commands require that exact tenant/run
+  scope; SQL never looks up a run by `run_id` alone.
 - Idempotency records bind tenant, run, deterministic node path, operation,
   request digest, and the plan digest once a plan exists. Pre-plan create and
   start commands store a null plan binding; no post-plan command does.
 - `SERIALIZABLE` commands and `FOR UPDATE` locks make revision checks and
   state-machine transitions atomic.
 
-### Approval and release
+### Approval, checkpoint, and release
 
-- An approval nonce is one-time, expiring, and bound to the exact plan digest.
-- `RecordApproval` consumes the nonce before inserting the immutable approval
-  row, advances the run, appends the event, and commits all four together.
-- Approval actor identity is retained only in the authority table; it is not
-  copied into Mission Control events.
+- Simulation and production authority decisions are separate immutable rows,
+  unique by tenant/run/stage. Both bind request, record, plan, release,
+  artifact, subject, nonce, and checkpoint digests. A production row also
+  binds the exact prior simulation approval ID and record digest; a trigger
+  requires that prior row to be an approved simulation decision with distinct
+  record and subject digests.
+- An approval nonce is one-time and expiring. It binds all decision inputs,
+  not just a plan. Its primary key is `(tenant_id, nonce_digest)`, so a digest
+  is usable once across every run in one tenant. The same digest may exist in
+  another tenant; this is deliberate tenant-global, not cross-tenant-global,
+  replay scope.
+- `RecordApproval` consumes the exact staged nonce before inserting the
+  immutable authority row, retains the run in `awaiting_approval` after an
+  approval, appends the sanitized event, and commits all mutations together.
+  Only the atomic production seal moves the run to `approved`.
+- `workflow_approval_entries` stores the canonical trust-spine approval facts
+  separately from authenticated authority decisions and binds each journal
+  record to its authority record digest. `workflow_checkpoints` stores exact
+  canonical bytes plus their digest and a monotonic revision. A checkpoint
+  cannot be created already sealed.
+- At `approved_for_execution`, `model_calls_at_seal` must equal
+  `model_calls`, and `post_seal_model_calls` is structurally pinned to zero.
+  Later checkpoint updates cannot change that frozen model-call boundary.
+- Approval identity is retained in the authority row and typed workflow
+  journal fact; it is never copied into Mission Control events.
 - A release requires the approved decision, exact plan digest, content digest,
   signer key-version reference, and signature digest. Release rows are
   append-only.
@@ -111,6 +143,9 @@ opens a database or reads credentials implicitly.
 | Crash point | Durable result | Recovery |
 | --- | --- | --- |
 | Before transaction commit | No state, event, nonce consumption, or result survives | Retry the same command |
+| Authority decision committed before workflow resume | The staged authority row and consumed nonce survive; no seal is implied | Re-read the row and retry the exact journal/checkpoint command |
+| Production journal insert or checkpoint update fails | The journal insert, checkpoint, run, event, and idempotency result all roll back | Retry `CommitProductionApprovalSeal` with the same binding |
+| Production seal committed before relay | Sealed checkpoint, approved run, replay result, and pending sanitized event survive together | Return exact replay result; relay claims the pending event |
 | After commit, before relay | State and pending event both survive | Relay reclaims event lease |
 | After downstream publish, before acknowledgement | Event remains reclaimable with the same stable `event_id` | Subscriber deduplicates `event_id`; relay marks published |
 | Worker stops heartbeating | Running attempt remains until database expiry | Evaluator records `timed_out`, then retry or DLQ |
@@ -140,14 +175,16 @@ write ordering, and the migration contract. The PostgreSQL test is opt-in:
 
 ```sh
 M3_TEST_DATABASE_DSN=postgresql:///zero_trust_m3_test go test \
-  -run TestM3PostgresContractIntegration -v ./studio-backend
+  -run 'TestM3Postgres(ContractIntegration|RepositoryLive)' -v ./studio-backend
 ```
 
-It rewrites the migration to a process-unique schema, exercises transaction
-rollback, nonce consumption, immutable approval/release/attempt records,
-signed release, create-once launch and reconciliation counts, lease fencing,
-and unsafe event rejection, then rolls the entire schema back. With no DSN it
-skips cleanly so the offline v1 baseline remains green.
+The SQL contract test rewrites the migration to a process-unique schema and
+rolls the transaction back. The pgx repository test resets only a database
+whose name begins `zero_trust_m3_test`, then proves seal success, exact replay,
+stale-CAS rollback, missing/mismatched simulation rejection, injected failure
+rollback, tenant-global nonce uniqueness, and exact authority/journal/event/
+idempotency row counts. With no DSN both tests skip cleanly, so the offline v1
+baseline remains green.
 
 This milestone does not claim a Cloud SQL instance, Datastream stream,
 Pub/Sub topic, BigQuery projection, or production relay was deployed or live

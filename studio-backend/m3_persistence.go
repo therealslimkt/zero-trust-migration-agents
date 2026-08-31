@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
@@ -58,15 +59,17 @@ type M3CommandResult struct {
 }
 
 type M3Run struct {
-	TenantID   string
-	RunID      string
-	State      M3RunState
-	Revision   int64
-	PlanDigest string
-	ApprovalID string
-	ReleaseID  string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	TenantID             string
+	RunID                string
+	State                M3RunState
+	Revision             int64
+	PlanDigest           string
+	SimulationApprovalID string
+	ProductionApprovalID string
+	ApprovalID           string
+	ReleaseID            string
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
 }
 
 // M3Event contains a fixed, sanitized projection. It deliberately has no
@@ -117,6 +120,28 @@ type M3Attempt struct {
 	FailureCode     string
 }
 
+type M3WorkflowCheckpoint struct {
+	TenantID, RunID                               string
+	Revision                                      int64
+	CheckpointDigest, SourceDigest, RequestDigest string
+	PlanDigest, Phase, ChainDigest                string
+	Sequence                                      int64
+	CanonicalJSON                                 json.RawMessage
+	ModelCalls                                    int
+	ModelCallsAtSeal                              *int
+	PostSealModelCalls                            int
+	SealDigest, ProductionApprovalID              string
+}
+
+type M3WorkflowApprovalEntry struct {
+	TenantID, RunID, ApprovalID                       string
+	Stage                                             M3ApprovalStage
+	RecordDigest, AuthorityRecordDigest, SourceDigest string
+	SubjectDigest, PredecessorDigest, IdempotencyKey  string
+	AuthorityID, ApproverID                           string
+	CanonicalJSON                                     json.RawMessage
+}
+
 type M3OutboxDelivery struct {
 	Event              M3Event
 	DeliveryOwner      string
@@ -139,8 +164,8 @@ func NewM3PostgresRepository(db *sql.DB) (*M3PostgresRepository, error) {
 }
 
 var (
-	m3TenantRE       = regexp.MustCompile(`^tnt_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`)
-	m3RunRE          = regexp.MustCompile(`^run_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`)
+	m3TenantRE       = regexp.MustCompile(`^tnt_[a-z0-9][a-z0-9_]{3,59}$`)
+	m3RunRE          = regexp.MustCompile(`^run_[a-z0-9][a-z0-9_-]{11,59}$`)
 	m3TaskRE         = regexp.MustCompile(`^tsk_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`)
 	m3ApprovalRE     = regexp.MustCompile(`^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`)
 	m3ReleaseRE      = regexp.MustCompile(`^rel_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`)
@@ -223,7 +248,8 @@ var m3Transitions = map[M3RunState]map[M3RunState]bool{
 
 var m3EventTypes = map[string]bool{
 	"run.created": true, "run.transitioned": true, "approval.recorded": true,
-	"release.created": true, "launch.recorded": true, "reconciliation.recorded": true,
+	"checkpoint.sealed": true,
+	"release.created":   true, "launch.recorded": true, "reconciliation.recorded": true,
 	"task.enqueued": true, "attempt.started": true, "attempt.completed": true,
 	"lease.expired": true, "task.retry_scheduled": true, "task.dead_lettered": true,
 	"effect.reserved": true, "effect.committed": true,
@@ -350,13 +376,15 @@ func m3LockRun(ctx context.Context, tx *sql.Tx, tenantID, runID string) (M3Run, 
 	var run M3Run
 	err := tx.QueryRowContext(ctx, `
 		SELECT tenant_id, run_id, lifecycle_state, revision,
-			COALESCE(plan_digest, ''), COALESCE(approval_id, ''), COALESCE(release_id, ''),
+			COALESCE(plan_digest, ''), COALESCE(simulation_approval_id, ''),
+			COALESCE(production_approval_id, ''), COALESCE(approval_id, ''), COALESCE(release_id, ''),
 			created_at, updated_at
 		FROM mission_control_v2.runs
 		WHERE tenant_id = $1 AND run_id = $2
 		FOR UPDATE`, tenantID, runID).Scan(
 		&run.TenantID, &run.RunID, &run.State, &run.Revision,
-		&run.PlanDigest, &run.ApprovalID, &run.ReleaseID, &run.CreatedAt, &run.UpdatedAt,
+		&run.PlanDigest, &run.SimulationApprovalID, &run.ProductionApprovalID,
+		&run.ApprovalID, &run.ReleaseID, &run.CreatedAt, &run.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return M3Run{}, ErrM3NotFound
@@ -371,12 +399,14 @@ func (r *M3PostgresRepository) GetRun(ctx context.Context, tenantID, runID strin
 	var run M3Run
 	err := r.db.QueryRowContext(ctx, `
 		SELECT tenant_id, run_id, lifecycle_state, revision,
-			COALESCE(plan_digest, ''), COALESCE(approval_id, ''), COALESCE(release_id, ''),
+			COALESCE(plan_digest, ''), COALESCE(simulation_approval_id, ''),
+			COALESCE(production_approval_id, ''), COALESCE(approval_id, ''), COALESCE(release_id, ''),
 			created_at, updated_at
 		FROM mission_control_v2.runs
 		WHERE tenant_id = $1 AND run_id = $2`, tenantID, runID).Scan(
 		&run.TenantID, &run.RunID, &run.State, &run.Revision,
-		&run.PlanDigest, &run.ApprovalID, &run.ReleaseID, &run.CreatedAt, &run.UpdatedAt,
+		&run.PlanDigest, &run.SimulationApprovalID, &run.ProductionApprovalID,
+		&run.ApprovalID, &run.ReleaseID, &run.CreatedAt, &run.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return M3Run{}, ErrM3NotFound
@@ -470,7 +500,8 @@ func (r *M3PostgresRepository) TransitionRun(ctx context.Context, cmd M3Transiti
 	if m3Terminal(run.State) || !m3TransitionAllowed(run.State, cmd.To) {
 		return M3CommandResult{}, m3Rollback(tx, ErrM3Conflict)
 	}
-	if cmd.To == M3RunAwaitingApproval && (run.ApprovalID != "" || run.ReleaseID != "") {
+	if cmd.To == M3RunAwaitingApproval && (run.SimulationApprovalID != "" ||
+		run.ProductionApprovalID != "" || run.ApprovalID != "" || run.ReleaseID != "") {
 		return M3CommandResult{}, m3Rollback(tx, ErrM3Conflict)
 	}
 	if cmd.To == M3RunSucceeded && run.ReleaseID == "" {
@@ -533,20 +564,36 @@ func (r *M3PostgresRepository) TransitionRun(ctx context.Context, cmd M3Transiti
 }
 
 type M3ApprovalCommand struct {
-	TenantID, RunID, ApprovalID, SubjectDigest, NonceDigest, Decision, ActorSubject string
-	IdempotencyKey, RequestDigest                                                   string
-	ExpectedRevision                                                                int64
+	TenantID, RunID, ApprovalID, RequestID       string
+	Stage                                        M3ApprovalStage
+	RequestDigest, RecordDigest, PlanDigest      string
+	ReleaseDigest, ArtifactDigest, SubjectDigest string
+	NonceDigest, CheckpointDigest                string
+	SimulationApprovalID, SimulationRecordDigest string
+	Decision                                     M3ApprovalDecision
+	ActorSubject, IdempotencyKey                 string
+	ExpectedRevision                             int64
 }
 
 func (r *M3PostgresRepository) RecordApproval(ctx context.Context, cmd M3ApprovalCommand) (M3CommandResult, error) {
 	if err := m3ValidateScope(cmd.TenantID, cmd.RunID); err != nil ||
-		!m3ApprovalRE.MatchString(cmd.ApprovalID) || !m3DigestRE.MatchString(cmd.SubjectDigest) || !m3DigestRE.MatchString(cmd.NonceDigest) ||
-		(cmd.Decision != "approved" && cmd.Decision != "rejected") ||
+		!m3ApprovalRE.MatchString(cmd.ApprovalID) || !m3IDPattern.MatchString(cmd.RequestID) ||
+		(cmd.Stage != M3SimulationStage && cmd.Stage != M3ProductionStage) ||
+		!m3DigestRE.MatchString(cmd.RequestDigest) || !m3DigestRE.MatchString(cmd.RecordDigest) ||
+		!m3DigestRE.MatchString(cmd.PlanDigest) || !m3DigestRE.MatchString(cmd.ReleaseDigest) ||
+		!m3DigestRE.MatchString(cmd.ArtifactDigest) || !m3DigestRE.MatchString(cmd.SubjectDigest) ||
+		!m3DigestRE.MatchString(cmd.NonceDigest) || !m3DigestRE.MatchString(cmd.CheckpointDigest) ||
+		(cmd.Decision != M3Approve && cmd.Decision != M3Reject) ||
 		!m3SafeText(cmd.ActorSubject, 3, 160) || cmd.ExpectedRevision < 1 {
 		return M3CommandResult{}, ErrM3Invalid
 	}
-	const nodePath = "/control/approval.record"
-	tx, replay, err := r.beginIdempotent(ctx, cmd.TenantID, cmd.RunID, nodePath, cmd.SubjectDigest, "approval.record", cmd.IdempotencyKey, cmd.RequestDigest)
+	if (cmd.Stage == M3SimulationStage && (cmd.SimulationApprovalID != "" || cmd.SimulationRecordDigest != "")) ||
+		(cmd.Stage == M3ProductionStage && (!m3ApprovalRE.MatchString(cmd.SimulationApprovalID) || !m3DigestRE.MatchString(cmd.SimulationRecordDigest))) {
+		return M3CommandResult{}, ErrM3Invalid
+	}
+	nodePath := "/control/approval." + string(cmd.Stage)
+	operation := "approval." + string(cmd.Stage) + ".record"
+	tx, replay, err := r.beginIdempotent(ctx, cmd.TenantID, cmd.RunID, nodePath, cmd.PlanDigest, operation, cmd.IdempotencyKey, cmd.RequestDigest)
 	if err != nil {
 		return M3CommandResult{}, err
 	}
@@ -560,16 +607,46 @@ func (r *M3PostgresRepository) RecordApproval(ctx context.Context, cmd M3Approva
 	if run.Revision != cmd.ExpectedRevision {
 		return M3CommandResult{}, m3Rollback(tx, ErrM3RevisionConflict)
 	}
-	if run.State != M3RunAwaitingApproval || run.PlanDigest != cmd.SubjectDigest || run.ApprovalID != "" {
+	if run.State != M3RunAwaitingApproval || run.PlanDigest != cmd.PlanDigest || run.ApprovalID != "" {
 		return M3CommandResult{}, m3Rollback(tx, ErrM3Conflict)
+	}
+	if cmd.Stage == M3SimulationStage {
+		if run.SimulationApprovalID != "" || run.ProductionApprovalID != "" {
+			return M3CommandResult{}, m3Rollback(tx, ErrM3Conflict)
+		}
+	} else {
+		if run.SimulationApprovalID != cmd.SimulationApprovalID || run.ProductionApprovalID != "" {
+			return M3CommandResult{}, m3Rollback(tx, ErrM3Conflict)
+		}
+		var priorDecision, priorDigest, priorSubject string
+		err := tx.QueryRowContext(ctx, `
+			SELECT decision, record_digest, subject_digest
+			FROM mission_control_v2.approvals
+			WHERE tenant_id = $1 AND run_id = $2 AND approval_id = $3 AND stage = 'simulation'`,
+			cmd.TenantID, cmd.RunID, cmd.SimulationApprovalID).Scan(&priorDecision, &priorDigest, &priorSubject)
+		if errors.Is(err, sql.ErrNoRows) {
+			err = ErrM3Conflict
+		}
+		if err != nil || priorDecision != string(M3Approve) || priorDigest != cmd.SimulationRecordDigest || priorSubject == cmd.SubjectDigest {
+			if err == nil {
+				err = ErrM3Conflict
+			}
+			return M3CommandResult{}, m3Rollback(tx, err)
+		}
 	}
 	res, err := tx.ExecContext(ctx, `
 		UPDATE mission_control_v2.approval_nonces
 		SET consumed_at = clock_timestamp(), approval_id = $4
 		WHERE tenant_id = $1 AND run_id = $2 AND nonce_digest = $3
-			AND subject_digest = $5 AND consumed_at IS NULL
+			AND request_id = $5 AND stage = $6 AND request_digest = $7
+			AND plan_digest = $8 AND release_digest = $9 AND artifact_digest = $10
+			AND subject_digest = $11 AND checkpoint_digest = $12
+			AND simulation_record_digest IS NOT DISTINCT FROM NULLIF($13, '')
+			AND consumed_at IS NULL
 			AND expires_at > clock_timestamp()`,
-		cmd.TenantID, cmd.RunID, cmd.NonceDigest, cmd.ApprovalID, cmd.SubjectDigest)
+		cmd.TenantID, cmd.RunID, cmd.NonceDigest, cmd.ApprovalID, cmd.RequestID,
+		string(cmd.Stage), cmd.RequestDigest, cmd.PlanDigest, cmd.ReleaseDigest,
+		cmd.ArtifactDigest, cmd.SubjectDigest, cmd.CheckpointDigest, cmd.SimulationRecordDigest)
 	if err != nil {
 		return M3CommandResult{}, m3Rollback(tx, err)
 	}
@@ -581,29 +658,52 @@ func (r *M3PostgresRepository) RecordApproval(ctx context.Context, cmd M3Approva
 	}
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO mission_control_v2.approvals
-			(tenant_id, approval_id, run_id, subject_digest, nonce_digest, decision, actor_subject)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		cmd.TenantID, cmd.ApprovalID, cmd.RunID, cmd.SubjectDigest, cmd.NonceDigest, cmd.Decision, cmd.ActorSubject); err != nil {
+			(tenant_id, approval_id, run_id, stage, request_digest, record_digest,
+			 plan_digest, release_digest, artifact_digest, subject_digest, nonce_digest,
+			 checkpoint_digest, simulation_approval_id, simulation_record_digest,
+			 decision, actor_subject)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+			NULLIF($13, ''), NULLIF($14, ''), $15, $16)`,
+		cmd.TenantID, cmd.ApprovalID, cmd.RunID, string(cmd.Stage), cmd.RequestDigest,
+		cmd.RecordDigest, cmd.PlanDigest, cmd.ReleaseDigest, cmd.ArtifactDigest,
+		cmd.SubjectDigest, cmd.NonceDigest, cmd.CheckpointDigest, cmd.SimulationApprovalID,
+		cmd.SimulationRecordDigest, string(cmd.Decision), cmd.ActorSubject); err != nil {
 		return M3CommandResult{}, m3Rollback(tx, err)
 	}
-	run.State = M3RunState(cmd.Decision)
-	err = tx.QueryRowContext(ctx, `
-		UPDATE mission_control_v2.runs
-		SET lifecycle_state = $3, approval_id = $4, revision = revision + 1,
-			updated_at = clock_timestamp()
-		WHERE tenant_id = $1 AND run_id = $2 AND revision = $5
-		RETURNING revision, updated_at`,
-		cmd.TenantID, cmd.RunID, cmd.Decision, cmd.ApprovalID, cmd.ExpectedRevision).Scan(&run.Revision, &run.UpdatedAt)
+	nextState := M3RunAwaitingApproval
+	if cmd.Decision == M3Reject {
+		nextState = M3RunRejected
+	}
+	if cmd.Stage == M3SimulationStage {
+		err = tx.QueryRowContext(ctx, `
+			UPDATE mission_control_v2.runs
+			SET lifecycle_state = $3, simulation_approval_id = $4,
+				revision = revision + 1, updated_at = clock_timestamp()
+			WHERE tenant_id = $1 AND run_id = $2 AND revision = $5
+			RETURNING revision, updated_at`, cmd.TenantID, cmd.RunID, string(nextState),
+			cmd.ApprovalID, cmd.ExpectedRevision).Scan(&run.Revision, &run.UpdatedAt)
+		run.SimulationApprovalID = cmd.ApprovalID
+	} else {
+		err = tx.QueryRowContext(ctx, `
+			UPDATE mission_control_v2.runs
+			SET lifecycle_state = $3, production_approval_id = $4,
+				revision = revision + 1, updated_at = clock_timestamp()
+			WHERE tenant_id = $1 AND run_id = $2 AND revision = $5
+			RETURNING revision, updated_at`, cmd.TenantID, cmd.RunID, string(nextState),
+			cmd.ApprovalID, cmd.ExpectedRevision).Scan(&run.Revision, &run.UpdatedAt)
+		run.ProductionApprovalID = cmd.ApprovalID
+	}
 	if err != nil {
 		return M3CommandResult{}, m3Rollback(tx, err)
 	}
-	run.ApprovalID = cmd.ApprovalID
-	seq, err := r.appendEvent(ctx, tx, run, "approval.recorded", "", "", cmd.ApprovalID, "", "", []string{cmd.SubjectDigest})
+	run.State = nextState
+	code := strings.ToUpper(string(cmd.Stage)) + "_" + strings.ToUpper(string(cmd.Decision))
+	seq, err := r.appendEvent(ctx, tx, run, "approval.recorded", "", "", cmd.ApprovalID, "", code, []string{cmd.RecordDigest, cmd.SubjectDigest})
 	if err != nil {
 		return M3CommandResult{}, m3Rollback(tx, err)
 	}
-	result := M3CommandResult{TenantID: run.TenantID, RunID: run.RunID, Revision: run.Revision, State: run.State, EventSequence: seq, ApprovalID: run.ApprovalID}
-	if err := m3StoreIdempotency(ctx, tx, nodePath, cmd.SubjectDigest, "approval.record", cmd.IdempotencyKey, cmd.RequestDigest, result); err != nil {
+	result := M3CommandResult{TenantID: run.TenantID, RunID: run.RunID, Revision: run.Revision, State: run.State, EventSequence: seq, ApprovalID: cmd.ApprovalID}
+	if err := m3StoreIdempotency(ctx, tx, nodePath, cmd.PlanDigest, operation, cmd.IdempotencyKey, cmd.RequestDigest, result); err != nil {
 		return M3CommandResult{}, m3Rollback(tx, err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -613,8 +713,12 @@ func (r *M3PostgresRepository) RecordApproval(ctx context.Context, cmd M3Approva
 }
 
 type M3ApprovalNonceCommand struct {
-	TenantID, RunID, SubjectDigest, NonceDigest string
-	ExpiresAt                                   time.Time
+	TenantID, RunID, RequestID                   string
+	Stage                                        M3ApprovalStage
+	NonceDigest, RequestDigest, PlanDigest       string
+	ReleaseDigest, ArtifactDigest, SubjectDigest string
+	CheckpointDigest, SimulationRecordDigest     string
+	ExpiresAt                                    time.Time
 }
 
 // RegisterApprovalNonce records a one-time, digest-bound authorization
@@ -622,7 +726,16 @@ type M3ApprovalNonceCommand struct {
 // this repository guarantees consumption is atomic with the decision.
 func (r *M3PostgresRepository) RegisterApprovalNonce(ctx context.Context, cmd M3ApprovalNonceCommand) error {
 	if err := m3ValidateScope(cmd.TenantID, cmd.RunID); err != nil ||
-		!m3DigestRE.MatchString(cmd.SubjectDigest) || !m3DigestRE.MatchString(cmd.NonceDigest) || cmd.ExpiresAt.IsZero() {
+		!m3IDPattern.MatchString(cmd.RequestID) ||
+		(cmd.Stage != M3SimulationStage && cmd.Stage != M3ProductionStage) ||
+		!m3DigestRE.MatchString(cmd.NonceDigest) || !m3DigestRE.MatchString(cmd.RequestDigest) ||
+		!m3DigestRE.MatchString(cmd.PlanDigest) || !m3DigestRE.MatchString(cmd.ReleaseDigest) ||
+		!m3DigestRE.MatchString(cmd.ArtifactDigest) || !m3DigestRE.MatchString(cmd.SubjectDigest) ||
+		!m3DigestRE.MatchString(cmd.CheckpointDigest) || cmd.ExpiresAt.IsZero() {
+		return ErrM3Invalid
+	}
+	if (cmd.Stage == M3SimulationStage && cmd.SimulationRecordDigest != "") ||
+		(cmd.Stage == M3ProductionStage && !m3DigestRE.MatchString(cmd.SimulationRecordDigest)) {
 		return ErrM3Invalid
 	}
 	tx, err := r.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
@@ -633,15 +746,26 @@ func (r *M3PostgresRepository) RegisterApprovalNonce(ctx context.Context, cmd M3
 	if err != nil {
 		return m3Rollback(tx, err)
 	}
-	if run.State != M3RunAwaitingApproval || run.PlanDigest != cmd.SubjectDigest {
+	if run.State != M3RunAwaitingApproval || run.PlanDigest != cmd.PlanDigest {
+		return m3Rollback(tx, ErrM3Conflict)
+	}
+	if cmd.Stage == M3SimulationStage && run.SimulationApprovalID != "" {
+		return m3Rollback(tx, ErrM3Conflict)
+	}
+	if cmd.Stage == M3ProductionStage && (run.SimulationApprovalID == "" || run.ProductionApprovalID != "") {
 		return m3Rollback(tx, ErrM3Conflict)
 	}
 	res, err := tx.ExecContext(ctx, `
 		INSERT INTO mission_control_v2.approval_nonces
-			(tenant_id, run_id, nonce_digest, subject_digest, expires_at)
-		SELECT $1, $2, $3, $4, $5
-		WHERE $5 > clock_timestamp()
-		ON CONFLICT DO NOTHING`, cmd.TenantID, cmd.RunID, cmd.NonceDigest, cmd.SubjectDigest, cmd.ExpiresAt.UTC())
+			(tenant_id, run_id, request_id, stage, nonce_digest, request_digest,
+			 plan_digest, release_digest, artifact_digest, subject_digest,
+			 checkpoint_digest, simulation_record_digest, expires_at)
+		SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NULLIF($12, ''), $13
+		WHERE $13 > clock_timestamp()
+		ON CONFLICT DO NOTHING`, cmd.TenantID, cmd.RunID, cmd.RequestID, string(cmd.Stage),
+		cmd.NonceDigest, cmd.RequestDigest, cmd.PlanDigest, cmd.ReleaseDigest,
+		cmd.ArtifactDigest, cmd.SubjectDigest, cmd.CheckpointDigest,
+		cmd.SimulationRecordDigest, cmd.ExpiresAt.UTC())
 	if err != nil {
 		return m3Rollback(tx, err)
 	}
@@ -652,6 +776,493 @@ func (r *M3PostgresRepository) RegisterApprovalNonce(ctx context.Context, cmd M3
 		return m3Rollback(tx, err)
 	}
 	return tx.Commit()
+}
+
+var m3WorkflowPhaseRank = map[string]int{
+	"planned":                1,
+	"validated":              2,
+	"policy_decided":         3,
+	"verified":               4,
+	"simulation_approved":    5,
+	"approved_for_execution": 6,
+	"dispatched":             7,
+	"reconciled":             8,
+	"certified":              9,
+}
+
+func m3ValidateCanonicalJSON(raw json.RawMessage, digest string, maxBytes int) error {
+	if len(raw) == 0 || len(raw) > maxBytes || !json.Valid(raw) || !m3DigestRE.MatchString(digest) {
+		return ErrM3Invalid
+	}
+	var object map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &object); err != nil || object == nil {
+		return ErrM3Invalid
+	}
+	sum := sha256.Sum256(raw)
+	if digest != "sha256:"+hex.EncodeToString(sum[:]) {
+		return ErrM3Invalid
+	}
+	return nil
+}
+
+func m3ValidateWorkflowCheckpoint(checkpoint M3WorkflowCheckpoint) error {
+	if err := m3ValidateScope(checkpoint.TenantID, checkpoint.RunID); err != nil ||
+		checkpoint.Revision < 1 || checkpoint.Sequence < 0 || checkpoint.ModelCalls < 0 ||
+		checkpoint.ModelCalls > 30 || checkpoint.PostSealModelCalls != 0 ||
+		!m3DigestRE.MatchString(checkpoint.SourceDigest) ||
+		!m3DigestRE.MatchString(checkpoint.RequestDigest) ||
+		!m3DigestRE.MatchString(checkpoint.PlanDigest) ||
+		!m3DigestRE.MatchString(checkpoint.ChainDigest) ||
+		m3WorkflowPhaseRank[checkpoint.Phase] == 0 ||
+		m3ValidateCanonicalJSON(checkpoint.CanonicalJSON, checkpoint.CheckpointDigest, 262144) != nil {
+		return ErrM3Invalid
+	}
+	sealed := m3WorkflowPhaseRank[checkpoint.Phase] >= m3WorkflowPhaseRank["approved_for_execution"]
+	if sealed {
+		if !m3DigestRE.MatchString(checkpoint.SealDigest) ||
+			!m3ApprovalRE.MatchString(checkpoint.ProductionApprovalID) ||
+			checkpoint.ModelCallsAtSeal == nil || *checkpoint.ModelCallsAtSeal != checkpoint.ModelCalls {
+			return ErrM3Invalid
+		}
+	} else if checkpoint.SealDigest != "" || checkpoint.ProductionApprovalID != "" || checkpoint.ModelCallsAtSeal != nil {
+		return ErrM3Invalid
+	}
+	return nil
+}
+
+func m3ValidateWorkflowApprovalEntry(entry M3WorkflowApprovalEntry) error {
+	if err := m3ValidateScope(entry.TenantID, entry.RunID); err != nil ||
+		(entry.Stage != M3SimulationStage && entry.Stage != M3ProductionStage) ||
+		!m3ApprovalRE.MatchString(entry.ApprovalID) ||
+		!m3DigestRE.MatchString(entry.AuthorityRecordDigest) ||
+		!m3DigestRE.MatchString(entry.SourceDigest) ||
+		!m3DigestRE.MatchString(entry.SubjectDigest) ||
+		!m3DigestRE.MatchString(entry.PredecessorDigest) ||
+		!m3IdempotencyRE.MatchString(entry.IdempotencyKey) ||
+		!m3SafeText(entry.AuthorityID, 3, 128) || !m3SafeText(entry.ApproverID, 3, 128) ||
+		m3ValidateCanonicalJSON(entry.CanonicalJSON, entry.RecordDigest, 65536) != nil {
+		return ErrM3Invalid
+	}
+	return nil
+}
+
+func m3WorkflowCheckpointsEqual(left, right M3WorkflowCheckpoint) bool {
+	leftAtSeal, rightAtSeal := -1, -1
+	if left.ModelCallsAtSeal != nil {
+		leftAtSeal = *left.ModelCallsAtSeal
+	}
+	if right.ModelCallsAtSeal != nil {
+		rightAtSeal = *right.ModelCallsAtSeal
+	}
+	return left.TenantID == right.TenantID && left.RunID == right.RunID &&
+		left.Revision == right.Revision && left.CheckpointDigest == right.CheckpointDigest &&
+		left.SourceDigest == right.SourceDigest && left.RequestDigest == right.RequestDigest &&
+		left.PlanDigest == right.PlanDigest && left.Phase == right.Phase &&
+		left.Sequence == right.Sequence && left.ChainDigest == right.ChainDigest &&
+		string(left.CanonicalJSON) == string(right.CanonicalJSON) && left.ModelCalls == right.ModelCalls &&
+		leftAtSeal == rightAtSeal && left.PostSealModelCalls == right.PostSealModelCalls &&
+		left.SealDigest == right.SealDigest && left.ProductionApprovalID == right.ProductionApprovalID
+}
+
+func m3WorkflowApprovalEntriesEqual(left, right M3WorkflowApprovalEntry) bool {
+	return left.TenantID == right.TenantID && left.RunID == right.RunID &&
+		left.Stage == right.Stage && left.ApprovalID == right.ApprovalID &&
+		left.RecordDigest == right.RecordDigest && left.AuthorityRecordDigest == right.AuthorityRecordDigest &&
+		left.SourceDigest == right.SourceDigest && left.SubjectDigest == right.SubjectDigest &&
+		left.PredecessorDigest == right.PredecessorDigest && left.IdempotencyKey == right.IdempotencyKey &&
+		left.AuthorityID == right.AuthorityID && left.ApproverID == right.ApproverID &&
+		string(left.CanonicalJSON) == string(right.CanonicalJSON)
+}
+
+// CreateWorkflowCheckpoint durably installs the first resumable trust-spine
+// checkpoint. Later production sealing uses a locked digest+revision CAS.
+func (r *M3PostgresRepository) CreateWorkflowCheckpoint(ctx context.Context, checkpoint M3WorkflowCheckpoint) error {
+	if err := m3ValidateWorkflowCheckpoint(checkpoint); err != nil || checkpoint.Revision != 1 ||
+		m3WorkflowPhaseRank[checkpoint.Phase] >= m3WorkflowPhaseRank["approved_for_execution"] {
+		return ErrM3Invalid
+	}
+	tx, err := r.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return err
+	}
+	run, err := m3LockRun(ctx, tx, checkpoint.TenantID, checkpoint.RunID)
+	if err != nil {
+		return m3Rollback(tx, err)
+	}
+	if run.PlanDigest != checkpoint.PlanDigest || run.State != M3RunAwaitingApproval {
+		return m3Rollback(tx, ErrM3Conflict)
+	}
+	if checkpoint.Phase == "simulation_approved" {
+		var journalPresent bool
+		err = tx.QueryRowContext(ctx, `
+			SELECT EXISTS (
+				SELECT 1 FROM mission_control_v2.workflow_approval_entries
+				WHERE tenant_id = $1 AND run_id = $2 AND stage = 'simulation'
+				  AND source_digest = $3
+			)`, checkpoint.TenantID, checkpoint.RunID, checkpoint.SourceDigest).Scan(&journalPresent)
+		if err != nil || !journalPresent {
+			if err == nil {
+				err = ErrM3Conflict
+			}
+			return m3Rollback(tx, err)
+		}
+	}
+	existing, lookupErr := m3ScanWorkflowCheckpoint(tx.QueryRowContext(ctx, `
+		SELECT tenant_id, run_id, revision, checkpoint_digest, source_digest,
+			request_digest, plan_digest, phase, sequence, chain_digest,
+			canonical_json, model_calls, model_calls_at_seal, post_seal_model_calls,
+			COALESCE(seal_digest, ''), COALESCE(production_approval_id, '')
+		FROM mission_control_v2.workflow_checkpoints
+		WHERE tenant_id = $1 AND run_id = $2 FOR UPDATE`, checkpoint.TenantID, checkpoint.RunID))
+	if lookupErr == nil {
+		if !m3WorkflowCheckpointsEqual(existing, checkpoint) {
+			return m3Rollback(tx, ErrM3Conflict)
+		}
+		return tx.Commit()
+	}
+	if !errors.Is(lookupErr, ErrM3NotFound) {
+		return m3Rollback(tx, lookupErr)
+	}
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO mission_control_v2.workflow_checkpoints
+			(tenant_id, run_id, revision, checkpoint_digest, source_digest,
+			 request_digest, plan_digest, phase, sequence, chain_digest,
+			 canonical_json, model_calls, post_seal_model_calls)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 0)`,
+		checkpoint.TenantID, checkpoint.RunID, checkpoint.Revision,
+		checkpoint.CheckpointDigest, checkpoint.SourceDigest, checkpoint.RequestDigest,
+		checkpoint.PlanDigest, checkpoint.Phase, checkpoint.Sequence, checkpoint.ChainDigest,
+		string(checkpoint.CanonicalJSON), checkpoint.ModelCalls)
+	if err != nil {
+		return m3Rollback(tx, err)
+	}
+	return tx.Commit()
+}
+
+// AppendSimulationApprovalJournal records the trust-spine approval fact. The
+// authenticated decision remains a distinct, immutable row in approvals.
+func (r *M3PostgresRepository) AppendSimulationApprovalJournal(ctx context.Context, entry M3WorkflowApprovalEntry) error {
+	if err := m3ValidateWorkflowApprovalEntry(entry); err != nil || entry.Stage != M3SimulationStage {
+		return ErrM3Invalid
+	}
+	tx, err := r.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return err
+	}
+	run, err := m3LockRun(ctx, tx, entry.TenantID, entry.RunID)
+	if err != nil {
+		return m3Rollback(tx, err)
+	}
+	if run.State != M3RunAwaitingApproval || run.SimulationApprovalID != entry.ApprovalID {
+		return m3Rollback(tx, ErrM3Conflict)
+	}
+	var authorityRecordDigest, subjectDigest, actorSubject string
+	err = tx.QueryRowContext(ctx, `
+		SELECT record_digest, subject_digest, actor_subject
+		FROM mission_control_v2.approvals
+		WHERE tenant_id = $1 AND run_id = $2 AND approval_id = $3
+		  AND stage = 'simulation' AND decision = 'approve'`,
+		entry.TenantID, entry.RunID, entry.ApprovalID).Scan(
+		&authorityRecordDigest, &subjectDigest, &actorSubject,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		err = ErrM3Conflict
+	}
+	if err != nil || authorityRecordDigest != entry.AuthorityRecordDigest ||
+		subjectDigest != entry.SubjectDigest || actorSubject != entry.ApproverID {
+		if err == nil {
+			err = ErrM3Conflict
+		}
+		return m3Rollback(tx, err)
+	}
+	var existing M3WorkflowApprovalEntry
+	var stage string
+	var raw []byte
+	lookupErr := tx.QueryRowContext(ctx, `
+		SELECT tenant_id, run_id, stage, approval_id, record_digest,
+			authority_record_digest, source_digest, subject_digest,
+			predecessor_digest, idempotency_key, authority_id, approver_id, canonical_json
+		FROM mission_control_v2.workflow_approval_entries
+		WHERE tenant_id = $1 AND run_id = $2 AND stage = 'simulation'
+		FOR UPDATE`, entry.TenantID, entry.RunID).Scan(
+		&existing.TenantID, &existing.RunID, &stage, &existing.ApprovalID,
+		&existing.RecordDigest, &existing.AuthorityRecordDigest, &existing.SourceDigest,
+		&existing.SubjectDigest, &existing.PredecessorDigest, &existing.IdempotencyKey,
+		&existing.AuthorityID, &existing.ApproverID, &raw,
+	)
+	if lookupErr == nil {
+		existing.Stage = M3ApprovalStage(stage)
+		existing.CanonicalJSON = append(json.RawMessage(nil), raw...)
+		if !m3WorkflowApprovalEntriesEqual(existing, entry) {
+			return m3Rollback(tx, ErrM3Conflict)
+		}
+		return tx.Commit()
+	}
+	if !errors.Is(lookupErr, sql.ErrNoRows) {
+		return m3Rollback(tx, lookupErr)
+	}
+	if err := m3InsertWorkflowApprovalEntry(ctx, tx, entry); err != nil {
+		return m3Rollback(tx, err)
+	}
+	return tx.Commit()
+}
+
+func m3InsertWorkflowApprovalEntry(ctx context.Context, tx *sql.Tx, entry M3WorkflowApprovalEntry) error {
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO mission_control_v2.workflow_approval_entries
+			(tenant_id, run_id, stage, approval_id, record_digest,
+			 authority_record_digest, source_digest, subject_digest,
+			 predecessor_digest, idempotency_key, authority_id, approver_id, canonical_json)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+		entry.TenantID, entry.RunID, string(entry.Stage), entry.ApprovalID,
+		entry.RecordDigest, entry.AuthorityRecordDigest, entry.SourceDigest,
+		entry.SubjectDigest, entry.PredecessorDigest, entry.IdempotencyKey,
+		entry.AuthorityID, entry.ApproverID, string(entry.CanonicalJSON))
+	return err
+}
+
+func m3ScanWorkflowCheckpoint(row *sql.Row) (M3WorkflowCheckpoint, error) {
+	var checkpoint M3WorkflowCheckpoint
+	var raw []byte
+	var atSeal sql.NullInt64
+	err := row.Scan(
+		&checkpoint.TenantID, &checkpoint.RunID, &checkpoint.Revision,
+		&checkpoint.CheckpointDigest, &checkpoint.SourceDigest, &checkpoint.RequestDigest,
+		&checkpoint.PlanDigest, &checkpoint.Phase, &checkpoint.Sequence, &checkpoint.ChainDigest,
+		&raw, &checkpoint.ModelCalls, &atSeal, &checkpoint.PostSealModelCalls,
+		&checkpoint.SealDigest, &checkpoint.ProductionApprovalID,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return M3WorkflowCheckpoint{}, ErrM3NotFound
+	}
+	if err != nil {
+		return M3WorkflowCheckpoint{}, err
+	}
+	checkpoint.CanonicalJSON = append(json.RawMessage(nil), raw...)
+	if atSeal.Valid {
+		value := int(atSeal.Int64)
+		checkpoint.ModelCallsAtSeal = &value
+	}
+	return checkpoint, nil
+}
+
+func (r *M3PostgresRepository) GetWorkflowCheckpoint(ctx context.Context, tenantID, runID string) (M3WorkflowCheckpoint, error) {
+	if err := m3ValidateScope(tenantID, runID); err != nil {
+		return M3WorkflowCheckpoint{}, err
+	}
+	return m3ScanWorkflowCheckpoint(r.db.QueryRowContext(ctx, `
+		SELECT tenant_id, run_id, revision, checkpoint_digest, source_digest,
+			request_digest, plan_digest, phase, sequence, chain_digest,
+			canonical_json, model_calls, model_calls_at_seal, post_seal_model_calls,
+			COALESCE(seal_digest, ''), COALESCE(production_approval_id, '')
+		FROM mission_control_v2.workflow_checkpoints
+		WHERE tenant_id = $1 AND run_id = $2`, tenantID, runID))
+}
+
+type M3CommitProductionApprovalSealCommand struct {
+	TenantID, RunID               string
+	ExpectedRunRevision           int64
+	ExpectedCheckpointRevision    int64
+	ExpectedCheckpointDigest      string
+	SimulationApprovalID          string
+	ProductionApprovalID          string
+	ProductionEntry               M3WorkflowApprovalEntry
+	SealedCheckpoint              M3WorkflowCheckpoint
+	IdempotencyKey, RequestDigest string
+}
+
+// CommitProductionApprovalSeal is the irreversible production boundary. The
+// production journal append, checkpoint CAS, lifecycle advance, sanitized
+// outbox append, and replay result are one SERIALIZABLE transaction.
+func (r *M3PostgresRepository) CommitProductionApprovalSeal(
+	ctx context.Context, cmd M3CommitProductionApprovalSealCommand,
+) (M3CommandResult, error) {
+	sealed := cmd.SealedCheckpoint
+	entry := cmd.ProductionEntry
+	if err := m3ValidateScope(cmd.TenantID, cmd.RunID); err != nil ||
+		cmd.ExpectedRunRevision < 1 || cmd.ExpectedCheckpointRevision < 1 ||
+		!m3DigestRE.MatchString(cmd.ExpectedCheckpointDigest) ||
+		!m3ApprovalRE.MatchString(cmd.SimulationApprovalID) ||
+		!m3ApprovalRE.MatchString(cmd.ProductionApprovalID) ||
+		cmd.SimulationApprovalID == cmd.ProductionApprovalID ||
+		m3ValidateWorkflowCheckpoint(sealed) != nil ||
+		m3ValidateWorkflowApprovalEntry(entry) != nil ||
+		sealed.TenantID != cmd.TenantID || sealed.RunID != cmd.RunID ||
+		entry.TenantID != cmd.TenantID || entry.RunID != cmd.RunID ||
+		entry.Stage != M3ProductionStage || entry.ApprovalID != cmd.ProductionApprovalID ||
+		sealed.Phase != "approved_for_execution" ||
+		sealed.Revision != cmd.ExpectedCheckpointRevision+1 ||
+		sealed.ProductionApprovalID != cmd.ProductionApprovalID {
+		return M3CommandResult{}, ErrM3Invalid
+	}
+	const nodePath = "/control/production-seal.commit"
+	const operation = "production-seal.commit"
+	tx, replay, err := r.beginIdempotent(
+		ctx, cmd.TenantID, cmd.RunID, nodePath, sealed.PlanDigest, operation,
+		cmd.IdempotencyKey, cmd.RequestDigest,
+	)
+	if err != nil {
+		return M3CommandResult{}, err
+	}
+	if replay != nil {
+		return *replay, nil
+	}
+	run, err := m3LockRun(ctx, tx, cmd.TenantID, cmd.RunID)
+	if err != nil {
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	if run.Revision != cmd.ExpectedRunRevision {
+		return M3CommandResult{}, m3Rollback(tx, ErrM3RevisionConflict)
+	}
+	if run.State != M3RunAwaitingApproval || run.PlanDigest != sealed.PlanDigest ||
+		run.SimulationApprovalID != cmd.SimulationApprovalID ||
+		run.ProductionApprovalID != cmd.ProductionApprovalID || run.ApprovalID != "" {
+		return M3CommandResult{}, m3Rollback(tx, ErrM3Conflict)
+	}
+	current, err := m3ScanWorkflowCheckpoint(tx.QueryRowContext(ctx, `
+		SELECT tenant_id, run_id, revision, checkpoint_digest, source_digest,
+			request_digest, plan_digest, phase, sequence, chain_digest,
+			canonical_json, model_calls, model_calls_at_seal, post_seal_model_calls,
+			COALESCE(seal_digest, ''), COALESCE(production_approval_id, '')
+		FROM mission_control_v2.workflow_checkpoints
+		WHERE tenant_id = $1 AND run_id = $2 FOR UPDATE`, cmd.TenantID, cmd.RunID))
+	if err != nil {
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	if current.Revision != cmd.ExpectedCheckpointRevision ||
+		current.CheckpointDigest != cmd.ExpectedCheckpointDigest {
+		return M3CommandResult{}, m3Rollback(tx, ErrM3RevisionConflict)
+	}
+	if current.Phase != "simulation_approved" || current.SealDigest != "" ||
+		current.ProductionApprovalID != "" || current.ModelCallsAtSeal != nil ||
+		current.PostSealModelCalls != 0 ||
+		sealed.SourceDigest != current.SourceDigest || sealed.RequestDigest != current.RequestDigest ||
+		sealed.PlanDigest != current.PlanDigest || sealed.Sequence != current.Sequence ||
+		sealed.ModelCalls != current.ModelCalls || sealed.ChainDigest == current.ChainDigest ||
+		entry.SourceDigest != current.SourceDigest || entry.PredecessorDigest != current.ChainDigest {
+		return M3CommandResult{}, m3Rollback(tx, ErrM3Conflict)
+	}
+
+	var simulationRecord, simulationSubject, simulationActor string
+	var simulationCheckpoint, simulationPlan string
+	var productionRecord, productionSubject, productionActor string
+	var productionPriorID, productionPriorRecord, productionCheckpoint, productionPlan string
+	err = tx.QueryRowContext(ctx, `
+		SELECT simulation.record_digest, simulation.subject_digest, simulation.actor_subject,
+			simulation.checkpoint_digest, simulation.plan_digest,
+			production.record_digest, production.subject_digest, production.actor_subject,
+			production.simulation_approval_id, production.simulation_record_digest,
+			production.checkpoint_digest, production.plan_digest
+		FROM mission_control_v2.approvals AS simulation
+		JOIN mission_control_v2.approvals AS production
+		  ON production.tenant_id = simulation.tenant_id
+		 AND production.run_id = simulation.run_id
+		WHERE simulation.tenant_id = $1 AND simulation.run_id = $2
+		  AND simulation.approval_id = $3 AND production.approval_id = $4
+		  AND simulation.stage = 'simulation' AND simulation.decision = 'approve'
+		  AND production.stage = 'production' AND production.decision = 'approve'`,
+		cmd.TenantID, cmd.RunID, cmd.SimulationApprovalID, cmd.ProductionApprovalID).Scan(
+		&simulationRecord, &simulationSubject, &simulationActor, &simulationCheckpoint, &simulationPlan,
+		&productionRecord, &productionSubject, &productionActor,
+		&productionPriorID, &productionPriorRecord, &productionCheckpoint, &productionPlan,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		err = ErrM3Conflict
+	}
+	if err != nil || simulationRecord == productionRecord || simulationSubject == productionSubject ||
+		simulationCheckpoint != current.CheckpointDigest || simulationPlan != current.PlanDigest ||
+		productionPriorID != cmd.SimulationApprovalID || productionPriorRecord != simulationRecord ||
+		productionCheckpoint != current.CheckpointDigest || productionPlan != current.PlanDigest ||
+		entry.AuthorityRecordDigest != productionRecord || entry.SubjectDigest != productionSubject ||
+		entry.ApproverID != productionActor {
+		if err == nil {
+			err = ErrM3Conflict
+		}
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	var simulationJournalApproval, simulationJournalAuthorityRecord string
+	var simulationJournalSource, simulationJournalSubject, simulationJournalRecord string
+	err = tx.QueryRowContext(ctx, `
+		SELECT approval_id, authority_record_digest, source_digest, subject_digest, record_digest
+		FROM mission_control_v2.workflow_approval_entries
+		WHERE tenant_id = $1 AND run_id = $2 AND stage = 'simulation'`,
+		cmd.TenantID, cmd.RunID).Scan(
+		&simulationJournalApproval, &simulationJournalAuthorityRecord,
+		&simulationJournalSource, &simulationJournalSubject, &simulationJournalRecord,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		err = ErrM3Conflict
+	}
+	if err != nil || simulationJournalApproval != cmd.SimulationApprovalID ||
+		simulationJournalAuthorityRecord != simulationRecord || simulationJournalSource != current.SourceDigest ||
+		simulationJournalSubject != simulationSubject || simulationJournalRecord == entry.RecordDigest {
+		if err == nil {
+			err = ErrM3Conflict
+		}
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	_ = simulationActor // retained in the authority row; the journal binds its own approver exactly.
+	if err := m3InsertWorkflowApprovalEntry(ctx, tx, entry); err != nil {
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	result, err := tx.ExecContext(ctx, `
+		UPDATE mission_control_v2.workflow_checkpoints
+		SET revision = $3, checkpoint_digest = $4, phase = $5, sequence = $6,
+			chain_digest = $7, canonical_json = $8, model_calls = $9,
+			model_calls_at_seal = $10, post_seal_model_calls = 0,
+			seal_digest = $11, production_approval_id = $12, updated_at = clock_timestamp()
+		WHERE tenant_id = $1 AND run_id = $2 AND revision = $13
+		  AND checkpoint_digest = $14 AND phase = 'simulation_approved'
+		  AND seal_digest IS NULL AND production_approval_id IS NULL`,
+		cmd.TenantID, cmd.RunID, sealed.Revision, sealed.CheckpointDigest, sealed.Phase,
+		sealed.Sequence, sealed.ChainDigest, string(sealed.CanonicalJSON), sealed.ModelCalls,
+		*sealed.ModelCallsAtSeal, sealed.SealDigest, sealed.ProductionApprovalID,
+		cmd.ExpectedCheckpointRevision, cmd.ExpectedCheckpointDigest)
+	if err != nil {
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	if count, err := result.RowsAffected(); err != nil || count != 1 {
+		if err == nil {
+			err = ErrM3RevisionConflict
+		}
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	err = tx.QueryRowContext(ctx, `
+		UPDATE mission_control_v2.runs
+		SET lifecycle_state = 'approved', approval_id = $3,
+			revision = revision + 1, updated_at = clock_timestamp()
+		WHERE tenant_id = $1 AND run_id = $2 AND revision = $4
+		  AND lifecycle_state = 'awaiting_approval'
+		  AND simulation_approval_id = $5 AND production_approval_id = $3
+		  AND approval_id IS NULL
+		RETURNING revision, updated_at`, cmd.TenantID, cmd.RunID, cmd.ProductionApprovalID,
+		cmd.ExpectedRunRevision, cmd.SimulationApprovalID).Scan(&run.Revision, &run.UpdatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		err = ErrM3RevisionConflict
+	}
+	if err != nil {
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	run.State = M3RunApproved
+	run.ApprovalID = cmd.ProductionApprovalID
+	sequence, err := r.appendEvent(ctx, tx, run, "checkpoint.sealed", "", "",
+		cmd.ProductionApprovalID, "", "PRODUCTION_SEALED",
+		[]string{sealed.CheckpointDigest, sealed.SealDigest, entry.RecordDigest})
+	if err != nil {
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	commandResult := M3CommandResult{
+		TenantID: run.TenantID, RunID: run.RunID, Revision: run.Revision,
+		State: run.State, EventSequence: sequence, ApprovalID: run.ApprovalID,
+	}
+	if err := m3StoreIdempotency(ctx, tx, nodePath, sealed.PlanDigest, operation,
+		cmd.IdempotencyKey, cmd.RequestDigest, commandResult); err != nil {
+		return M3CommandResult{}, m3Rollback(tx, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return M3CommandResult{}, err
+	}
+	return commandResult, nil
 }
 
 type M3ReleaseCommand struct {
@@ -689,7 +1300,7 @@ func (r *M3PostgresRepository) CreateRelease(ctx context.Context, cmd M3ReleaseC
 	}
 	var approved bool
 	if err := tx.QueryRowContext(ctx, `
-		SELECT decision = 'approved' AND subject_digest = $4
+		SELECT stage = 'production' AND decision = 'approve' AND subject_digest = $4
 		FROM mission_control_v2.approvals
 		WHERE tenant_id = $1 AND run_id = $2 AND approval_id = $3`,
 		cmd.TenantID, cmd.RunID, cmd.ApprovalID, cmd.SubjectDigest).Scan(&approved); err != nil || !approved {

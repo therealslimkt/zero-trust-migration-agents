@@ -9,20 +9,24 @@ CREATE TABLE runs (
     lifecycle_state varchar(32) NOT NULL,
     revision bigint NOT NULL DEFAULT 1 CHECK (revision > 0),
     plan_digest varchar(71),
+    simulation_approval_id varchar(80),
+    production_approval_id varchar(80),
     approval_id varchar(80),
     release_id varchar(80),
     next_event_sequence bigint NOT NULL DEFAULT 1 CHECK (next_event_sequence > 0),
     created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
     updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
     PRIMARY KEY (tenant_id, run_id),
-    CHECK (tenant_id ~ '^tnt_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
-    CHECK (run_id ~ '^run_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
+    CHECK (tenant_id ~ '^tnt_[a-z0-9][a-z0-9_]{3,59}$'),
+    CHECK (run_id ~ '^run_[a-z0-9][a-z0-9_-]{11,59}$'),
     CHECK (lifecycle_state IN (
         'created', 'running', 'awaiting_input', 'awaiting_approval',
         'approved', 'rejected', 'succeeded', 'failed', 'cancelled',
         'budget_exhausted', 'dead_lettered'
     )),
     CHECK (plan_digest IS NULL OR plan_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (simulation_approval_id IS NULL OR simulation_approval_id ~ '^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
+    CHECK (production_approval_id IS NULL OR production_approval_id ~ '^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
     CHECK (approval_id IS NULL OR approval_id ~ '^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
     CHECK (release_id IS NULL OR release_id ~ '^rel_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$')
 );
@@ -31,19 +35,42 @@ CREATE TABLE approvals (
     tenant_id varchar(80) NOT NULL,
     approval_id varchar(80) NOT NULL,
     run_id varchar(80) NOT NULL,
+    stage varchar(16) NOT NULL,
+    request_digest varchar(71) NOT NULL,
+    record_digest varchar(71) NOT NULL,
+    plan_digest varchar(71) NOT NULL,
+    release_digest varchar(71) NOT NULL,
+    artifact_digest varchar(71) NOT NULL,
     subject_digest varchar(71) NOT NULL,
     nonce_digest varchar(71) NOT NULL,
+    checkpoint_digest varchar(71) NOT NULL,
+    simulation_approval_id varchar(80),
+    simulation_record_digest varchar(71),
     decision varchar(16) NOT NULL,
     actor_subject varchar(160) NOT NULL,
     decided_at timestamptz NOT NULL DEFAULT clock_timestamp(),
     PRIMARY KEY (tenant_id, approval_id),
-    UNIQUE (tenant_id, run_id),
+    UNIQUE (tenant_id, run_id, stage),
     UNIQUE (tenant_id, run_id, approval_id),
     FOREIGN KEY (tenant_id, run_id) REFERENCES runs (tenant_id, run_id),
+    FOREIGN KEY (tenant_id, run_id, simulation_approval_id)
+        REFERENCES approvals (tenant_id, run_id, approval_id)
+        DEFERRABLE INITIALLY DEFERRED,
     CHECK (approval_id ~ '^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
+    CHECK (stage IN ('simulation', 'production')),
+    CHECK (request_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (record_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (plan_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (release_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (artifact_digest ~ '^sha256:[0-9a-f]{64}$'),
     CHECK (subject_digest ~ '^sha256:[0-9a-f]{64}$'),
     CHECK (nonce_digest ~ '^sha256:[0-9a-f]{64}$'),
-    CHECK (decision IN ('approved', 'rejected')),
+    CHECK (checkpoint_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (simulation_approval_id IS NULL OR simulation_approval_id ~ '^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
+    CHECK (simulation_record_digest IS NULL OR simulation_record_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK ((stage = 'simulation' AND simulation_approval_id IS NULL AND simulation_record_digest IS NULL)
+        OR (stage = 'production' AND simulation_approval_id IS NOT NULL AND simulation_record_digest IS NOT NULL)),
+    CHECK (decision IN ('approve', 'reject')),
     CHECK (length(actor_subject) BETWEEN 3 AND 160),
     CHECK (actor_subject !~ '[[:cntrl:]]')
 );
@@ -51,16 +78,35 @@ CREATE TABLE approvals (
 CREATE TABLE approval_nonces (
     tenant_id varchar(80) NOT NULL,
     run_id varchar(80) NOT NULL,
+    request_id varchar(128) NOT NULL,
+    stage varchar(16) NOT NULL,
     nonce_digest varchar(71) NOT NULL,
+    request_digest varchar(71) NOT NULL,
+    plan_digest varchar(71) NOT NULL,
+    release_digest varchar(71) NOT NULL,
+    artifact_digest varchar(71) NOT NULL,
     subject_digest varchar(71) NOT NULL,
+    checkpoint_digest varchar(71) NOT NULL,
+    simulation_record_digest varchar(71),
     expires_at timestamptz NOT NULL,
     consumed_at timestamptz,
     approval_id varchar(80),
     created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
-    PRIMARY KEY (tenant_id, run_id, nonce_digest),
+    PRIMARY KEY (tenant_id, nonce_digest),
+    UNIQUE (tenant_id, request_id),
     FOREIGN KEY (tenant_id, run_id) REFERENCES runs (tenant_id, run_id),
+    CHECK (request_id ~ '^[A-Za-z][A-Za-z0-9_.:-]{2,127}$'),
+    CHECK (stage IN ('simulation', 'production')),
     CHECK (nonce_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (request_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (plan_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (release_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (artifact_digest ~ '^sha256:[0-9a-f]{64}$'),
     CHECK (subject_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (checkpoint_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (simulation_record_digest IS NULL OR simulation_record_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK ((stage = 'simulation' AND simulation_record_digest IS NULL)
+        OR (stage = 'production' AND simulation_record_digest IS NOT NULL)),
     CHECK ((consumed_at IS NULL) = (approval_id IS NULL)),
     CHECK (approval_id IS NULL OR approval_id ~ '^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
     FOREIGN KEY (tenant_id, run_id, approval_id)
@@ -69,6 +115,14 @@ CREATE TABLE approval_nonces (
 );
 
 ALTER TABLE runs
+    ADD CONSTRAINT runs_simulation_approval_fk
+    FOREIGN KEY (tenant_id, run_id, simulation_approval_id)
+    REFERENCES approvals (tenant_id, run_id, approval_id)
+    DEFERRABLE INITIALLY DEFERRED,
+    ADD CONSTRAINT runs_production_approval_fk
+    FOREIGN KEY (tenant_id, run_id, production_approval_id)
+    REFERENCES approvals (tenant_id, run_id, approval_id)
+    DEFERRABLE INITIALLY DEFERRED,
     ADD CONSTRAINT runs_approval_fk
     FOREIGN KEY (tenant_id, run_id, approval_id)
     REFERENCES approvals (tenant_id, run_id, approval_id)
@@ -226,6 +280,85 @@ CREATE TABLE idempotency_results (
 CREATE INDEX idempotency_lookup_idx
     ON idempotency_results (tenant_id, operation, idempotency_key);
 
+CREATE TABLE workflow_checkpoints (
+    tenant_id varchar(80) NOT NULL,
+    run_id varchar(80) NOT NULL,
+    revision bigint NOT NULL CHECK (revision > 0),
+    checkpoint_digest varchar(71) NOT NULL,
+    source_digest varchar(71) NOT NULL,
+    request_digest varchar(71) NOT NULL,
+    plan_digest varchar(71) NOT NULL,
+    phase varchar(32) NOT NULL,
+    sequence bigint NOT NULL CHECK (sequence >= 0),
+    chain_digest varchar(71) NOT NULL,
+    canonical_json text NOT NULL,
+    model_calls integer NOT NULL CHECK (model_calls >= 0),
+    model_calls_at_seal integer,
+    post_seal_model_calls integer NOT NULL DEFAULT 0 CHECK (post_seal_model_calls = 0),
+    seal_digest varchar(71),
+    production_approval_id varchar(80),
+    created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    PRIMARY KEY (tenant_id, run_id),
+    UNIQUE (tenant_id, checkpoint_digest),
+    FOREIGN KEY (tenant_id, run_id) REFERENCES runs (tenant_id, run_id),
+    FOREIGN KEY (tenant_id, run_id, production_approval_id)
+        REFERENCES approvals (tenant_id, run_id, approval_id)
+        DEFERRABLE INITIALLY DEFERRED,
+    CHECK (checkpoint_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (source_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (request_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (plan_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (chain_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (phase IN (
+        'planned', 'validated', 'policy_decided', 'verified',
+        'simulation_approved', 'approved_for_execution',
+        'dispatched', 'reconciled', 'certified'
+    )),
+    CHECK (jsonb_typeof(canonical_json::jsonb) = 'object'),
+    CHECK (octet_length(canonical_json) <= 262144),
+    CHECK (model_calls_at_seal IS NULL OR model_calls_at_seal = model_calls),
+    CHECK (seal_digest IS NULL OR seal_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (production_approval_id IS NULL OR production_approval_id ~ '^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
+    CHECK ((phase IN ('approved_for_execution', 'dispatched', 'reconciled', 'certified'))
+        = (seal_digest IS NOT NULL AND model_calls_at_seal IS NOT NULL AND production_approval_id IS NOT NULL))
+);
+
+CREATE TABLE workflow_approval_entries (
+    tenant_id varchar(80) NOT NULL,
+    run_id varchar(80) NOT NULL,
+    stage varchar(16) NOT NULL,
+    approval_id varchar(80) NOT NULL,
+    record_digest varchar(71) NOT NULL,
+    authority_record_digest varchar(71) NOT NULL,
+    source_digest varchar(71) NOT NULL,
+    subject_digest varchar(71) NOT NULL,
+    predecessor_digest varchar(71) NOT NULL,
+    idempotency_key varchar(128) NOT NULL,
+    authority_id varchar(128) NOT NULL,
+    approver_id varchar(128) NOT NULL,
+    canonical_json text NOT NULL,
+    appended_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    PRIMARY KEY (tenant_id, run_id, stage),
+    UNIQUE (tenant_id, run_id, record_digest),
+    UNIQUE (tenant_id, run_id, idempotency_key),
+    FOREIGN KEY (tenant_id, run_id) REFERENCES runs (tenant_id, run_id),
+    FOREIGN KEY (tenant_id, run_id, approval_id)
+        REFERENCES approvals (tenant_id, run_id, approval_id),
+    CHECK (stage IN ('simulation', 'production')),
+    CHECK (approval_id ~ '^apr_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
+    CHECK (record_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (authority_record_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (source_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (subject_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (predecessor_digest ~ '^sha256:[0-9a-f]{64}$'),
+    CHECK (idempotency_key ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$'),
+    CHECK (length(authority_id) BETWEEN 3 AND 128 AND authority_id !~ '[[:cntrl:]]'),
+    CHECK (length(approver_id) BETWEEN 3 AND 128 AND approver_id !~ '[[:cntrl:]]'),
+    CHECK (jsonb_typeof(canonical_json::jsonb) = 'object'),
+    CHECK (octet_length(canonical_json) <= 65536)
+);
+
 CREATE TABLE launch_results (
     tenant_id varchar(80) NOT NULL,
     run_id varchar(80) NOT NULL,
@@ -325,7 +458,7 @@ CREATE TABLE events (
         DEFERRABLE INITIALLY DEFERRED,
     CHECK (event_id ~ '^evt_[A-Za-z0-9][A-Za-z0-9._-]{7,63}$'),
     CHECK (event_type IN (
-        'run.created', 'run.transitioned', 'approval.recorded',
+        'run.created', 'run.transitioned', 'approval.recorded', 'checkpoint.sealed',
         'release.created', 'launch.recorded', 'reconciliation.recorded',
         'task.enqueued', 'attempt.started',
         'attempt.completed', 'lease.expired', 'task.retry_scheduled',
@@ -443,8 +576,16 @@ LANGUAGE plpgsql AS $$
 BEGIN
     IF OLD.tenant_id IS DISTINCT FROM NEW.tenant_id
        OR OLD.run_id IS DISTINCT FROM NEW.run_id
+       OR OLD.request_id IS DISTINCT FROM NEW.request_id
+       OR OLD.stage IS DISTINCT FROM NEW.stage
        OR OLD.nonce_digest IS DISTINCT FROM NEW.nonce_digest
+       OR OLD.request_digest IS DISTINCT FROM NEW.request_digest
+       OR OLD.plan_digest IS DISTINCT FROM NEW.plan_digest
+       OR OLD.release_digest IS DISTINCT FROM NEW.release_digest
+       OR OLD.artifact_digest IS DISTINCT FROM NEW.artifact_digest
        OR OLD.subject_digest IS DISTINCT FROM NEW.subject_digest
+       OR OLD.checkpoint_digest IS DISTINCT FROM NEW.checkpoint_digest
+       OR OLD.simulation_record_digest IS DISTINCT FROM NEW.simulation_record_digest
        OR OLD.expires_at IS DISTINCT FROM NEW.expires_at
        OR OLD.created_at IS DISTINCT FROM NEW.created_at THEN
         RAISE EXCEPTION 'approval nonce identity is immutable' USING ERRCODE = '55000';
@@ -459,6 +600,125 @@ BEGIN
 END;
 $$;
 
+CREATE FUNCTION guard_staged_approval() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE
+    prior_stage varchar;
+    prior_decision varchar;
+    prior_record_digest varchar;
+    prior_subject_digest varchar;
+BEGIN
+    IF NEW.stage = 'production' THEN
+        SELECT stage, decision, record_digest, subject_digest
+        INTO prior_stage, prior_decision, prior_record_digest, prior_subject_digest
+        FROM mission_control_v2.approvals
+        WHERE tenant_id = NEW.tenant_id AND run_id = NEW.run_id
+          AND approval_id = NEW.simulation_approval_id;
+        IF prior_stage IS DISTINCT FROM 'simulation'
+           OR prior_decision IS DISTINCT FROM 'approve'
+           OR prior_record_digest IS DISTINCT FROM NEW.simulation_record_digest
+           OR prior_record_digest IS NOT DISTINCT FROM NEW.record_digest
+           OR prior_subject_digest IS NOT DISTINCT FROM NEW.subject_digest THEN
+            RAISE EXCEPTION 'production approval requires a distinct approved simulation decision'
+                USING ERRCODE = '23514';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE FUNCTION guard_release_approval() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE
+    approval_valid boolean;
+BEGIN
+    SELECT stage = 'production' AND decision = 'approve'
+    INTO approval_valid
+    FROM mission_control_v2.approvals
+    WHERE tenant_id = NEW.tenant_id AND run_id = NEW.run_id
+      AND approval_id = NEW.approval_id;
+    IF approval_valid IS DISTINCT FROM true THEN
+        RAISE EXCEPTION 'release requires an approved production decision'
+            USING ERRCODE = '23514';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE FUNCTION workflow_phase_rank(phase_value varchar) RETURNS integer
+LANGUAGE sql IMMUTABLE STRICT AS $$
+    SELECT CASE phase_value
+        WHEN 'planned' THEN 1 WHEN 'validated' THEN 2
+        WHEN 'policy_decided' THEN 3 WHEN 'verified' THEN 4
+        WHEN 'simulation_approved' THEN 5 WHEN 'approved_for_execution' THEN 6
+        WHEN 'dispatched' THEN 7 WHEN 'reconciled' THEN 8
+        WHEN 'certified' THEN 9 ELSE 0 END
+$$;
+
+CREATE FUNCTION guard_workflow_checkpoint() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+    IF OLD.tenant_id IS DISTINCT FROM NEW.tenant_id
+       OR OLD.run_id IS DISTINCT FROM NEW.run_id
+       OR OLD.source_digest IS DISTINCT FROM NEW.source_digest
+       OR OLD.request_digest IS DISTINCT FROM NEW.request_digest
+       OR OLD.plan_digest IS DISTINCT FROM NEW.plan_digest
+       OR OLD.created_at IS DISTINCT FROM NEW.created_at THEN
+        RAISE EXCEPTION 'workflow checkpoint identity is immutable' USING ERRCODE = '55000';
+    END IF;
+    IF NEW.revision <> OLD.revision + 1
+       OR NEW.sequence < OLD.sequence
+       OR mission_control_v2.workflow_phase_rank(NEW.phase) < mission_control_v2.workflow_phase_rank(OLD.phase) THEN
+        RAISE EXCEPTION 'workflow checkpoint CAS is not monotonic' USING ERRCODE = '40001';
+    END IF;
+    IF OLD.seal_digest IS NOT NULL AND (
+        NEW.seal_digest IS DISTINCT FROM OLD.seal_digest
+        OR NEW.production_approval_id IS DISTINCT FROM OLD.production_approval_id
+        OR NEW.model_calls IS DISTINCT FROM OLD.model_calls
+        OR NEW.model_calls_at_seal IS DISTINCT FROM OLD.model_calls_at_seal
+    ) THEN
+        RAISE EXCEPTION 'sealed workflow checkpoint is immutable at the production boundary'
+            USING ERRCODE = '55000';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE FUNCTION guard_workflow_checkpoint_insert() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+    IF mission_control_v2.workflow_phase_rank(NEW.phase) >=
+       mission_control_v2.workflow_phase_rank('approved_for_execution') THEN
+        RAISE EXCEPTION 'workflow checkpoint must be created before the production boundary'
+            USING ERRCODE = '23514';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE FUNCTION guard_workflow_approval_entry() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE
+    approval_valid boolean;
+BEGIN
+    SELECT stage = NEW.stage AND decision = 'approve'
+           AND actor_subject = NEW.approver_id
+           AND record_digest = NEW.authority_record_digest
+           AND subject_digest = NEW.subject_digest
+    INTO approval_valid
+    FROM mission_control_v2.approvals
+    WHERE tenant_id = NEW.tenant_id AND run_id = NEW.run_id
+      AND approval_id = NEW.approval_id;
+    IF approval_valid IS DISTINCT FROM true THEN
+        RAISE EXCEPTION 'workflow approval entry does not match its authority decision'
+            USING ERRCODE = '23514';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER approvals_guard_insert BEFORE INSERT ON approvals
+    FOR EACH ROW EXECUTE FUNCTION guard_staged_approval();
 CREATE TRIGGER approvals_no_update BEFORE UPDATE OR DELETE ON approvals
     FOR EACH ROW EXECUTE FUNCTION reject_all_mutation();
 CREATE TRIGGER approval_nonces_no_delete BEFORE DELETE ON approval_nonces
@@ -467,11 +727,23 @@ CREATE TRIGGER approval_nonces_guard_update BEFORE UPDATE ON approval_nonces
     FOR EACH ROW EXECUTE FUNCTION guard_approval_nonce();
 CREATE TRIGGER releases_no_update BEFORE UPDATE OR DELETE ON releases
     FOR EACH ROW EXECUTE FUNCTION reject_all_mutation();
+CREATE TRIGGER releases_guard_insert BEFORE INSERT ON releases
+    FOR EACH ROW EXECUTE FUNCTION guard_release_approval();
 CREATE TRIGGER launch_results_no_update BEFORE UPDATE OR DELETE ON launch_results
     FOR EACH ROW EXECUTE FUNCTION reject_all_mutation();
 CREATE TRIGGER reconciliation_results_no_update BEFORE UPDATE OR DELETE ON reconciliation_results
     FOR EACH ROW EXECUTE FUNCTION reject_all_mutation();
 CREATE TRIGGER idempotency_no_update BEFORE UPDATE OR DELETE ON idempotency_results
+    FOR EACH ROW EXECUTE FUNCTION reject_all_mutation();
+CREATE TRIGGER workflow_checkpoints_guard_update BEFORE UPDATE ON workflow_checkpoints
+    FOR EACH ROW EXECUTE FUNCTION guard_workflow_checkpoint();
+CREATE TRIGGER workflow_checkpoints_guard_insert BEFORE INSERT ON workflow_checkpoints
+    FOR EACH ROW EXECUTE FUNCTION guard_workflow_checkpoint_insert();
+CREATE TRIGGER workflow_checkpoints_no_delete BEFORE DELETE ON workflow_checkpoints
+    FOR EACH ROW EXECUTE FUNCTION reject_all_mutation();
+CREATE TRIGGER workflow_approval_entries_guard_insert BEFORE INSERT ON workflow_approval_entries
+    FOR EACH ROW EXECUTE FUNCTION guard_workflow_approval_entry();
+CREATE TRIGGER workflow_approval_entries_no_update BEFORE UPDATE OR DELETE ON workflow_approval_entries
     FOR EACH ROW EXECUTE FUNCTION reject_all_mutation();
 CREATE TRIGGER effects_guard_update BEFORE UPDATE ON effects
     FOR EACH ROW EXECUTE FUNCTION guard_effect_ledger();
