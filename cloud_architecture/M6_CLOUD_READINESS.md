@@ -1,7 +1,7 @@
 # Milestone 6 cloud readiness
 
-Status: **implemented as an offline desired-state and validation boundary; no
-M6 cloud resource has been created, enabled, or verified.**
+Status: **the desired-state boundary is implemented; a constrained live M6
+canary is provisioned and verified separately below.**
 
 M6 selects the sanitized **Pub/Sub outbox** path, rather than Datastream, for
 the code-first relay. Cloud SQL for PostgreSQL remains the only lifecycle,
@@ -26,6 +26,35 @@ The command is offline and makes no API call. A valid result says only that the
 checked-in planned configuration is internally consistent. It is not Cloud SQL
 connectivity, Pub/Sub delivery, BigQuery projection, KMS, VPC Service Controls,
 Model Armor enforcement, or deployment proof.
+
+## Live canary facts
+
+The owner-approved M6 canary is a deliberately small, non-production slice in
+`ztm-agent-9049c3` / `us-central1`:
+
+- `keraun-m6-pg`: Cloud SQL PostgreSQL 16, `db-f1-micro`, zonal
+  (`us-central1-a`), private IP only on the default VPC, 10 GB SSD with a
+  20 GB automatic-growth cap, deletion protection, two retained backups, IAM
+  database authentication, and the dedicated `keraun-m6/authority` software
+  CMEK. Its empty database is `m3_authority`.
+- `keraun-m6-outbox`, `keraun-m6-outbox-sub`, and
+  `keraun-m6-outbox-dlq`: a Pub/Sub transport canary with one-day retention,
+  five delivery attempts, and only the Pub/Sub service agent grants needed for
+  the DLQ policy. One fixed sanitized canary message was published and
+  acknowledged.
+- `keraun_m6_audit.sanitized_outbox_events`: an empty partitioned BigQuery
+  audit table. No Pub/Sub-to-BigQuery projector or migration writer is
+  deployed, so zero rows is the expected result.
+
+The enabled M6 APIs are Cloud SQL Admin, Service Networking, Cloud KMS,
+Pub/Sub, and Model Armor. The canary has a project budget alert at USD 100 and
+does not create HA, Dataflow, Cloud Run, a Serverless VPC connector, a VPC
+Service Controls perimeter, or a Model Armor template.
+
+These are resource configuration and transport facts only. They do **not**
+prove an M3 schema migration, Cloud SQL application connectivity, an outbox
+relay, BigQuery projection, workload-identity federation, VPC-SC enforcement,
+Model Armor enforcement, customer data processing, or production readiness.
 
 ## Read-only inventory result on 2026-08-31
 

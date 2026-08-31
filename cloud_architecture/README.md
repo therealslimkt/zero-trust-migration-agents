@@ -23,6 +23,8 @@ created and verified.
 | Identity Platform / Firebase | **Planned** | Not enabled at the recorded inventory point |
 | Dataflow | **Planned** | Not enabled at the recorded inventory point; no Dataflow jobs exist |
 | Migration BigQuery data | **Planned** | No migration datasets exist at the recorded inventory point |
+| M6 Cloud SQL authority canary | **Deployed, constrained** | `keraun-m6-pg`: PostgreSQL 16, private IP only, CMEK, zonal `db-f1-micro`; empty `m3_authority` database |
+| M6 sanitized outbox transport | **Deployed, constrained** | Pub/Sub topic/subscription/DLQ plus an empty BigQuery audit table; no relay or migration writer deployed |
 
 The active Google account is deliberately redacted from every tracked document.
 Run the discovery commands locally to see the authenticated account; never paste
