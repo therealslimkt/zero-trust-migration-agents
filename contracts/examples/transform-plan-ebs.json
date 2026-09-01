@@ -2,9 +2,9 @@
   "schemaVersion": "1.0.0",
   "planId": "plan_BTRIEVE00001",
   "runId": "mig_PORTFOLIO0001",
-  "sourceId": "btrieve",
+  "sourceId": "ebs",
   "sourceManifestDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-  "target": {"dataset": "legacy_migration", "table": "accpac_arcus"},
+  "target": {"dataset": "legacy_migration", "table": "ebs_hz_parties"},
   "operations": [
     {"operation": "decode_text", "inputField": "IDCUST_raw", "outputField": "customer_number", "encoding": "latin-1", "trimPadding": true},
     {"operation": "rename", "from": "SWACTV", "to": "is_active"},

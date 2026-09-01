@@ -28,8 +28,8 @@ def _plan(*, operations=None, output_fields=None, source_id="jde"):
             "dataset": "legacy_migration",
             "table": {
                 "jde": "jde_f0101",
-                "maxdb": "sap_kna1",
-                "btrieve": "accpac_arcus",
+                "dynamics": "ax_custtable",
+                "ebs": "ebs_hz_parties",
             }[source_id],
         },
         "operations": operations
@@ -224,7 +224,7 @@ def test_plan_batch_identity_must_agree(key):
     if key == "runId":
         batch[key] = "mig_DIFFERENTRUN01"
     elif key == "sourceId":
-        batch[key] = "maxdb"
+        batch[key] = "dynamics"
     else:
         batch[key] = "sha256:" + "3" * 64
     with pytest.raises(ExecutionRejected, match="^plan_batch_mismatch$"):
@@ -476,7 +476,7 @@ def test_output_field_declarations_must_be_unique():
 
 def test_target_must_be_pre_registered_for_source():
     plan = _plan()
-    plan["target"]["table"] = "sap_kna1"
+    plan["target"]["table"] = "ax_custtable"
     _resign(plan)
     with pytest.raises(ExecutionRejected, match="^target_not_registered$"):
         _execute(plan)

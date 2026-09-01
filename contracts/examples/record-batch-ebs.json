@@ -2,9 +2,9 @@
   "schemaVersion": "1.0.0",
   "batchId": "batch_BTRBATCH0001",
   "runId": "mig_PORTFOLIO0001",
-  "sourceId": "btrieve",
+  "sourceId": "ebs",
   "sourceManifestDigest": "sha256:3030303030303030303030303030303030303030303030303030303030303030",
-  "recordSet": "ARCUS",
+  "recordSet": "HZ_PARTIES",
   "schemaDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
   "recordCount": 1,
   "records": [{"recordId": "rec_BTR00001", "ordinal": 0, "values": [{"field": "customer_number", "protection": "sanitized", "value": "C00001"}, {"field": "is_active", "protection": "sanitized", "value": true}, {"field": "customer_token", "protection": "tokenized", "value": "tok_BTRCustomer0001"}]}]

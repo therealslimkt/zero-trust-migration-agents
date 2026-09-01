@@ -3,8 +3,8 @@
   "portfolioName": "Legacy ERP Portfolio",
   "sources": [
     {"sourceId": "jde", "hostname": "legacy-jde-db"},
-    {"sourceId": "maxdb", "hostname": "legacy-maxdb"},
-    {"sourceId": "btrieve", "hostname": "legacy-btrieve-db"}
+    {"sourceId": "dynamics", "hostname": "dynamics-ax"},
+    {"sourceId": "ebs", "hostname": "oracle-ebs-19c"}
   ],
   "requestedBy": "migration-operator"
 }

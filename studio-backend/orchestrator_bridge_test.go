@@ -278,7 +278,7 @@ func TestOrchestratorBridgeDrivesValidPortfolioToApprovalGate(t *testing.T) {
 		}
 	}
 
-	for _, source := range []string{"jde", "maxdb", "btrieve"} {
+	for _, source := range []string{"jde", "dynamics", "ebs"} {
 		read := int64(100)
 		advance(source, ControlPlaneStateInventorying, "", "", nil)
 		advance(source, ControlPlaneStateRedacting, "art_"+source+"-manifest", cpTestPlanDigests[source], &read)
@@ -372,7 +372,7 @@ func TestOrchestratorBridgeDrivesValidPortfolioToApprovalGate(t *testing.T) {
 	verifying["artifactId"] = "art_jde-dataflow-proof"
 	verifying["digest"] = cpTestPlanDigests["jde"]
 	verifying["secondaryArtifactId"] = "art_jde-bigquery-proof"
-	verifying["secondaryDigest"] = cpTestPlanDigests["maxdb"]
+	verifying["secondaryDigest"] = cpTestPlanDigests["dynamics"]
 	if rec := orchestratorTestDo(t, h, orchestratorTestJSON(t, verifying)); rec.Code != http.StatusOK {
 		t.Fatalf("verify JDE = %d (%s)", rec.Code, rec.Body.String())
 	}
@@ -382,7 +382,7 @@ func TestOrchestratorBridgeDrivesValidPortfolioToApprovalGate(t *testing.T) {
 	completed["artifactId"] = "art_jde-reconciliation-proof"
 	completed["digest"] = cpTestPlanDigests["jde"]
 	completed["secondaryArtifactId"] = "art_jde-audit-proof"
-	completed["secondaryDigest"] = cpTestPlanDigests["btrieve"]
+	completed["secondaryDigest"] = cpTestPlanDigests["ebs"]
 	if rec := orchestratorTestDo(t, h, orchestratorTestJSON(t, completed)); rec.Code != http.StatusOK {
 		t.Fatalf("complete JDE = %d (%s)", rec.Code, rec.Body.String())
 	}
@@ -406,7 +406,7 @@ func TestOrchestratorBridgeCanRecordOnlyClosedFailureCode(t *testing.T) {
 	h := orchestratorTestHandler(t, controlPlane)
 
 	fail := orchestratorBase("fail_source", run.RunID)
-	fail["sourceId"] = "maxdb"
+	fail["sourceId"] = "dynamics"
 	fail["failureCode"] = "SOURCE_UNREACHABLE"
 	rec := orchestratorTestDo(t, h, orchestratorTestJSON(t, fail))
 	if rec.Code != http.StatusOK {

@@ -13,14 +13,14 @@ from scripts.verify_m3_control_plane import _execute, _load_prepared, _write_exc
 RUN_ID = "mig_CANARYTEST001"
 DIGESTS = {
     "jde": "sha256:" + "1" * 64,
-    "maxdb": "sha256:" + "2" * 64,
-    "btrieve": "sha256:" + "3" * 64,
+    "dynamics": "sha256:" + "2" * 64,
+    "ebs": "sha256:" + "3" * 64,
 }
 
 
 def _prepared_document():
     sources = []
-    for source_id in ("jde", "maxdb", "btrieve"):
+    for source_id in ("jde", "dynamics", "ebs"):
         manifest = {
             "schemaVersion": "1.0.0",
             "manifestId": "manifest_" + source_id.upper() + "000000000000",
@@ -28,8 +28,8 @@ def _prepared_document():
             "sourceId": source_id,
             "hostname": {
                 "jde": "legacy-jde-db",
-                "maxdb": "legacy-maxdb",
-                "btrieve": "legacy-btrieve-db",
+                "dynamics": "dynamics-ax",
+                "ebs": "oracle-ebs-19c",
             }[source_id],
             "inventoryDigest": "sha256:" + "4" * 64,
             "recordSets": [
@@ -149,8 +149,8 @@ def test_execute_requires_exact_digest_and_emits_only_reconciliation(tmp_path):
     assert result["sourceCount"] == 3
     assert [source["sourceId"] for source in result["sources"]] == [
         "jde",
-        "maxdb",
-        "btrieve",
+        "dynamics",
+        "ebs",
     ]
     assert "tok_PROTECTED_SENTINEL" not in json.dumps(result)
     args.digest = "sha256:" + "9" * 64

@@ -103,7 +103,7 @@ class WebSchemaTests(unittest.TestCase):
         self.assertTrue(sources["uniqueItems"])
         self.assertEqual(
             {rule["contains"]["const"] for rule in sources["allOf"]},
-            {"jde", "maxdb", "btrieve"},
+            {"jde", "dynamics", "ebs"},
         )
 
     def test_async_research_and_manual_upload_states_are_explicit(self):

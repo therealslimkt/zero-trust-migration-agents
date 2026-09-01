@@ -378,8 +378,8 @@ def _audit_sources():
     digest = lambda character: "sha256:" + character * 64
     tables = {
         "jde": "jde_f0101",
-        "maxdb": "sap_kna1",
-        "btrieve": "accpac_arcus",
+        "dynamics": "ax_custtable",
+        "ebs": "ebs_hz_parties",
     }
     return tuple(
         CloudSourceResult(
@@ -395,7 +395,7 @@ def _audit_sources():
             approval_digest=digest("4"),
             policy_digest=digest("5"),
         )
-        for index, source_id in enumerate(("jde", "maxdb", "btrieve"), start=1)
+        for index, source_id in enumerate(("jde", "dynamics", "ebs"), start=1)
     )
 
 

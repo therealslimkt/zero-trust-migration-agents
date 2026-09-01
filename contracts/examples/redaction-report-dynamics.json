@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "reportId": "report_MAXREPORT001",
   "runId": "mig_PORTFOLIO0001",
-  "sourceId": "maxdb",
+  "sourceId": "dynamics",
   "sourceManifestDigest": "sha256:2020202020202020202020202020202020202020202020202020202020202020",
   "deterministicCheck": {"engine": "deterministic-pii-rules", "rulesetVersion": "1.0.0", "status": "passed", "findingCount": 2, "categoryCounts": {"name": 1, "email": 0, "phone": 0, "address": 1, "governmentId": 0, "financialAccount": 0, "other": 0}, "evidenceDigest": "sha256:4242424242424242424242424242424242424242424242424242424242424242"},
   "localGemmaCheck": {"model": "gemma-3-4b-it", "executionLocation": "edge-local", "status": "passed", "findingCount": 0, "categoryCounts": {"name": 0, "email": 0, "phone": 0, "address": 0, "governmentId": 0, "financialAccount": 0, "other": 0}, "evidenceDigest": "sha256:5252525252525252525252525252525252525252525252525252525252525252"},

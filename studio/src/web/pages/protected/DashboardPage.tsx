@@ -10,11 +10,11 @@ import type {
 import { CodeValue, Metric, PageScaffold, StatePanel } from './PageScaffold'
 import type { ResourceState } from './state'
 
-const SOURCE_ORDER: readonly SourceId[] = ['jde', 'maxdb', 'btrieve']
+const SOURCE_ORDER: readonly SourceId[] = ['jde', 'dynamics', 'ebs']
 const SOURCE_LABELS: Readonly<Record<SourceId, string>> = {
-  jde: 'JD Edwards World',
-  maxdb: 'SAP ERP',
-  btrieve: 'Sage ERP',
+  jde: 'JD Edwards EnterpriseOne',
+  dynamics: 'Microsoft Dynamics AX',
+  ebs: 'Oracle E-Business Suite',
 }
 
 const STATE_LABELS: Readonly<Record<RunState, string>> = {

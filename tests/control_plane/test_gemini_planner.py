@@ -28,7 +28,7 @@ ZERO_COUNTS = {
 def artifacts():
     result = {}
     for source_id in SOURCE_ORDER:
-        record_set = {"jde": "F0101", "maxdb": "KNA1", "btrieve": "ARCUS_CUSTOMER"}[
+        record_set = {"jde": "F0101", "dynamics": "CustTable", "ebs": "HZ_PARTIES"}[
             source_id
         ]
         manifest = {
@@ -38,8 +38,8 @@ def artifacts():
             "sourceId": source_id,
             "hostname": {
                 "jde": "legacy-jde-db",
-                "maxdb": "legacy-maxdb",
-                "btrieve": "legacy-btrieve-db",
+                "dynamics": "dynamics-ax",
+                "ebs": "oracle-ebs-19c",
             }[source_id],
             "inventoryDigest": "sha256:" + "1" * 64,
             "recordSets": [
@@ -175,15 +175,15 @@ class GeminiPlanCompilerTests(unittest.IsolatedAsyncioTestCase):
         for plan in portfolio.as_documents():
             self.assertEqual(plan["target"]["table"], {
                 "jde": "jde_f0101",
-                "maxdb": "sap_kna1",
-                "btrieve": "accpac_arcus",
+                "dynamics": "ax_custtable",
+                "ebs": "ebs_hz_parties",
             }[plan["sourceId"]])
             self.assertEqual(
                 plan["planDigest"], document_digest(plan, omit=("planDigest",))
             )
         self.assertNotIn("tok_SafeToken1234", repr(portfolio))
         with self.assertRaises(TypeError):
-            portfolio.plans[0]["sourceId"] = "maxdb"
+            portfolio.plans[0]["sourceId"] = "dynamics"
         self.assertEqual(len(model.calls), 1)
 
     async def test_digests_are_stable_when_model_order_changes(self):
@@ -221,10 +221,10 @@ class GeminiPlanCompilerTests(unittest.IsolatedAsyncioTestCase):
         del missing["jde"]
         variants.append(missing)
         failed = artifacts()
-        failed["maxdb"]["redaction_report"]["status"] = "blocked"
+        failed["dynamics"]["redaction_report"]["status"] = "blocked"
         variants.append(failed)
         mismatch = artifacts()
-        mismatch["btrieve"]["record_batch"]["sourceManifestDigest"] = "sha256:" + "9" * 64
+        mismatch["ebs"]["record_batch"]["sourceManifestDigest"] = "sha256:" + "9" * 64
         variants.append(mismatch)
         counts = artifacts()
         counts["jde"]["record_batch"]["recordCount"] = 2
@@ -314,7 +314,7 @@ class GeminiPlanCompilerTests(unittest.IsolatedAsyncioTestCase):
         )
         variants.append(duplicate_field)
         wrong_ordinal = artifacts()
-        wrong_ordinal["maxdb"]["record_batch"]["records"][0]["ordinal"] = 4
+        wrong_ordinal["dynamics"]["record_batch"]["records"][0]["ordinal"] = 4
         variants.append(wrong_ordinal)
 
         for value in variants:

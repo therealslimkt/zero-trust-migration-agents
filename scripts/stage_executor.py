@@ -73,7 +73,7 @@ CARTRIDGES = {
                  "SELECT max(upmj) AS max_upmj, max(upmt) AS max_upmt,\n"
                  "       count(*) AS rows FROM f0911"),
             ]},
-    "maxdb": {"service": "dynamics-ax", "db": "keraun_ax", "source": "maxdb",
+    "dynamics": {"service": "dynamics-ax", "db": "keraun_ax", "source": "dynamics",
               "label": "Microsoft Dynamics AX 2012 R3 / SQL Server",
               "queries": [
                   ("Orphan-derived RecIds (base row is gone)",
@@ -90,7 +90,7 @@ CARTRIDGES = {
                    "SELECT table_id, physical_name, logical_name FROM sqldictionary\n"
                    "ORDER BY table_id LIMIT 20"),
               ]},
-    "btrieve": {"service": "oracle-ebs-19c", "db": "keraun_ebs", "source": "btrieve",
+    "ebs": {"service": "oracle-ebs-19c", "db": "keraun_ebs", "source": "ebs",
                 "label": "Oracle E-Business Suite / Oracle 19c",
                 "queries": [
                     ("Flexfields with no meaning in the catalog",
@@ -247,10 +247,13 @@ LAYOUTS = {
             "fields": [("ABAN8", 0, 5, "COMP-3 packed decimal", "address_number"),
                        ("ABALPH", 5, 40, "EBCDIC cp037", "alpha_name"),
                        ("ABTAX", 45, 20, "EBCDIC cp037", "tax_id")]},
-    "maxdb": {"record": None, "runner": "DirectRunner",
-              "dofn": "InflateKNA1Cluster", "fields": []},
-    "btrieve": {"record": None, "runner": "DirectRunner",
-                "dofn": "ReadBtrievePages", "fields": []},
+    # Neither of these decodes bytes. AX hides a logical row across two physical
+    # tables, and EBS hides a column's meaning in a metadata catalogue, so the
+    # transform is a join and a lookup rather than an unpack.
+    "dynamics": {"record": None, "runner": "DirectRunner",
+                 "dofn": "ResolveAXInheritance", "fields": []},
+    "ebs": {"record": None, "runner": "DirectRunner",
+            "dofn": "ResolveDescriptiveFlexfield", "fields": []},
 }
 
 
@@ -295,82 +298,307 @@ def fetch_records(cartridge: str, limit: int) -> list[tuple[int, bytes]]:
 
 
 def stage_compile(cartridge: str, limit: int = 500) -> dict[str, Any]:
-    """Decode the bytes the source lane just showed, one record at a time.
+    """Decode the rows the source lane just showed, one record at a time.
 
     Reading from the emulator rather than a generated stream is what makes the
-    three columns describe one dataset: the hex in column 1 is the hex being
-    converted here. Each record is decoded independently so a structurally bad
-    row is rejected on its own instead of failing the batch.
+    three columns describe one dataset: the rows in column 1 are the rows being
+    converted here. Each record is decoded independently so a bad row is
+    rejected on its own instead of failing the batch.
     """
-    from scripts.mission_control_pipeline import CARTRIDGES as PIPE, _decode, _export
-    from edge_runtime.types import SOURCE_SPECS, SourcePayload
-
     source = CARTRIDGES[cartridge]["source"]
     layout = LAYOUTS[source]
     mc = mirror()
 
     if source == "jde":
         return compile_jde(mc, cartridge, layout, limit)
+    if source == "dynamics":
+        return compile_dynamics(mc, cartridge, layout, limit)
+    if source == "ebs":
+        return compile_ebs(mc, cartridge, layout, limit)
+    raise StageError(f"no_compiler_for_{source}")
 
-    raw = _export(source)
-    payload = SourcePayload(spec=SOURCE_SPECS[source], data=raw)
 
-    # --- the Beam environment this conversion runs in ---------------------
-    mc.frame(source, "compiler", "$ python -m apache_beam.pipeline --runner=DirectRunner",
+def _run_beam(build_call) -> tuple[list[dict], list[dict]]:
+    """Execute one DirectRunner pipeline and read both tagged outputs back."""
+    import glob
+    import json as _json
+    import tempfile
+
+    import apache_beam as beam
+    from apache_beam.options.pipeline_options import PipelineOptions
+
+    workdir = tempfile.mkdtemp(prefix="keraun-beam-")
+    accepted_path = os.path.join(workdir, "accepted")
+    rejected_path = os.path.join(workdir, "rejected")
+    options = PipelineOptions(runner="DirectRunner", direct_running_mode="in_memory")
+    with beam.Pipeline(options=options) as pipeline:
+        build_call(pipeline, accepted_path, rejected_path)
+    accepted = [_json.loads(line) for f in glob.glob(accepted_path + "*") for line in open(f)]
+    rejected = [_json.loads(line) for f in glob.glob(rejected_path + "*") for line in open(f)]
+    return accepted, rejected
+
+
+def _finish(mc, source: str, cartridge: str, table: str, accepted: list[dict],
+            rejected: list[dict], read: int, beam_version: str,
+            quarantine_label) -> dict[str, Any]:
+    """Shared tally, quarantine narration and COMPILED handoff."""
+    classes = accepted[0].pop("_classes") if accepted else {}
+    for row in accepted[1:]:
+        row.pop("_classes", None)
+
+    _step(mc, source, 6, "Result", f"target table {table}")
+    for name, category in sorted(classes.items()):
+        mc.frame(source, "compiler", f"  {name:<18} {category}",
+                 producer="vale", tool="schema")
+    mc.frame(source, "compiler",
+             f"pipeline finished: {len(accepted)} accepted, {len(rejected)} rejected "
+             f"of {read} read",
+             stream="metric", producer="beam", tool="apache-beam")
+    if rejected:
+        mc.frame(source, "compiler",
+                 f"{len(rejected)} records could not be resolved and are quarantined, not repaired",
+                 stream="stderr", producer="vale", tool="policy", severity="error")
+        for reject in rejected[:5]:
+            mc.frame(source, "compiler", f"  {quarantine_label(reject)}",
+                     stream="stderr", producer="vale", tool="quarantine", severity="error")
+        mc.frame(source, "compiler",
+                 "the full quarantine manifest is downloadable beside this mirror",
+                 stream="system", producer="vale", tool="quarantine")
+    mc.frame(source, "compiler", RULE, stream="system", producer="beam", tool="pipeline")
+
+    COMPILED[cartridge] = {"rows": accepted, "classes": classes,
+                           "read": read, "rejected": len(rejected),
+                           "quarantine": rejected}
+    return {"records": len(accepted), "read": read,
+            "rejected": len(rejected), "beamVersion": beam_version,
+            "quarantine": rejected,
+            "mapping": [{"column": n, "dataClass": c} for n, c in sorted(classes.items())],
+            "table": table}
+
+
+def compile_dynamics(mc, cartridge: str, layout: dict, limit: int) -> dict[str, Any]:
+    """Resolve AX table inheritance and narrate it as discrete, labelled steps."""
+    import apache_beam as beam
+
+    from dynamics_beam_pipeline import ResolveAXInheritance, build
+    from scripts.mission_control_pipeline import CARTRIDGES as PIPE
+
+    source, table = "dynamics", PIPE["dynamics"]["table"]
+    cap = int(limit)
+
+    # -- STEP 1 - the entity as a client sees it -------------------------
+    _step(mc, source, 1, "CustTable  ·  read the entity as a client sees it",
+          "the application layer joins the inheritance for you, so this looks like one table")
+    joined_sql = ("SELECT c.data_area_id, c.partition_id, c.rec_id, b.party_name, c.customer_group\n"
+                  "FROM custtable c JOIN dirpartytable b\n"
+                  "  ON b.data_area_id = c.data_area_id\n"
+                  " AND b.partition_id = c.partition_id\n"
+                  " AND b.rec_id = c.rec_id\n"
+                  f"ORDER BY c.rec_id LIMIT {cap}")
+    mc.frame(source, "compiler", f"$ {joined_sql}",
+             stream="command", producer="dynamics-ax", tool="psql")
+    joined = psql(cartridge, joined_sql)[1:]
+    _table(mc, source, "compiler", ["company", "partition", "rec_id", "party_name", "group"],
+           joined[:10], [9, 12, 8, 24, 12], "dynamics-ax", "psql")
+    mc.frame(source, "compiler", f"({len(joined)} rows)",
+             stream="metric", producer="dynamics-ax", tool="psql")
+
+    # -- STEP 2 - the same entity as two physical tables ------------------
+    _step(mc, source, 2, "CustTable + DirPartyTable  ·  read the physical tables",
+          "ISSUE AX-CUSTTABLE-001  ·  a derived row is only valid beside its base row")
+    derived_sql = ("SELECT data_area_id, partition_id, rec_id, customer_group, modified_datetime\n"
+                   f"FROM custtable ORDER BY rec_id, partition_id LIMIT {cap}")
+    base_sql = ("SELECT data_area_id, partition_id, rec_id, party_name, modified_datetime\n"
+                f"FROM dirpartytable ORDER BY rec_id, partition_id LIMIT {cap}")
+    mc.frame(source, "compiler", f"$ {derived_sql}",
+             stream="command", producer="dynamics-ax", tool="psql")
+    derived_rows_raw = psql(cartridge, derived_sql)[1:]
+    _table(mc, source, "compiler", ["company", "partition", "rec_id", "group"],
+           [r[:4] for r in derived_rows_raw[:10]], [9, 12, 8, 12], "dynamics-ax", "psql")
+    mc.frame(source, "compiler", f"$ {base_sql}",
+             stream="command", producer="dynamics-ax", tool="psql")
+    base_rows_raw = psql(cartridge, base_sql)[1:]
+    _table(mc, source, "compiler", ["company", "partition", "rec_id", "party_name"],
+           [r[:4] for r in base_rows_raw[:10]], [9, 12, 8, 24], "dynamics-ax", "psql")
+    mc.frame(source, "compiler",
+             "a bulk export has no application layer: this is what the migration actually receives",
+             stream="system", producer="dynamics-ax", tool="policy")
+
+    derived_rows = [{"data_area_id": r[0], "partition_id": int(r[1]), "rec_id": int(r[2]),
+                     "customer_group": r[3], "modified_datetime": r[4]}
+                    for r in derived_rows_raw]
+    base_rows = [{"data_area_id": r[0], "partition_id": int(r[1]), "rec_id": int(r[2]),
+                  "party_name": r[3], "modified_datetime": r[4]}
+                 for r in base_rows_raw]
+
+    # -- STEP 3 - load the runtime ---------------------------------------
+    _step(mc, source, 3, "Engage the compiler",
+          "code-owned transform; the model contributes parameters, never code")
+    for line in (f"apache-beam    {beam.__version__}",
+                 "runner         DirectRunner",
+                 f"DoFn           dynamics_beam_pipeline.{ResolveAXInheritance.__name__}",
+                 "join           CoGroupByKey on (DataAreaId, PartitionId, RecId)"):
+        mc.frame(source, "compiler", line, producer="beam", tool="apache-beam")
+    mc.frame(source, "compiler",
+             "driver         synthetic emulator speaks SQL directly; the production AX "
+             "path declares mssql-jdbc.jar and fingerprints it before use",
+             stream="system", producer="maven", tool="driver-contract")
+
+    # -- STEP 4 - resolve the inheritance --------------------------------
+    _step(mc, source, 4, "Resolving CustTable → DirPartyTable  ·  table inheritance",
+          "RecId is not an identity on its own; the join must hold company and partition")
+    mc.frame(source, "compiler",
+             f"$ beam.Pipeline | Create({len(derived_rows)}) + Create({len(base_rows)}) "
+             "| CoGroupByKey | ParDo(ResolveAXInheritance) | WriteToText",
              stream="command", producer="beam", tool="apache-beam")
-    mc.frame(source, "compiler", f"runner       {layout['runner']}",
-             producer="beam", tool="apache-beam")
-    mc.frame(source, "compiler", f"transform    ParDo({layout['dofn']})",
-             producer="beam", tool="apache-beam")
+    accepted, rejected = _run_beam(
+        lambda pipeline, a, r: build(pipeline, derived_rows, base_rows, a, r))
+    by_key = {(row["data_area_id"], row["partition_id"], row["rec_id"]): row
+              for row in accepted}
+
+    mc.frame(source, "compiler", "BEFORE  ·  the derived row alone",
+             stream="system", producer="beam", tool="ParDo")
+    _table(mc, source, "compiler", ["company", "partition", "rec_id", "group"],
+           [[r["data_area_id"], r["partition_id"], r["rec_id"], r["customer_group"]]
+            for r in derived_rows[:10]], [9, 12, 8, 12], "beam", "ParDo")
+    mc.frame(source, "compiler", "AFTER   ·  party_name inherited from the base row",
+             stream="system", producer="beam", tool="ParDo")
+    _table(mc, source, "compiler", ["company", "partition", "rec_id", "party_name", "group"],
+           [[r["data_area_id"], r["partition_id"], r["rec_id"],
+             by_key[(r["data_area_id"], r["partition_id"], r["rec_id"])]["party_name"],
+             r["customer_group"]]
+            for r in derived_rows[:10]
+            if (r["data_area_id"], r["partition_id"], r["rec_id"]) in by_key],
+           [9, 12, 8, 24, 12], "beam", "ParDo")
+
+    # -- STEP 5 - name the object ----------------------------------------
+    _step(mc, source, 5, "Resolving the AX object name  ·  SQLDICTIONARY + MODELELEMENT",
+          "the physical table name is not the application's name for the entity")
+    catalog_sql = ("SELECT m.element_name, m.extends_element, d.physical_name\n"
+                   "FROM modelelement m JOIN sqldictionary d ON d.table_id = m.table_id\n"
+                   "ORDER BY m.element_name LIMIT 20")
+    mc.frame(source, "compiler", f"$ {catalog_sql}",
+             stream="command", producer="dynamics-ax", tool="psql")
+    _table(mc, source, "compiler", ["element", "extends", "physical"],
+           psql(cartridge, catalog_sql)[1:], [18, 18, 18], "dynamics-ax", "psql")
+
+    return _finish(mc, source, cartridge, table, accepted, rejected, len(derived_rows),
+                   beam.__version__,
+                   lambda reject: (f"rec_id {reject['recId']:<8} "
+                                   f"{reject['dataAreaId']}/{reject['partitionId']}  "
+                                   f"{reject['reason']}"))
+
+
+def compile_ebs(mc, cartridge: str, layout: dict, limit: int) -> dict[str, Any]:
+    """Resolve EBS descriptive flexfields and narrate it as discrete, labelled steps."""
+    import apache_beam as beam
+
+    from ebs_beam_pipeline import GENERIC_COLUMNS, ResolveDescriptiveFlexfield, build
+    from scripts.mission_control_pipeline import CARTRIDGES as PIPE
+
+    source, table = "ebs", PIPE["ebs"]["table"]
+    cap = int(limit)
+
+    # -- STEP 1 - the rows as a client sees them -------------------------
+    _step(mc, source, 1, "HZ_PARTIES  ·  read the rows as a client sees them",
+          "the application resolves the flexfield for you, so these columns look named")
+    party_sql = ("SELECT party_id, party_name, attribute_category, attribute1, attribute2,\n"
+                 "       last_update_date\n"
+                 f"FROM hz_parties ORDER BY party_id LIMIT {cap}")
+    mc.frame(source, "compiler", f"$ {party_sql}",
+             stream="command", producer="oracle-ebs-19c", tool="psql")
+    party_raw = psql(cartridge, party_sql)[1:]
+    _table(mc, source, "compiler",
+           ["party_id", "party_name", "context", "attribute1", "attribute2"],
+           [r[:5] for r in party_raw[:10]], [9, 20, 16, 12, 12], "oracle-ebs-19c", "psql")
+    mc.frame(source, "compiler", f"({len(party_raw)} rows)",
+             stream="metric", producer="oracle-ebs-19c", tool="psql")
+
+    # -- STEP 2 - the column that means two things -----------------------
+    _step(mc, source, 2, "HZ_PARTIES  ·  ATTRIBUTE1 does not mean one thing",
+          "ISSUE EBS-HZPARTIES-001  ·  the meaning lives in the catalogue, not the column")
+    flex_sql = ("SELECT context_value, segment_column, semantic_name, data_type,\n"
+                "       metadata_version\n"
+                "FROM fnd_descriptive_flexs ORDER BY context_value, segment_column LIMIT 40")
+    mc.frame(source, "compiler", f"$ {flex_sql}",
+             stream="command", producer="oracle-ebs-19c", tool="psql")
+    flex_raw = psql(cartridge, flex_sql)[1:]
+    _table(mc, source, "compiler",
+           ["context", "segment", "semantic_name", "type", "metadata_version"],
+           flex_raw[:20], [16, 12, 20, 8, 20], "oracle-ebs-19c", "psql")
     mc.frame(source, "compiler",
-             f"input        {len(raw)} bytes"
-             + (f" · fixed {layout['record']}-byte records" if layout["record"] else " · variable-length clusters"),
-             producer="beam", tool="apache-beam")
+             "ATTRIBUTE1 is a different column in every context; copying it across "
+             "preserves the bytes and loses the meaning",
+             stream="system", producer="oracle-ebs-19c", tool="policy")
+
+    party_rows = [{"party_id": int(r[0]), "party_name": r[1], "attribute_category": r[2],
+                   "attribute1": r[3] or None, "attribute2": r[4] or None,
+                   "attribute3": None, "attribute4": None, "attribute5": None,
+                   "last_update_date": r[5]}
+                  for r in party_raw]
+    flex_map = {(r[0], r[1]): (r[2], r[3]) for r in flex_raw}
+    metadata_version = flex_raw[0][4] if flex_raw else "unknown"
+
+    # -- STEP 3 - load the runtime ---------------------------------------
+    _step(mc, source, 3, "Engage the compiler",
+          "code-owned transform; the model contributes parameters, never code")
+    for line in (f"apache-beam    {beam.__version__}",
+                 "runner         DirectRunner",
+                 f"DoFn           ebs_beam_pipeline.{ResolveDescriptiveFlexfield.__name__}",
+                 f"catalogue      FND_DESCRIPTIVE_FLEXS @ {metadata_version}"):
+        mc.frame(source, "compiler", line, producer="beam", tool="apache-beam")
     mc.frame(source, "compiler",
-             "the DoFn is code we own; the model contributes parameters, never code",
+             "driver         synthetic emulator speaks SQL directly; the production EBS "
+             "path declares ojdbc8.jar and fingerprints it before use",
+             stream="system", producer="maven", tool="driver-contract")
+
+    # -- STEP 4 - resolve the flexfields ---------------------------------
+    _step(mc, source, 4, "Resolving ATTRIBUTE1..5  ·  descriptive flexfield → named columns",
+          "a context with no mapping is quarantined rather than landed untyped")
+    mc.frame(source, "compiler",
+             f"$ beam.Pipeline | Create({len(party_rows)}) "
+             "| ParDo(ResolveDescriptiveFlexfield) | WriteToText",
+             stream="command", producer="beam", tool="apache-beam")
+    accepted, rejected = _run_beam(
+        lambda pipeline, a, r: build(pipeline, party_rows, flex_map, metadata_version, a, r))
+    by_id = {row["party_id"]: row for row in accepted}
+
+    mc.frame(source, "compiler", "BEFORE  ·  generic columns",
+             stream="system", producer="beam", tool="ParDo")
+    _table(mc, source, "compiler", ["party_id", "context", "attribute1", "attribute2"],
+           [[r["party_id"], r["attribute_category"], r["attribute1"], r["attribute2"]]
+            for r in party_rows[:10]], [9, 16, 14, 14], "beam", "ParDo")
+    mc.frame(source, "compiler", "AFTER   ·  the same values under their declared names",
+             stream="system", producer="beam", tool="ParDo")
+    for row in party_rows[:10]:
+        landed = by_id.get(row["party_id"])
+        if landed is None:
+            continue
+        named = [f"{k} = {v!r}" for k, v in landed.items()
+                 if k not in ("_classes", "source_ordinal", "party_id", "party_name",
+                              "attribute_category", "last_update_date")]
+        mc.frame(source, "compiler",
+                 f"  party {row['party_id']}  [{row['attribute_category']}]  "
+                 + "  ·  ".join(named),
+                 producer="beam", tool="ParDo")
+
+    # -- STEP 5 - the catalogue that made it possible --------------------
+    _step(mc, source, 5, "FND_TABLES + FND_COLUMNS  ·  the application catalogue",
+          "the warehouse schema is derived from the source's own metadata, not guessed")
+    catalog_sql = ("SELECT c.application_short_name, c.table_name, c.column_name, c.data_type\n"
+                   "FROM fnd_columns c ORDER BY c.column_name LIMIT 20")
+    mc.frame(source, "compiler", f"$ {catalog_sql}",
+             stream="command", producer="oracle-ebs-19c", tool="psql")
+    _table(mc, source, "compiler", ["app", "table", "column", "type"],
+           psql(cartridge, catalog_sql)[1:], [6, 16, 20, 10], "oracle-ebs-19c", "psql")
+    mc.frame(source, "compiler",
+             f"generic columns considered: {', '.join(c.upper() for c in GENERIC_COLUMNS)}",
              stream="system", producer="beam", tool="policy")
 
-    # --- the bytes, as they arrive ---------------------------------------
-    mc.frame(source, "compiler", f"raw[0:24]    {_hex(raw)}",
-             producer=f"{source}-adapter", tool="hexdump")
-
-    decoded = _decode(source, payload)
-
-    # --- per record, show the field the DoFn is converting right now ------
-    size = layout["record"]
-    for index, record in enumerate(decoded.records):
-        values = {field.name: field for field in record.fields}
-        mc.frame(source, "compiler",
-                 f"── record {index + 1}/{len(decoded.records)}"
-                 + (f"  offset 0x{index * size:04x}  {size} bytes" if size else ""),
-                 stream="system", producer=f"{source}-adapter", tool="ParDo")
-        if size and layout["fields"]:
-            chunk = raw[index * size:(index + 1) * size]
-            for name, start, length, encoding, column in layout["fields"]:
-                field = values.get(column)
-                if field is None:
-                    continue
-                mc.frame(source, "compiler",
-                         f"  {name:<7} {encoding:<21} {_hex(chunk[start:start + length], 8)}",
-                         producer=f"{source}-adapter", tool="ParDo")
-                mc.frame(source, "compiler",
-                         f"  {'':<7} └─ {column} = {field.value!r}  [{field.category}]",
-                         producer=f"{source}-adapter", tool="ParDo")
-        else:
-            for field in record.fields:
-                mc.frame(source, "compiler",
-                         f"  {field.name} = {field.value!r}  [{field.category}]",
-                         producer=f"{source}-adapter", tool="ParDo")
-
-    mapping = [{"column": f.name, "dataClass": f.category} for f in decoded.records[0].fields]
-    mc.frame(source, "compiler",
-             f"ParDo complete: {len(decoded.records)} elements, 0 dropped",
-             stream="metric", producer="beam", tool="apache-beam")
-    mc.frame(source, "compiler",
-             "closed schema; anything outside the declared columns is rejected",
-             producer="vale", tool="validator")
-    return {"records": len(decoded.records), "mapping": mapping,
-            "table": PIPE[source]["table"]}
+    return _finish(mc, source, cartridge, table, accepted, rejected, len(party_rows),
+                   beam.__version__,
+                   lambda reject: (f"party_id {reject['partyId']:<8} "
+                                   f"{reject['attributeCategory']}  {reject['reason']}"))
 
 
 def compile_jde(mc, cartridge: str, layout: dict, limit: int) -> dict[str, Any]:
@@ -497,8 +725,7 @@ def compile_jde(mc, cartridge: str, layout: dict, limit: int) -> dict[str, Any]:
 
 def stage_land(cartridge: str, project: str, dataset: str) -> dict[str, Any]:
     from google.cloud import bigquery
-    from scripts.mission_control_pipeline import CARTRIDGES as PIPE, _decode, _export
-    from edge_runtime.types import SOURCE_SPECS, SourcePayload
+    from scripts.mission_control_pipeline import CARTRIDGES as PIPE
 
     source = CARTRIDGES[cartridge]["source"]
     table = PIPE[source]["table"]
@@ -511,11 +738,10 @@ def stage_land(cartridge: str, project: str, dataset: str) -> dict[str, Any]:
         rows, classes = compiled["rows"], compiled["classes"]
         read_count, rejected_count = compiled["read"], compiled["rejected"]
     else:
-        decoded = _decode(source, SourcePayload(spec=SOURCE_SPECS[source], data=_export(source)))
-        rows = [dict({f.name: f.value for f in r.fields}, source_ordinal=r.ordinal)
-                for r in decoded.records]
-        classes = {f.name: f.category for f in decoded.records[0].fields}
-        read_count, rejected_count = len(rows), 0
+        # Every cartridge now compiles from its own emulator, so there is no
+        # generated stand-in to fall back to. Landing without a compile would
+        # write rows the source lane never showed.
+        raise StageError("compile_before_landing")
     if not rows:
         raise StageError("nothing_compiled")
 

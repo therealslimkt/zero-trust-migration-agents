@@ -109,8 +109,8 @@
           "items": {"$ref": "common.schema.json#/$defs/sourceId"},
           "allOf": [
             {"contains": {"const": "jde"}, "minContains": 1, "maxContains": 1},
-            {"contains": {"const": "maxdb"}, "minContains": 1, "maxContains": 1},
-            {"contains": {"const": "btrieve"}, "minContains": 1, "maxContains": 1}
+            {"contains": {"const": "dynamics"}, "minContains": 1, "maxContains": 1},
+            {"contains": {"const": "ebs"}, "minContains": 1, "maxContains": 1}
           ]
         }
       }
@@ -126,7 +126,7 @@
         "runId": {"$ref": "common.schema.json#/$defs/runId"},
         "state": {"$ref": "common.schema.json#/$defs/runState"},
         "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
-        "hostname": {"type": "string", "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]},
+        "hostname": {"type": "string", "enum": ["legacy-jde-db", "dynamics-ax", "oracle-ebs-19c"]},
         "snapshotVersion": {"type": "integer", "minimum": 0},
         "updatedAt": {"$ref": "common.schema.json#/$defs/dateTime"},
         "progress": {"$ref": "#/$defs/liveSourceProgress"},
@@ -139,7 +139,7 @@
       "required": ["sourceId", "hostname", "state", "recordsRead", "recordsWritten", "recordsRejected", "evidenceReferences"],
       "properties": {
         "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
-        "hostname": {"type": "string", "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]},
+        "hostname": {"type": "string", "enum": ["legacy-jde-db", "dynamics-ax", "oracle-ebs-19c"]},
         "state": {"$ref": "common.schema.json#/$defs/runState"},
         "recordsRead": {"type": "integer", "minimum": 0},
         "recordsWritten": {"type": "integer", "minimum": 0},
@@ -150,8 +150,8 @@
       },
       "oneOf": [
         {"properties": {"sourceId": {"const": "jde"}, "hostname": {"const": "legacy-jde-db"}}},
-        {"properties": {"sourceId": {"const": "maxdb"}, "hostname": {"const": "legacy-maxdb"}}},
-        {"properties": {"sourceId": {"const": "btrieve"}, "hostname": {"const": "legacy-btrieve-db"}}}
+        {"properties": {"sourceId": {"const": "dynamics"}, "hostname": {"const": "dynamics-ax"}}},
+        {"properties": {"sourceId": {"const": "ebs"}, "hostname": {"const": "oracle-ebs-19c"}}}
       ]
     },
     "liveSourceSet": {
@@ -161,8 +161,8 @@
       "items": {"$ref": "#/$defs/liveSourceProgress"},
       "allOf": [
         {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "jde"}}}, "minContains": 1, "maxContains": 1},
-        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "maxdb"}}}, "minContains": 1, "maxContains": 1},
-        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "btrieve"}}}, "minContains": 1, "maxContains": 1}
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "dynamics"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "ebs"}}}, "minContains": 1, "maxContains": 1}
       ]
     },
     "liveRunEvent": {

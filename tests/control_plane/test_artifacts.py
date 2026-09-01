@@ -24,7 +24,7 @@ from edge_security.pii_redactor import DeterministicRedactor, PII_CATEGORIES
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_DIR = ROOT / "contracts" / "schemas"
-RECORD_SETS = {"jde": "F0101", "maxdb": "KNA1", "btrieve": "ARCUS"}
+RECORD_SETS = {"jde": "F0101", "dynamics": "CustTable", "ebs": "HZ_PARTIES"}
 RUN_ID = "mig_ARTIFACTTEST01"
 OBSERVED_AT = "2026-08-26T16:45:30Z"
 
@@ -113,7 +113,7 @@ class EdgeArtifactTests(unittest.TestCase):
         return build_edge_artifacts(**arguments)
 
     def test_all_three_sources_build_schema_valid_artifacts(self):
-        for source_id in ("jde", "maxdb", "btrieve"):
+        for source_id in ("jde", "dynamics", "ebs"):
             with self.subTest(source_id=source_id):
                 artifacts = self.build(source_id)
                 VALIDATORS["source_manifest"].validate(artifacts.source_manifest)
@@ -123,7 +123,7 @@ class EdgeArtifactTests(unittest.TestCase):
                 )
 
     def test_reference_counts_and_report_digest_are_integral(self):
-        payload, decoded, deterministic, gemma = self.make_inputs("maxdb")
+        payload, decoded, deterministic, gemma = self.make_inputs("dynamics")
         artifacts = build_edge_artifacts(
             run_id=RUN_ID,
             observed_at=OBSERVED_AT,
@@ -161,8 +161,8 @@ class EdgeArtifactTests(unittest.TestCase):
         )
 
     def test_identical_inputs_are_deterministic(self):
-        first_inputs = self.make_inputs("btrieve")
-        second_inputs = self.make_inputs("btrieve")
+        first_inputs = self.make_inputs("ebs")
+        second_inputs = self.make_inputs("ebs")
         first = build_edge_artifacts(
             run_id=RUN_ID,
             observed_at=OBSERVED_AT,
@@ -244,7 +244,7 @@ class EdgeArtifactTests(unittest.TestCase):
 
     def test_cross_source_mismatch_is_rejected(self):
         payload, _, _, _ = self.make_inputs("jde")
-        _, decoded, deterministic, gemma = self.make_inputs("maxdb")
+        _, decoded, deterministic, gemma = self.make_inputs("dynamics")
         with self.assertRaisesRegex(ArtifactBuildError, "cross-source mismatch"):
             build_edge_artifacts(
                 run_id=RUN_ID,
@@ -258,7 +258,7 @@ class EdgeArtifactTests(unittest.TestCase):
     def test_noncanonical_source_spec_is_rejected(self):
         payload, decoded, deterministic, gemma = self.make_inputs("jde")
         forged_payload = SourcePayload(
-            SourceSpec("jde", "legacy-maxdb", payload.spec.remote_path, payload.spec.source_format),
+            SourceSpec("jde", "dynamics-ax", payload.spec.remote_path, payload.spec.source_format),
             payload.data,
         )
         with self.assertRaises(ArtifactBuildError):
@@ -410,7 +410,7 @@ class EdgeArtifactTests(unittest.TestCase):
         for value in (payload, decoded, deterministic, artifacts):
             self.assertNotIn(secret, repr(value))
 
-        _, other_decoded, other_deterministic, _ = self.make_inputs("maxdb")
+        _, other_decoded, other_deterministic, _ = self.make_inputs("dynamics")
         with self.assertRaises(ArtifactBuildError) as raised:
             build_edge_artifacts(
                 run_id=RUN_ID,

@@ -27,7 +27,7 @@ from control_plane.gemini_planner import (
 )
 from control_plane.workflow import PreparedPortfolio, execute_portfolio, prepare_portfolio
 from control_plane.mission_control_client import MissionControlLocalClient
-from edge_runtime.adapters import btrieve, jde, maxdb
+from edge_runtime.adapters import jde
 from edge_runtime.transport import TailscaleSSHTransport
 from edge_runtime.types import SOURCE_SPECS
 from edge_security.local_gemma_agent import TailscaleGemmaReviewer
@@ -35,10 +35,11 @@ from edge_security.pii_redactor import DeterministicRedactor
 from ztm_security.approval import ApprovalRecord
 
 
+# Only JDE presents a byte-level export to decode. Dynamics AX and Oracle EBS
+# are relational sources whose defects are resolved by the Beam pipelines in
+# dynamics_beam_pipeline / ebs_beam_pipeline, not by a byte decoder.
 DECODERS = {
     "jde": jde.decode,
-    "maxdb": maxdb.decode,
-    "btrieve": btrieve.decode,
 }
 
 

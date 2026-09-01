@@ -446,18 +446,18 @@
   box-shadow: 0 0 12px var(--google-blue-glow);
 }
 
-.pipeline-lane-card--maxdb {
+.pipeline-lane-card--dynamics {
   border-left: 4px solid var(--google-red);
 }
-.pipeline-lane-card--maxdb:hover {
+.pipeline-lane-card--dynamics:hover {
   border-color: var(--google-red);
   box-shadow: 0 0 12px var(--google-red-glow);
 }
 
-.pipeline-lane-card--btrieve {
+.pipeline-lane-card--ebs {
   border-left: 4px solid var(--google-green);
 }
-.pipeline-lane-card--btrieve:hover {
+.pipeline-lane-card--ebs:hover {
   border-color: var(--google-green);
   box-shadow: 0 0 12px var(--google-green-glow);
 }

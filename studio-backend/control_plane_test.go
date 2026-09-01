@@ -60,8 +60,8 @@ const cpTestCreateBody = `{
   "portfolioName": "Legacy ERP Portfolio",
   "sources": [
     {"sourceId": "jde", "hostname": "legacy-jde-db"},
-    {"sourceId": "maxdb", "hostname": "legacy-maxdb"},
-    {"sourceId": "btrieve", "hostname": "legacy-btrieve-db"}
+    {"sourceId": "dynamics", "hostname": "dynamics-ax"},
+    {"sourceId": "ebs", "hostname": "oracle-ebs-19c"}
   ],
   "requestedBy": "migration-operator"
 }`
@@ -81,15 +81,15 @@ func cpTestCreate(t *testing.T, h http.Handler) cpRunBody {
 
 var cpTestPlanDigests = map[string]string{
 	"jde":     "sha256:" + strings.Repeat("a", 64),
-	"maxdb":   "sha256:" + strings.Repeat("b", 64),
-	"btrieve": "sha256:" + strings.Repeat("c", 64),
+	"dynamics":   "sha256:" + strings.Repeat("b", 64),
+	"ebs": "sha256:" + strings.Repeat("c", 64),
 }
 
 // cpTestReachAwaitingApproval drives every source through the frozen sequence
 // up to the single portfolio approval gate.
 func cpTestReachAwaitingApproval(t *testing.T, h *ControlPlaneHandler, runID string) {
 	t.Helper()
-	for _, src := range []string{"jde", "maxdb", "btrieve"} {
+	for _, src := range []string{"jde", "dynamics", "ebs"} {
 		read := int64(100)
 		steps := []struct {
 			to  ControlPlaneState
@@ -298,14 +298,14 @@ func TestControlPlane_StrictBodies(t *testing.T) {
 		body string
 		want int
 	}{
-		{"unknown top-level field", `{"schemaVersion":"1.0.0","portfolioName":"P","sources":[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}],"extra":1}`, http.StatusBadRequest},
-		{"unknown nested field", `{"schemaVersion":"1.0.0","portfolioName":"P","sources":[{"sourceId":"jde","hostname":"legacy-jde-db","port":1},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}]}`, http.StatusBadRequest},
+		{"unknown top-level field", `{"schemaVersion":"1.0.0","portfolioName":"P","sources":[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}],"extra":1}`, http.StatusBadRequest},
+		{"unknown nested field", `{"schemaVersion":"1.0.0","portfolioName":"P","sources":[{"sourceId":"jde","hostname":"legacy-jde-db","port":1},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}]}`, http.StatusBadRequest},
 		{"trailing document", cpTestCreateBody + `{"schemaVersion":"1.0.0"}`, http.StatusBadRequest},
 		{"not json", `not-json`, http.StatusBadRequest},
 		{"empty body", `{}`, http.StatusBadRequest},
-		{"wrong schema version", `{"schemaVersion":"2.0.0","portfolioName":"P","sources":[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}]}`, http.StatusBadRequest},
-		{"unsafe portfolio name", `{"schemaVersion":"1.0.0","portfolioName":"<script>","sources":[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}]}`, http.StatusBadRequest},
-		{"bad requester", `{"schemaVersion":"1.0.0","portfolioName":"P","requestedBy":" bad","sources":[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}]}`, http.StatusBadRequest},
+		{"wrong schema version", `{"schemaVersion":"2.0.0","portfolioName":"P","sources":[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}]}`, http.StatusBadRequest},
+		{"unsafe portfolio name", `{"schemaVersion":"1.0.0","portfolioName":"<script>","sources":[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}]}`, http.StatusBadRequest},
+		{"bad requester", `{"schemaVersion":"1.0.0","portfolioName":"P","requestedBy":" bad","sources":[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}]}`, http.StatusBadRequest},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -321,12 +321,12 @@ func TestControlPlane_StrictBodies(t *testing.T) {
 func TestControlPlane_InvalidSourceSets(t *testing.T) {
 	h := cpTestNew(t)
 	bodies := map[string]string{
-		"missing a source":  `[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"maxdb","hostname":"legacy-maxdb"}]`,
-		"duplicated source": `[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}]`,
-		"unknown source":    `[{"sourceId":"oracle","hostname":"legacy-jde-db"},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}]`,
-		"mismatched host":   `[{"sourceId":"jde","hostname":"legacy-maxdb"},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}]`,
-		"ip hostname":       `[{"sourceId":"jde","hostname":"10.0.0.5"},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"}]`,
-		"four sources":      `[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"maxdb","hostname":"legacy-maxdb"},{"sourceId":"btrieve","hostname":"legacy-btrieve-db"},{"sourceId":"jde","hostname":"legacy-jde-db"}]`,
+		"missing a source":  `[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"dynamics","hostname":"dynamics-ax"}]`,
+		"duplicated source": `[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}]`,
+		"unknown source":    `[{"sourceId":"oracle","hostname":"legacy-jde-db"},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}]`,
+		"mismatched host":   `[{"sourceId":"jde","hostname":"dynamics-ax"},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}]`,
+		"ip hostname":       `[{"sourceId":"jde","hostname":"10.0.0.5"},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"}]`,
+		"four sources":      `[{"sourceId":"jde","hostname":"legacy-jde-db"},{"sourceId":"dynamics","hostname":"dynamics-ax"},{"sourceId":"ebs","hostname":"oracle-ebs-19c"},{"sourceId":"jde","hostname":"legacy-jde-db"}]`,
 		"empty":             `[]`,
 		"null":              `null`,
 	}
@@ -646,11 +646,11 @@ func TestPortfolioPlanDigest_MatchesPythonCanonicalVector(t *testing.T) {
 		RunID: "mig_DIGESTVECTOR01",
 		Sources: []ControlPlaneSource{
 			{SourceID: "jde", PlanDigest: "sha256:" + strings.Repeat("1", 64)},
-			{SourceID: "maxdb", PlanDigest: "sha256:" + strings.Repeat("2", 64)},
-			{SourceID: "btrieve", PlanDigest: "sha256:" + strings.Repeat("3", 64)},
+			{SourceID: "dynamics", PlanDigest: "sha256:" + strings.Repeat("2", 64)},
+			{SourceID: "ebs", PlanDigest: "sha256:" + strings.Repeat("3", 64)},
 		},
 	}
-	const expected = "sha256:e2288ef0c6e5ce4f8ffd669604e5bbf3f125d1142eba04f80954024608ab76e5"
+	const expected = "sha256:7b2239a005b1e4d33efd386b6f774886d67021fe0598af02d790b5a551d1ad9d"
 	if got := cpPortfolioPlanDigest(run); got != expected {
 		t.Fatalf("digest = %q, want shared canonical vector %q", got, expected)
 	}
@@ -678,7 +678,7 @@ func TestOrchestration_ValidSequenceReachesCompletion(t *testing.T) {
 		t.Fatalf("approve = %d (%s)", rec.Code, rec.Body.String())
 	}
 
-	for _, src := range []string{"jde", "maxdb", "btrieve"} {
+	for _, src := range []string{"jde", "dynamics", "ebs"} {
 		written := int64(100)
 		steps := []struct {
 			to  ControlPlaneState
@@ -798,7 +798,7 @@ func TestOrchestration_InvalidTransitionsFailClosed(t *testing.T) {
 		if _, err := h.AttachSourcePlan(id, "jde", "art_jde-plan-001", cpTestPlanDigests["jde"]); err != nil {
 			t.Fatalf("AttachSourcePlan: %v", err)
 		}
-		if _, err := h.AttachSourcePlan(id, "jde", "art_jde-plan-002", cpTestPlanDigests["maxdb"]); err == nil {
+		if _, err := h.AttachSourcePlan(id, "jde", "art_jde-plan-002", cpTestPlanDigests["dynamics"]); err == nil {
 			t.Errorf("a plan digest was allowed to be rebound")
 		}
 	})
@@ -808,7 +808,7 @@ func TestOrchestration_InvalidTransitionsFailClosed(t *testing.T) {
 		}
 	})
 	t.Run("terminal runs are immutable", func(t *testing.T) {
-		if _, err := h.FailSource(id, "maxdb", "SOURCE_UNREACHABLE"); err != nil {
+		if _, err := h.FailSource(id, "dynamics", "SOURCE_UNREACHABLE"); err != nil {
 			t.Fatalf("FailSource: %v", err)
 		}
 		failed, err := h.Run(id)
@@ -818,7 +818,7 @@ func TestOrchestration_InvalidTransitionsFailClosed(t *testing.T) {
 		if failed.State != ControlPlaneStateFailed || failed.FailureCode != "SOURCE_UNREACHABLE" {
 			t.Fatalf("run = %q/%q, want failed/SOURCE_UNREACHABLE", failed.State, failed.FailureCode)
 		}
-		if _, err := h.AdvanceSource(id, "btrieve", ControlPlaneStateInventorying, ControlPlaneSourceUpdate{}); err == nil {
+		if _, err := h.AdvanceSource(id, "ebs", ControlPlaneStateInventorying, ControlPlaneSourceUpdate{}); err == nil {
 			t.Errorf("a terminal portfolio accepted a transition")
 		}
 		if _, err := h.EnterAwaitingApproval(id); err == nil {
@@ -1291,7 +1291,7 @@ func TestControlPlane_ConcurrentMutationsAndReads(t *testing.T) {
 	run := cpTestCreate(t, h)
 
 	var wg sync.WaitGroup
-	for _, src := range []string{"jde", "maxdb", "btrieve"} {
+	for _, src := range []string{"jde", "dynamics", "ebs"} {
 		wg.Add(1)
 		go func(src string) {
 			defer wg.Done()

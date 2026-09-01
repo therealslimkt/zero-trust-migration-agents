@@ -17,8 +17,8 @@
       "items": {"$ref": "common.schema.json#/$defs/sourceProgress"},
       "allOf": [
         {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "jde"}}}, "minContains": 1, "maxContains": 1},
-        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "maxdb"}}}, "minContains": 1, "maxContains": 1},
-        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "btrieve"}}}, "minContains": 1, "maxContains": 1}
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "dynamics"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "ebs"}}}, "minContains": 1, "maxContains": 1}
       ]
     },
     "portfolioPlanDigest": {"$ref": "common.schema.json#/$defs/digest"},

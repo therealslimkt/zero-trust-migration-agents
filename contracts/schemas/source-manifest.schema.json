@@ -12,7 +12,7 @@
     "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
     "hostname": {
       "type": "string",
-      "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]
+      "enum": ["legacy-jde-db", "dynamics-ax", "oracle-ebs-19c"]
     },
     "inventoryDigest": {"$ref": "common.schema.json#/$defs/digest"},
     "recordSets": {
@@ -24,8 +24,8 @@
   },
   "oneOf": [
     {"properties": {"sourceId": {"const": "jde"}, "hostname": {"const": "legacy-jde-db"}}},
-    {"properties": {"sourceId": {"const": "maxdb"}, "hostname": {"const": "legacy-maxdb"}}},
-    {"properties": {"sourceId": {"const": "btrieve"}, "hostname": {"const": "legacy-btrieve-db"}}}
+    {"properties": {"sourceId": {"const": "dynamics"}, "hostname": {"const": "dynamics-ax"}}},
+    {"properties": {"sourceId": {"const": "ebs"}, "hostname": {"const": "oracle-ebs-19c"}}}
   ],
   "$defs": {
     "recordSet": {

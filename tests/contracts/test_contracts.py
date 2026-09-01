@@ -18,17 +18,17 @@ POSITIVE_EXAMPLES = {
     "create-migration.json": "migration-request.schema.json",
     "migration-run.json": "migration-run.schema.json",
     "source-manifest-jde.json": "source-manifest.schema.json",
-    "source-manifest-maxdb.json": "source-manifest.schema.json",
-    "source-manifest-btrieve.json": "source-manifest.schema.json",
+    "source-manifest-dynamics.json": "source-manifest.schema.json",
+    "source-manifest-ebs.json": "source-manifest.schema.json",
     "record-batch-jde.json": "record-batch.schema.json",
-    "record-batch-maxdb.json": "record-batch.schema.json",
-    "record-batch-btrieve.json": "record-batch.schema.json",
+    "record-batch-dynamics.json": "record-batch.schema.json",
+    "record-batch-ebs.json": "record-batch.schema.json",
     "redaction-report-jde.json": "redaction-report.schema.json",
-    "redaction-report-maxdb.json": "redaction-report.schema.json",
-    "redaction-report-btrieve.json": "redaction-report.schema.json",
+    "redaction-report-dynamics.json": "redaction-report.schema.json",
+    "redaction-report-ebs.json": "redaction-report.schema.json",
     "transform-plan-jde.json": "transform-plan.schema.json",
-    "transform-plan-maxdb.json": "transform-plan.schema.json",
-    "transform-plan-btrieve.json": "transform-plan.schema.json",
+    "transform-plan-dynamics.json": "transform-plan.schema.json",
+    "transform-plan-ebs.json": "transform-plan.schema.json",
     "approval-request.json": "approval-request.schema.json",
     "approval-response.json": "approval-response.schema.json",
     "source-event.json": "sse-event.schema.json",
@@ -88,10 +88,10 @@ class SchemaStructureTests(unittest.TestCase):
 
     def test_canonical_source_and_state_values_are_exact(self):
         common = load_json(SCHEMAS / "common.schema.json")
-        self.assertEqual(common["$defs"]["sourceId"]["enum"], ["jde", "maxdb", "btrieve"])
+        self.assertEqual(common["$defs"]["sourceId"]["enum"], ["jde", "dynamics", "ebs"])
         self.assertEqual(
             common["$defs"]["sourceDescriptor"]["properties"]["hostname"]["enum"],
-            ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"],
+            ["legacy-jde-db", "dynamics-ax", "oracle-ebs-19c"],
         )
         self.assertEqual(
             common["$defs"]["runState"]["enum"],

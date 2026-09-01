@@ -26,7 +26,7 @@ describe('terminal SSE parsing', () => {
   it('accepts the typed terminal event only when SSE and payload identity agree', () => {
     const block = `id: ${FRAME.frameId}\nevent: terminal.frame\ndata: ${JSON.stringify(FRAME)}`
     expect(parseTerminalFrameSSEBlock(block, { runId: FRAME.runId, sourceId: 'jde' })).toEqual(FRAME)
-    expect(parseTerminalFrameSSEBlock(block, { runId: FRAME.runId, sourceId: 'maxdb' })).toBeUndefined()
+    expect(parseTerminalFrameSSEBlock(block, { runId: FRAME.runId, sourceId: 'dynamics' })).toBeUndefined()
     expect(parseTerminalFrameSSEBlock(block.replace('terminal.frame', 'migration.event'))).toBeUndefined()
     expect(parseTerminalFrameSSEBlock(block.replace(FRAME.frameId, 'frm_differentframe01'))).toBeUndefined()
   })

@@ -41,8 +41,8 @@ ZERO_COUNTS = {
 def _documents(source_id: str) -> dict[str, dict[str, object]]:
     record_set = {
         "jde": "F0101",
-        "maxdb": "KNA1",
-        "btrieve": "ARCUS_CUSTOMER",
+        "dynamics": "CustTable",
+        "ebs": "HZ_PARTIES",
     }[source_id]
     manifest = {
         "schemaVersion": "1.0.0",
@@ -51,8 +51,8 @@ def _documents(source_id: str) -> dict[str, dict[str, object]]:
         "sourceId": source_id,
         "hostname": {
             "jde": "legacy-jde-db",
-            "maxdb": "legacy-maxdb",
-            "btrieve": "legacy-btrieve-db",
+            "dynamics": "dynamics-ax",
+            "ebs": "oracle-ebs-19c",
         }[source_id],
         "inventoryDigest": "sha256:" + "1" * 64,
         "recordSets": [
@@ -247,7 +247,7 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
     async def test_prepared_snapshot_and_output_evidence_resist_mutation(self):
         detached = self.prepared.as_document()
         detached["portfolioDigest"] = "sha256:" + "9" * 64
-        detached["sources"][0]["plan"]["sourceId"] = "maxdb"
+        detached["sources"][0]["plan"]["sourceId"] = "dynamics"
         plan_copy = self.prepared.plans[0]
         plan_copy["target"]["dataset"] = "caller_mutation"
 
@@ -291,11 +291,11 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_artifact_run_source_and_manifest_mismatches_are_rejected(self):
         def wrong_run(source_id, documents):
-            if source_id == "maxdb":
+            if source_id == "dynamics":
                 documents["record_batch"]["runId"] = "mig_DIFFERENT0001"
 
         def wrong_source(source_id, documents):
-            if source_id == "btrieve":
+            if source_id == "ebs":
                 documents["record_batch"]["sourceId"] = "jde"
 
         def wrong_manifest(source_id, documents):
@@ -424,7 +424,7 @@ class PortfolioWorkflowTests(unittest.IsolatedAsyncioTestCase):
                     policy_categories=frozenset(),
                 )
 
-        self.assertEqual(called, ["jde", "maxdb"])
+        self.assertEqual(called, ["jde", "dynamics"])
         self.assertNotIn(SENTINEL, str(caught.exception))
         self.assertIsNone(caught.exception.__cause__)
 

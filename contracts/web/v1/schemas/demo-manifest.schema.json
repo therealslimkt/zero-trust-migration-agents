@@ -29,8 +29,8 @@
       "items": {"$ref": "#/$defs/sourceReplay"},
       "allOf": [
         {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "jde"}}}, "minContains": 1, "maxContains": 1},
-        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "maxdb"}}}, "minContains": 1, "maxContains": 1},
-        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "btrieve"}}}, "minContains": 1, "maxContains": 1}
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "dynamics"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "ebs"}}}, "minContains": 1, "maxContains": 1}
       ]
     },
     "events": {
@@ -64,7 +64,7 @@
       "required": ["sourceId", "hostname", "displayName", "source", "compiler", "destination", "terminalFrames"],
       "properties": {
         "sourceId": {"$ref": "common.schema.json#/$defs/sourceId"},
-        "hostname": {"type": "string", "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]},
+        "hostname": {"type": "string", "enum": ["legacy-jde-db", "dynamics-ax", "oracle-ebs-19c"]},
         "displayName": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\u0000-\\u001F\\u007F]+$"},
         "source": {"$ref": "#/$defs/sourceSystem"},
         "compiler": {"$ref": "#/$defs/compiler"},
@@ -73,8 +73,8 @@
       },
       "oneOf": [
         {"properties": {"sourceId": {"const": "jde"}, "hostname": {"const": "legacy-jde-db"}}},
-        {"properties": {"sourceId": {"const": "maxdb"}, "hostname": {"const": "legacy-maxdb"}}},
-        {"properties": {"sourceId": {"const": "btrieve"}, "hostname": {"const": "legacy-btrieve-db"}}}
+        {"properties": {"sourceId": {"const": "dynamics"}, "hostname": {"const": "dynamics-ax"}}},
+        {"properties": {"sourceId": {"const": "ebs"}, "hostname": {"const": "oracle-ebs-19c"}}}
       ]
     },
     "sourceSystem": {

@@ -21,16 +21,16 @@ SANITIZED_SOURCE_PROFILES = (
         "metadata": {"table": "F0101", "encoding": "ebcdic-cp037"},
     },
     {
-        "sourceId": "maxdb",
-        "hostname": "legacy-maxdb",
-        "format": "sap-maxdb",
-        "metadata": {"table": "KNA1", "encoding": "utf-8"},
+        "sourceId": "dynamics",
+        "hostname": "dynamics-ax",
+        "format": "dynamics-ax-2012-custtable",
+        "metadata": {"table": "CustTable", "encoding": "utf-8"},
     },
     {
-        "sourceId": "btrieve",
-        "hostname": "legacy-btrieve-db",
-        "format": "accpac-btrieve",
-        "metadata": {"table": "ARCUS", "encoding": "binary-records"},
+        "sourceId": "ebs",
+        "hostname": "oracle-ebs-19c",
+        "format": "oracle-ebs-19c-hz-parties",
+        "metadata": {"table": "HZ_PARTIES", "encoding": "utf-8"},
     },
 )
 

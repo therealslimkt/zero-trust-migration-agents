@@ -82,8 +82,8 @@ async def run_v1_portfolio(
     """Run the immutable v1 demonstration and stop at human review."""
 
     source_ids = tuple(str(profile.get("sourceId")) for profile in source_profiles)
-    if source_ids != ("jde", "maxdb", "btrieve"):
-        raise ValueError("v1 portfolio requires exactly jde, maxdb, and btrieve")
+    if source_ids != ("jde", "dynamics", "ebs"):
+        raise ValueError("v1 portfolio requires exactly jde, dynamics, and ebs")
     _report_status("orchestrator", "profiling", "Dispatching three source profilers")
     profiles = await asyncio.gather(
         *(_profile_source(dict(profile)) for profile in source_profiles)
@@ -96,8 +96,8 @@ async def run_v1_portfolio(
     planned_sources = {
         plan.get("sourceId") for plan in portfolio_plan.get("plans", [])
     }
-    if planned_sources != {"jde", "maxdb", "btrieve"}:
-        raise ValueError("portfolio plan must contain exactly jde, maxdb, and btrieve")
+    if planned_sources != {"jde", "dynamics", "ebs"}:
+        raise ValueError("portfolio plan must contain exactly jde, dynamics, and ebs")
 
     async with Agent(config=_AUDITOR_CONFIG) as auditor:
         response = await auditor.chat(json.dumps(portfolio_plan, sort_keys=True))
@@ -113,7 +113,7 @@ async def run_v1_portfolio(
     )
     return {
         "state": "awaiting_approval",
-        "sources": ["jde", "maxdb", "btrieve"],
+        "sources": ["jde", "dynamics", "ebs"],
         "plan": portfolio_plan,
         "audit": audit,
     }

@@ -6,7 +6,7 @@
     "schemaVersion": {"type": "string", "const": "1.0.0"},
     "experienceMode": {"type": "string", "enum": ["recorded_demo", "live"]},
     "dataClass": {"type": "string", "enum": ["synthetic_demo", "private"]},
-    "sourceId": {"type": "string", "enum": ["jde", "maxdb", "btrieve"]},
+    "sourceId": {"type": "string", "enum": ["jde", "dynamics", "ebs"]},
     "runState": {
       "type": "string",
       "enum": [

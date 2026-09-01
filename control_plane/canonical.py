@@ -9,11 +9,11 @@ from collections.abc import Iterable, Mapping
 
 
 SCHEMA_VERSION = "1.0.0"
-SOURCE_ORDER = ("jde", "maxdb", "btrieve")
+SOURCE_ORDER = ("jde", "dynamics", "ebs")
 TARGET_TABLES = {
     "jde": "jde_f0101",
-    "maxdb": "sap_kna1",
-    "btrieve": "accpac_arcus",
+    "dynamics": "ax_custtable",
+    "ebs": "ebs_hz_parties",
 }
 
 _RUN_ID = re.compile(r"^mig_[A-Za-z0-9]{12,64}$")

@@ -13,7 +13,7 @@
     },
     "sourceId": {
       "type": "string",
-      "enum": ["jde", "maxdb", "btrieve"]
+      "enum": ["jde", "dynamics", "ebs"]
     },
     "runState": {
       "type": "string",
@@ -43,7 +43,7 @@
         "sourceId": {"$ref": "#/$defs/sourceId"},
         "hostname": {
           "type": "string",
-          "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]
+          "enum": ["legacy-jde-db", "dynamics-ax", "oracle-ebs-19c"]
         }
       },
       "oneOf": [
@@ -55,14 +55,14 @@
         },
         {
           "properties": {
-            "sourceId": {"const": "maxdb"},
-            "hostname": {"const": "legacy-maxdb"}
+            "sourceId": {"const": "dynamics"},
+            "hostname": {"const": "dynamics-ax"}
           }
         },
         {
           "properties": {
-            "sourceId": {"const": "btrieve"},
-            "hostname": {"const": "legacy-btrieve-db"}
+            "sourceId": {"const": "ebs"},
+            "hostname": {"const": "oracle-ebs-19c"}
           }
         }
       ]
@@ -74,8 +74,8 @@
       "items": {"$ref": "#/$defs/sourceDescriptor"},
       "allOf": [
         {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "jde"}}}, "minContains": 1, "maxContains": 1},
-        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "maxdb"}}}, "minContains": 1, "maxContains": 1},
-        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "btrieve"}}}, "minContains": 1, "maxContains": 1}
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "dynamics"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"required": ["sourceId"], "properties": {"sourceId": {"const": "ebs"}}}, "minContains": 1, "maxContains": 1}
       ]
     },
     "evidenceReference": {
@@ -110,7 +110,7 @@
         "sourceId": {"$ref": "#/$defs/sourceId"},
         "hostname": {
           "type": "string",
-          "enum": ["legacy-jde-db", "legacy-maxdb", "legacy-btrieve-db"]
+          "enum": ["legacy-jde-db", "dynamics-ax", "oracle-ebs-19c"]
         },
         "state": {"$ref": "#/$defs/runState"},
         "recordsRead": {"type": "integer", "minimum": 0},
@@ -124,8 +124,8 @@
       },
       "oneOf": [
         {"properties": {"sourceId": {"const": "jde"}, "hostname": {"const": "legacy-jde-db"}}},
-        {"properties": {"sourceId": {"const": "maxdb"}, "hostname": {"const": "legacy-maxdb"}}},
-        {"properties": {"sourceId": {"const": "btrieve"}, "hostname": {"const": "legacy-btrieve-db"}}}
+        {"properties": {"sourceId": {"const": "dynamics"}, "hostname": {"const": "dynamics-ax"}}},
+        {"properties": {"sourceId": {"const": "ebs"}, "hostname": {"const": "oracle-ebs-19c"}}}
       ]
     }
   }

@@ -34,7 +34,7 @@ const RESEARCH_REQUEST: DriverResearchRequest = {
   projectId: 'operator-project',
   databaseFamily: 'IBM Db2 for i',
   databaseVersion: '7.5',
-  applicationLayer: 'JD Edwards World',
+  applicationLayer: 'JD Edwards EnterpriseOne',
   javaRuntime: 'Java 17',
   connectivityMode: 'tailscale',
 }
@@ -56,8 +56,8 @@ const RUNS: ListLiveRunsResponse = {
     updatedAt: '2026-08-27T10:00:00Z',
     sources: [
       { sourceId: 'jde', hostname: 'legacy-jde-db', state: 'planning', recordsRead: 12, recordsWritten: 0, recordsRejected: 0, evidenceReferences: [] },
-      { sourceId: 'maxdb', hostname: 'legacy-maxdb', state: 'redacting', recordsRead: 8, recordsWritten: 0, recordsRejected: 0, evidenceReferences: [] },
-      { sourceId: 'btrieve', hostname: 'legacy-btrieve-db', state: 'inventorying', recordsRead: 5, recordsWritten: 0, recordsRejected: 0, evidenceReferences: [] },
+      { sourceId: 'dynamics', hostname: 'dynamics-ax', state: 'redacting', recordsRead: 8, recordsWritten: 0, recordsRejected: 0, evidenceReferences: [] },
+      { sourceId: 'ebs', hostname: 'oracle-ebs-19c', state: 'inventorying', recordsRead: 5, recordsWritten: 0, recordsRejected: 0, evidenceReferences: [] },
     ],
   }],
 }
@@ -71,11 +71,11 @@ const EVIDENCE = {
 const SOURCE_REPLAY: SourceReplay = {
   sourceId: 'jde',
   hostname: 'legacy-jde-db',
-  displayName: 'JD Edwards World',
+  displayName: 'JD Edwards EnterpriseOne',
   source: {
     databaseFamily: 'IBM Db2 for i',
     databaseVersion: '7.5',
-    applicationLayer: 'JD Edwards World',
+    applicationLayer: 'JD Edwards EnterpriseOne',
     schema: [{ name: 'AN8', dataType: 'packed decimal', nullable: false, description: 'Address number' }],
     samples: [{
       recordId: 'record-1',
@@ -188,14 +188,14 @@ describe('DashboardPage', () => {
     render(<DashboardPage runs={{ status: 'ready', data: RUNS }} onOpenRun={openRun} onOpenSource={openSource} />)
 
     expect(screen.getByLabelText('Owned by Verified Operator, verified.operator@example.com')).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Open JD Edwards World for run-owned-1' })).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Open SAP ERP for run-owned-1' })).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Open Sage ERP for run-owned-1' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Open JD Edwards EnterpriseOne for run-owned-1' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Open Microsoft Dynamics AX for run-owned-1' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Open Oracle E-Business Suite for run-owned-1' })).toBeVisible()
 
     await user.click(screen.getByRole('button', { name: 'Open mission control for Northwind migration' }))
-    await user.click(screen.getByRole('button', { name: 'Open SAP ERP for run-owned-1' }))
+    await user.click(screen.getByRole('button', { name: 'Open Microsoft Dynamics AX for run-owned-1' }))
     expect(openRun).toHaveBeenCalledWith('run-owned-1')
-    expect(openSource).toHaveBeenCalledWith('run-owned-1', 'maxdb')
+    expect(openSource).toHaveBeenCalledWith('run-owned-1', 'dynamics')
   })
 
   it('keeps stale data visible while reconnecting and reports incomplete portfolios', () => {
@@ -433,7 +433,7 @@ describe('SourceDetailPage', () => {
   it('filters timeline events to the selected source and portfolio-wide events', () => {
     const events: readonly LiveRunEvent[] = [
       ...EVENTS,
-      { ...EVENTS[0], eventId: 'event-maxdb', sourceId: 'maxdb', summary: 'MaxDB-only event' },
+      { ...EVENTS[0], eventId: 'event-dynamics', sourceId: 'dynamics', summary: 'Dynamics-only event' },
       { ...EVENTS[0], eventId: 'event-portfolio', sourceId: undefined, summary: 'Portfolio event' },
     ]
     render(
@@ -448,6 +448,6 @@ describe('SourceDetailPage', () => {
     const evidencePanel = screen.getByRole('tabpanel', { name: 'Evidence & timeline' })
     expect(within(evidencePanel).getByText('Source migration reconciled')).toBeVisible()
     expect(within(evidencePanel).getByText('Portfolio event')).toBeVisible()
-    expect(within(evidencePanel).queryByText('MaxDB-only event')).not.toBeInTheDocument()
+    expect(within(evidencePanel).queryByText('Dynamics-only event')).not.toBeInTheDocument()
   })
 })

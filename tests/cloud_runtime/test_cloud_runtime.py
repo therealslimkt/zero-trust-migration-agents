@@ -388,7 +388,7 @@ def test_orchestrator_uploads_before_launch_and_requires_exact_reconciliation():
     assert result.audit_digest.startswith("sha256:")
     assert all("output_schema_json" in call["parameters"] for call in dataflow.launches)
 
-    documents["maxdb"]["recordCount"] = 2
+    documents["dynamics"]["recordCount"] = 2
     with pytest.raises(CloudExecutionRejected, match="^cloud_reconciliation$"):
         execute_cloud_portfolio(
             prepared=prepared,

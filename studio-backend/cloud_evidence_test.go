@@ -40,10 +40,10 @@ func makeValidFacts() VerifiedCloudFacts {
 }
 
 func TestVerifyAndConvert_Valid(t *testing.T) {
-	sources := []string{"jde", "maxdb", "btrieve"}
+	sources := []string{"jde", "dynamics", "ebs"}
 	terminalStates := []string{"JOB_STATE_DONE"}
 	registeredTables := map[string]string{
-		"jde": "jde_f0101", "maxdb": "sap_kna1", "btrieve": "accpac_arcus",
+		"jde": "jde_f0101", "dynamics": "ax_custtable", "ebs": "ebs_hz_parties",
 	}
 
 	for _, src := range sources {
@@ -101,14 +101,14 @@ func TestVerifyAndConvert_Adversarial(t *testing.T) {
 		{
 			name: "source ID mismatch BigQuery",
 			mutate: func(f *VerifiedCloudFacts) {
-				f.BigQueryTable.SourceID = "maxdb"
+				f.BigQueryTable.SourceID = "dynamics"
 			},
 			wantErr: "source ID mismatch",
 		},
 		{
 			name: "source ID mismatch Reconciliation",
 			mutate: func(f *VerifiedCloudFacts) {
-				f.Reconciliation.SourceID = "btrieve"
+				f.Reconciliation.SourceID = "ebs"
 			},
 			wantErr: "source ID mismatch",
 		},

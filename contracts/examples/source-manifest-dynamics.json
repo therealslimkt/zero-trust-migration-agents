@@ -2,9 +2,9 @@
   "schemaVersion": "1.0.0",
   "manifestId": "manifest_MAXMANIFEST01",
   "runId": "mig_PORTFOLIO0001",
-  "sourceId": "maxdb",
-  "hostname": "legacy-maxdb",
+  "sourceId": "dynamics",
+  "hostname": "dynamics-ax",
   "inventoryDigest": "sha256:2020202020202020202020202020202020202020202020202020202020202020",
-  "recordSets": [{"name": "KNA1", "recordCount": 120, "byteCount": 30720, "schemaDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}],
+  "recordSets": [{"name": "CustTable", "recordCount": 120, "byteCount": 30720, "schemaDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}],
   "observedAt": "2026-08-26T14:00:11Z"
 }

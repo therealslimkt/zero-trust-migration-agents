@@ -7,11 +7,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_IDS = ["jde", "maxdb", "btrieve"]
+SOURCE_IDS = ["jde", "dynamics", "ebs"]
 HOSTNAMES = {
     "jde": "legacy-jde-db",
-    "maxdb": "legacy-maxdb",
-    "btrieve": "legacy-btrieve-db",
+    "dynamics": "dynamics-ax",
+    "ebs": "oracle-ebs-19c",
 }
 DOMAIN_OPERATIONS = {
     "/api/v1/migrations": {"post"},

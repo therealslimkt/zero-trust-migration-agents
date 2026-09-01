@@ -53,7 +53,7 @@ _RFC3339_UTC = re.compile(
     r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{3})?Z$"
 )
 _JOB_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
-_JOB_NAME = re.compile(r"^ztm-(?:jde|maxdb|btrieve)-[a-z0-9-]{1,55}$")
+_JOB_NAME = re.compile(r"^ztm-(?:jde|dynamics|ebs)-[a-z0-9-]{1,55}$")
 _GCS_TEMP_LOCATION = re.compile(
     r"^gs://[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]/[A-Za-z0-9][A-Za-z0-9._/-]{0,1023}$"
 )

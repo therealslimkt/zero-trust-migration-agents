@@ -231,7 +231,7 @@
       "DemoId": {"name": "demo_id", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^demo_[A-Za-z0-9_-]{8,64}$"}},
       "BundleDigest": {"name": "bundle_digest", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}},
       "RunId": {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^mig_[A-Za-z0-9]{12,64}$"}},
-      "SourceId": {"name": "source_id", "in": "path", "required": true, "schema": {"type": "string", "enum": ["jde", "maxdb", "btrieve"]}},
+      "SourceId": {"name": "source_id", "in": "path", "required": true, "schema": {"type": "string", "enum": ["jde", "dynamics", "ebs"]}},
       "ResearchId": {"name": "research_id", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^research_[A-Za-z0-9_-]{8,64}$"}},
       "LastEventId": {"name": "Last-Event-ID", "in": "header", "required": false, "description": "Resume after the most recently processed live event.", "schema": {"type": "string", "pattern": "^evt_[A-Za-z0-9]{12,64}$"}},
       "LastTerminalFrameId": {"name": "Last-Event-ID", "in": "header", "required": false, "description": "Resume strictly after the most recently processed frame in this source terminal stream.", "schema": {"type": "string", "pattern": "^frm_[A-Za-z0-9]{12,64}$"}}

@@ -6,7 +6,7 @@ export const WEB_REQUIREMENTS_SHA256 = "37374d4fb13c4fd890e60c07b7d691fec0fe34ac
 
 export type ExperienceMode = "recorded_demo" | "live";
 export type DataClass = "synthetic_demo" | "private";
-export type SourceId = "jde" | "maxdb" | "btrieve";
+export type SourceId = "jde" | "dynamics" | "ebs";
 export type TerminalLane = "source" | "edge" | "compiler" | "destination";
 export type TerminalStream = "command" | "stdout" | "stderr" | "system" | "metric";
 export type TerminalSeverity = "debug" | "info" | "warning" | "error";
@@ -144,7 +144,7 @@ export interface DestinationReplay {
 
 export interface SourceReplay {
   readonly sourceId: SourceId;
-  readonly hostname: "legacy-jde-db" | "legacy-maxdb" | "legacy-btrieve-db";
+  readonly hostname: "legacy-jde-db" | "dynamics-ax" | "oracle-ebs-19c";
   readonly displayName: string;
   readonly source: SourceSystemReplay;
   readonly compiler: CompilerReplay;
@@ -250,7 +250,7 @@ export interface CreateLiveRunRequest {
   readonly schemaVersion: typeof WEB_SCHEMA_VERSION;
   readonly portfolioName: string;
   readonly cloudSetupId: string;
-  /** Exactly jde, maxdb, and btrieve, each once. */
+  /** Exactly jde, dynamics, and ebs, each once. */
   readonly sources: readonly [SourceId, SourceId, SourceId];
 }
 

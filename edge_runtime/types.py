@@ -43,6 +43,26 @@ SOURCE_SPECS = {
         remote_path="/home/kohalloran/F0101_address_book.bin",
         source_format="jde-as400-f0101",
     ),
+    # SOURCE_SPECS is the set of formats the edge runtime can read. It is not
+    # the demo cartridge list: maxdb and btrieve below are byte-level export
+    # formats with working decoders, but no cartridge ships them.
+    # Neither of these is a file export. The hazard is relational, so the
+    # "remote path" is the table the migration reads, not a blob on disk.
+    "dynamics": SourceSpec(
+        source_id="dynamics",
+        hostname="dynamics-ax",
+        remote_path="keraun_ax/public/custtable",
+        source_format="dynamics-ax-2012-custtable",
+    ),
+    "ebs": SourceSpec(
+        source_id="ebs",
+        hostname="oracle-ebs-19c",
+        remote_path="keraun_ebs/public/hz_parties",
+        source_format="oracle-ebs-19c-hz-parties",
+    ),
+    # Legacy binary export formats. Retained because edge_runtime.adapters.maxdb
+    # and .btrieve are real, tested decoders for them; they are simply not among
+    # the three cartridges the demo ships.
     "maxdb": SourceSpec(
         source_id="maxdb",
         hostname="legacy-maxdb",

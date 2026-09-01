@@ -24,8 +24,6 @@ export const PIXEL_ICON_PATHS = {
     "M8 0h3v1h-3zM7 1h3v1h-3zM6 2h3v1h-3zM5 3h3v1h-3zM4 4h3v1h-3zM3 5h7v1h-7zM2 6h7v1h-7zM7 7h3v1h-3zM6 8h3v1h-3zM5 9h3v1h-3zM4 10h3v1h-3zM3 11h3v1h-3zM2 12h3v1h-3zM1 13h3v1h-3z",
   branch:
     "M2 1h3v3H2V1zm1 1v1h1V2H3zm0 2h1v8H3V4zm0 8h1v3H3v-3zm0 3H2v-3h1v3zm8-13h3v3h-3V2zm1 1v1h1V3h-1zm0 2h1v2h-1V5zm-1 3h2v1h-2V8zm-2 1h2v1H8V9zm-2 1h2v1H6v-1zm-2 1h2v1H4v-1zm7 0h3v3h-3v-3zm1 1v1h1v-1h-1z",
-  btrieve:
-    "M3 1h9v1h2v12h-2v1H3v-1H1V2h2V1zm2 2v10h5v-1h2V9h-2V7h2V4h-2V3H5zm2 2h3v2H7V5zm0 4h3v2H7V9z",
   bug:
     "M4 1h1v2H4V1zm7 0h1v2h-1V1zM5 3h6v2H5V3zm-3 3h2v1H2V6zm10 0h2v1h-2V6zM1 9h3v1H1V9zm11 0h3v1h-3V9zm1 3h2v1h-2v-1zM2 12h2v1H2v-1zm2-6h8v7H4V6zm2 2h4v4H6V8z",
   cassette:
@@ -68,10 +66,10 @@ export const PIXEL_ICON_PATHS = {
     "M10 1h4v1h-4V1zM9 2h1v4H9V2zm5 0h1v4h-1V2zm-4 4h4v1h-4V6zm-8 4h7v2H2v-2zm0-2h2v2H2V8zm3 4h2v2H5v-2zm-3 2h1v1H2v-1zm10-7h2v2h-2V7zm-1-4h2v2h-2V3z",
   lock:
     "M5 2h6v2H5V2zm-2 2h2v3H3V4zm8 0h2v3h-2V4zM1 7h14v8H1V7zm2 2v4h10V9H3zm4 1h2v1H7v-1zm0 1h2v1H7v-1z",
-  maxdb:
-    "M3 1h10v1h2v12h-2v1H3v-1H1V2h2V1zm1 2v3h2V4h1v2h2V4h1v2h2V3H4zm0 5v2h8V8H4zm0 4v1h8v-1H4z",
   moon:
     "M6 1h4v1H6V1zM4 2h2v1H4V2zm6 0h2v2h-2V2zM3 3h1v2H3V3zm8 1h1v2h-1V4zM2 5h1v6H2V5zm9 1h1v4h-1V6zM3 11h1v2H3v-2zm8-1h1v2h-1v-2zm-5 4h4v1H6v-1zm4-1h2v-2h-2v2zm-6 0h2v1H4v-1z",
+  oracle:
+    "M5 2h22v2H5V2zM5 4h2v26H5V4zM25 4h2v26H25V4zM2 6h3v20H2V6zM27 6h3v20H27V6zM8 8h5v1H8V8zM14 8h5v1H14V8zM20 8h5v16H20V8zM8 9h1v15H8V9zM12 9h1v15H12V9zM14 9h1v15H14V9zM18 9h1v15H18V9zM9 23h3v1H9V23zM15 23h3v1H15V23zM7 28h18v2H7V28z",
   play:
     "M4 2h2v1H4V2zm0 1h3v1H4V3zm0 1h4v1H4V4zm0 1h5v1H4V5zm0 1h6v1H4V6zm0 1h7v2H4V7zm0 2h6v1H4V9zm0 1h5v1H4v-1zm0 1h4v1H4v-1zm0 1h3v1H4v-1zm0 1h2v1H4v-1z",
   "puppet-hand":
@@ -88,6 +86,8 @@ export const PIXEL_ICON_PATHS = {
     "M2 1h12v7c0 3-3 6-6 7-3-1-6-4-6-7V1zm1 1v6c0 2.5 2.5 5 5 5.8 2.5-.8 5-3.3 5-5.8V2H3zm8 3l-4 5-2-2 1-1 1 1 3-4 1 1z",
   sparkle:
     "M7 0h2v3H7V0zM7 13h2v3H7v-3zM0 7h3v2H0V7zm13 0h3v2h-3V7zm3-4h1v1h-1V3zm-1 1h1v1h-1V4zm-1 1h1v1h-1V5zM3 3h1v1H3V3zm1 1h1v1H4V4zm1 1h1v1H5V5zm6 6h1v1h-1v-1zm1 1h1v1h-1v-1zm1 1h1v1h-1v-1zM5 11h1v1H5v-1zm-1 1h1v1H4v-1zm-1 1h1v1H3v-1zM6 6h4v4H6V6z",
+  sqlserver:
+    "M5 2h22v2H5V2zM5 4h2v26H5V4zM25 4h2v26H25V4zM2 6h3v20H2V6zM27 6h3v20H27V6zM9 7h14v5H9V7zM15 12h2v13H15V12zM9 20h6v5H9V20zM17 20h6v5H17V20zM7 28h18v2H7V28z",
   sun:
     "M7 0h2v2H7V0zm0 14h2v2H7v-2zM0 7h2v2H0V7zm14 0h2v2h-2V7zM2 2h2v2H2V2zm10 0h2v2h-2V2zM2 12h2v2H2v-2zm10 0h2v2h-2v-2zM5 5h6v6H5V5zm1 1v4h4V6H6z",
   tailscale:
@@ -117,7 +117,6 @@ export const PIXEL_ICON_GRIDS: Record<PixelIconName, number> = {
   bigquery: 16,
   bolt: 16,
   branch: 16,
-  btrieve: 16,
   bug: 16,
   cassette: 32,
   "check-pixel": 16,
@@ -139,8 +138,8 @@ export const PIXEL_ICON_GRIDS: Record<PixelIconName, number> = {
   "jdbc-jar": 16,
   key: 16,
   lock: 16,
-  maxdb: 16,
   moon: 16,
+  oracle: 32,
   play: 16,
   "puppet-hand": 32,
   radar: 16,
@@ -149,6 +148,7 @@ export const PIXEL_ICON_GRIDS: Record<PixelIconName, number> = {
   server: 16,
   "shield-check": 16,
   sparkle: 16,
+  sqlserver: 32,
   sun: 16,
   tailscale: 16,
   telescope: 32,

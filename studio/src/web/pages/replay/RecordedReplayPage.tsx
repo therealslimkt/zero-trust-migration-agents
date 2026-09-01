@@ -12,7 +12,7 @@ export interface RecordedReplayPageProps {
   readonly onExit?: () => void;
 }
 
-const sourceOrder: readonly SourceId[] = ["jde", "maxdb", "btrieve"];
+const sourceOrder: readonly SourceId[] = ["jde", "dynamics", "ebs"];
 type ReplayPane = "source" | "compiler" | "destination";
 type ReplayLane = ReplayPane | "edge";
 

@@ -85,9 +85,9 @@ func VerifyAndConvert(facts *VerifiedCloudFacts) ([]ControlPlaneEvidence, error)
 		return nil, errors.New("verified cloud facts must not be nil")
 	}
 
-	// 1. Accept only canonical source IDs: jde, maxdb, btrieve
+	// 1. Accept only canonical source IDs: jde, dynamics, ebs
 	sourceID := facts.DataflowJob.SourceID
-	if sourceID != "jde" && sourceID != "maxdb" && sourceID != "btrieve" {
+	if sourceID != "jde" && sourceID != "dynamics" && sourceID != "ebs" {
 		return nil, errors.New("invalid or non-canonical source ID")
 	}
 	if facts.BigQueryTable.SourceID != sourceID {
@@ -125,9 +125,9 @@ func VerifyAndConvert(facts *VerifiedCloudFacts) ([]ControlPlaneEvidence, error)
 		return nil, errors.New("Google Cloud project binding mismatch")
 	}
 	registeredTable := map[string]string{
-		"jde":     "jde_f0101",
-		"maxdb":   "sap_kna1",
-		"btrieve": "accpac_arcus",
+		"jde":      "jde_f0101",
+		"dynamics": "ax_custtable",
+		"ebs":      "ebs_hz_parties",
 	}[sourceID]
 	if facts.BigQueryTable.Table != registeredTable {
 		return nil, errors.New("BigQuery target is not registered for source")

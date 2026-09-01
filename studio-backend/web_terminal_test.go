@@ -58,7 +58,7 @@ func TestWebTerminalAdmissionPersistsExactLinesAndSequences(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	second, err := store.AdmitTerminalFrame(webTerminalTestAdmission(webTerminalTestRun, "maxdb", "source", "connected to SAP MaxDB"))
+	second, err := store.AdmitTerminalFrame(webTerminalTestAdmission(webTerminalTestRun, "dynamics", "source", "connected to SAP MaxDB"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,8 +210,8 @@ func webTerminalTestHandler(t *testing.T, store *WebStateStore) http.Handler {
 		CreatedAt: webTerminalTimestamp, UpdatedAt: webTerminalTimestamp,
 		Sources: []ControlPlaneSource{
 			{SourceID: "jde", Hostname: "legacy-jde-db", State: ControlPlaneStateCreated},
-			{SourceID: "maxdb", Hostname: "legacy-maxdb", State: ControlPlaneStateCreated},
-			{SourceID: "btrieve", Hostname: "legacy-btrieve-db", State: ControlPlaneStateCreated},
+			{SourceID: "dynamics", Hostname: "dynamics-ax", State: ControlPlaneStateCreated},
+			{SourceID: "ebs", Hostname: "oracle-ebs-19c", State: ControlPlaneStateCreated},
 		},
 	}
 	handler, err := NewWebBFFHandler(WebBFFConfig{
@@ -247,7 +247,7 @@ func TestWebTerminalSSEIsOwnerScopedTypedAndExactlyResumable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	foreignSource, err := store.AdmitTerminalFrame(webTerminalTestAdmission(webTerminalTestRun, "maxdb", "source", "connected"))
+	foreignSource, err := store.AdmitTerminalFrame(webTerminalTestAdmission(webTerminalTestRun, "dynamics", "source", "connected"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -337,7 +337,7 @@ func TestWebTerminalTimestampMustBeMonotonicPerRun(t *testing.T) {
 	if _, err := store.AdmitTerminalFrame(first); err != nil {
 		t.Fatal(err)
 	}
-	second := webTerminalTestAdmission(webTerminalTestRun, "maxdb", "source", "second")
+	second := webTerminalTestAdmission(webTerminalTestRun, "dynamics", "source", "second")
 	second.Timestamp = "2026-08-27T12:00:00.000Z"
 	if _, err := store.AdmitTerminalFrame(second); !errors.Is(err, ErrWebTerminalFrameRejected) {
 		t.Fatalf("backdated frame error = %v", err)

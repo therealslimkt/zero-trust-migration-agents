@@ -132,10 +132,10 @@ class MissionControl:
 CARTRIDGES = {
     "jde": {"host": "legacy-jde-db", "label": "JD Edwards EnterpriseOne on IBM i",
             "record_set": "F0101", "table": "jde_f0101"},
-    "maxdb": {"host": "legacy-maxdb", "label": "SAP ERP on MaxDB",
-              "record_set": "KNA1", "table": "sap_kna1_clustered"},
-    "btrieve": {"host": "legacy-btrieve-db", "label": "Sage 300 on Actian Zen",
-                "record_set": "ARCUS", "table": "accpac_arcus"},
+    "dynamics": {"host": "dynamics-ax", "label": "Microsoft Dynamics AX 2012 R3 on SQL Server",
+                 "record_set": "CustTable", "table": "ax_custtable"},
+    "ebs": {"host": "oracle-ebs-19c", "label": "Oracle E-Business Suite on Oracle 19c",
+            "record_set": "HZ_PARTIES", "table": "ebs_hz_parties"},
 }
 
 
@@ -145,9 +145,6 @@ def _digest(text: str) -> str:
 
 def _export(source: str) -> bytes:
     """Produce the cartridge export exactly as the sealed emulator would."""
-    if source == "maxdb":
-        from tools.simulator.maxdb_kna1_generator import build_maxdb_export
-        return build_maxdb_export()
     if source == "jde":
         from tools.simulator.jde_f0101_generator import generate_f0101_record
         return b"".join(generate_f0101_record(an8, alph, tax) for an8, alph, tax in (
@@ -155,22 +152,20 @@ def _export(source: str) -> bytes:
             (2, "Blue Heron Manufacturing Ltd", "CA"),
             (3, "Juniper Industrial GmbH", "DE"),
         ))
-    if source == "btrieve":
-        import struct as _struct
-        page = 4096
-        fcb = bytearray(page)
-        _struct.pack_into("<4sH", fcb, 0, b"FCB ", page)
-        data = bytearray(page)
-        _struct.pack_into("<IB", data, 0, 0xFFFFFFFF, 0x00)
-        _struct.pack_into("<H40sf", data, 5, 46,
-                          b"SAGE_ACCPAC_CUSTOMER_01".ljust(40, b"\0"), 1530.50)
-        return bytes(fcb + data)
-    raise SystemExit(f"no export generator wired for {source}")
+    # Dynamics AX and Oracle EBS have no binary export to simulate. Their
+    # defects are relational, so the stage executor reads their tables directly
+    # rather than decoding a generated blob.
+    raise NotImplementedError(
+        f"{source} is read relationally by scripts/stage_executor.py; there is no export to generate")
 
 
 def _decode(source: str, payload):
-    from edge_runtime.adapters import btrieve, jde, maxdb
-    return {"maxdb": maxdb, "jde": jde, "btrieve": btrieve}[source].decode(payload)
+    from edge_runtime.adapters import jde
+    if source != "jde":
+        raise NotImplementedError(
+            f"{source} has no byte-level decoder; it is resolved relationally by "
+            "dynamics_beam_pipeline / ebs_beam_pipeline")
+    return jde.decode(payload)
 
 
 def plan_source(mc: "MissionControl", source: str) -> dict:
@@ -282,7 +277,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("phase", choices=["plan", "execute"],
                         help="plan stops at the approval gate; execute resumes after approval")
-    parser.add_argument("--sources", default="maxdb",
+    parser.add_argument("--sources", default="jde",
                         help="comma-separated cartridge ids, or 'all'")
     parser.add_argument("--run-id", default=os.environ.get("MISSION_CONTROL_RUN_ID"))
     parser.add_argument("--project", default="ztm-agent-9049c3")

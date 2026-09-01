@@ -29,8 +29,8 @@ _TERMINAL_STREAMS = frozenset({"command", "stdout", "stderr", "system", "metric"
 _TERMINAL_SEVERITIES = frozenset({"debug", "info", "warning", "error"})
 _HOSTS = {
     "jde": "legacy-jde-db",
-    "maxdb": "legacy-maxdb",
-    "btrieve": "legacy-btrieve-db",
+    "dynamics": "dynamics-ax",
+    "ebs": "oracle-ebs-19c",
 }
 
 

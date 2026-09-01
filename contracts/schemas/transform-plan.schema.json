@@ -17,7 +17,7 @@
       "required": ["dataset", "table"],
       "properties": {
         "dataset": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,1023}$"},
-        "table": {"type": "string", "enum": ["jde_f0101", "sap_kna1", "accpac_arcus"]}
+        "table": {"type": "string", "enum": ["jde_f0101", "ax_custtable", "ebs_hz_parties"]}
       }
     },
     "operations": {

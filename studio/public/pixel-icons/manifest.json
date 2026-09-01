@@ -51,12 +51,6 @@
       "grid": 16
     },
     {
-      "name": "btrieve",
-      "file": "icons/btrieve.svg",
-      "symbol": "pixel-btrieve",
-      "grid": 16
-    },
-    {
       "name": "bug",
       "file": "icons/bug.svg",
       "symbol": "pixel-bug",
@@ -183,16 +177,16 @@
       "grid": 16
     },
     {
-      "name": "maxdb",
-      "file": "icons/maxdb.svg",
-      "symbol": "pixel-maxdb",
-      "grid": 16
-    },
-    {
       "name": "moon",
       "file": "icons/moon.svg",
       "symbol": "pixel-moon",
       "grid": 16
+    },
+    {
+      "name": "oracle",
+      "file": "icons/oracle.svg",
+      "symbol": "pixel-oracle",
+      "grid": 32
     },
     {
       "name": "play",
@@ -241,6 +235,12 @@
       "file": "icons/sparkle.svg",
       "symbol": "pixel-sparkle",
       "grid": 16
+    },
+    {
+      "name": "sqlserver",
+      "file": "icons/sqlserver.svg",
+      "symbol": "pixel-sqlserver",
+      "grid": 32
     },
     {
       "name": "sun",

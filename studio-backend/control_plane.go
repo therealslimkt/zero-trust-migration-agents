@@ -140,8 +140,8 @@ var cpCanonicalSources = []struct {
 	Label    string
 }{
 	{SourceID: "jde", Hostname: "legacy-jde-db", Label: "JDE"},
-	{SourceID: "maxdb", Hostname: "legacy-maxdb", Label: "MaxDB"},
-	{SourceID: "btrieve", Hostname: "legacy-btrieve-db", Label: "Btrieve"},
+	{SourceID: "dynamics", Hostname: "dynamics-ax", Label: "Dynamics AX"},
+	{SourceID: "ebs", Hostname: "oracle-ebs-19c", Label: "Oracle EBS"},
 }
 
 func cpCanonicalHostname(sourceID string) (string, bool) {

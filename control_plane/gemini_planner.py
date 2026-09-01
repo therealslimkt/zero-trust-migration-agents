@@ -50,7 +50,7 @@ CLOUD_OPERATIONS = frozenset({"rename", "cast", "drop"})
 
 SYSTEM_INSTRUCTIONS = """You compile three already decoded and tokenized legacy
 record batches into declarative TransformPlan drafts. Return JSON only with
-exactly one plans array and one draft for jde, maxdb, and btrieve. Each draft
+exactly one plans array and one draft for jde, dynamics, and ebs. Each draft
 contains only sourceId, operations, and outputFields. Use only the operations
 defined by the supplied contract. Never emit code, commands, scripts, SQL,
 expressions, callbacks, tools, or execution claims. You plan; you do not run.

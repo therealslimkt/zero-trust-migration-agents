@@ -121,7 +121,7 @@ function useRunEvents(client: LiveWebClient, runId?: string) {
   return { events, connection }
 }
 
-const sourceIds: readonly SourceId[] = ['jde', 'maxdb', 'btrieve']
+const sourceIds: readonly SourceId[] = ['jde', 'dynamics', 'ebs']
 
 export function SourceDetailRoute() {
   const client = useLiveClient()

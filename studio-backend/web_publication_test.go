@@ -46,7 +46,7 @@ func webTestManifest(t *testing.T) DemoManifest {
 		}
 	}
 	source := func(id WebSourceID, hostname, displayName, rawHex, table, digit string) WebSourceReplay {
-		globalSequence := map[WebSourceID]int64{"jde": 1, "maxdb": 2, "btrieve": 3}[id]
+		globalSequence := map[WebSourceID]int64{"jde": 1, "dynamics": 2, "ebs": 3}[id]
 		return WebSourceReplay{
 			SourceID: id, Hostname: hostname, DisplayName: displayName,
 			Source: WebSourceSystemReplay{
@@ -108,8 +108,8 @@ func webTestManifest(t *testing.T) DemoManifest {
 		},
 		Sources: []WebSourceReplay{
 			source("jde", "legacy-jde-db", "JD Edwards World", "f1f2f3", "jde_f0101", "b"),
-			source("maxdb", "legacy-maxdb", "SAP MaxDB", "414243", "sap_kna1", "c"),
-			source("btrieve", "legacy-btrieve-db", "Sage Accpac", "010203", "accpac_arcus", "d"),
+			source("dynamics", "dynamics-ax", "SAP MaxDB", "414243", "ax_custtable", "c"),
+			source("ebs", "oracle-ebs-19c", "Sage Accpac", "010203", "ebs_hz_parties", "d"),
 		},
 		Events: []WebReplayEvent{
 			{Sequence: 1, EventID: "evt_migrationcreated01", Timestamp: "2026-08-27T08:00:00Z", EventType: "migration.created", State: "created", Summary: "Recorded migration created.", EvidenceReferences: []WebEvidenceReference{}},
@@ -171,7 +171,7 @@ func TestDemoManifestDigestIsDeterministicAndOmitsOnlyItsOwnField(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	const golden = "sha256:b9f5b56fba4dafccdb31b99ce60593d24fb9dea16e060d858b86cad124da25ce"
+	const golden = "sha256:29d33d5f3b53cdc54e9e9001f7c011fd8fb3efeee1d5ea6309d8e89a82760835"
 	if first != golden {
 		t.Fatalf("digest = %s, want golden %s", first, golden)
 	}

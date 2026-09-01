@@ -50,7 +50,7 @@ def _run(state="approved"):
         "state": state,
         "sources": [
             {"sourceId": source_id, "state": state}
-            for source_id in ("jde", "maxdb", "btrieve")
+            for source_id in ("jde", "dynamics", "ebs")
         ],
     }
 

@@ -36,7 +36,7 @@ function isTerminalFrame(value: unknown): value is TerminalFrame {
     value.schemaVersion !== WEB_SCHEMA_VERSION ||
     typeof value.frameId !== 'string' || !FRAME_ID.test(value.frameId) ||
     typeof value.runId !== 'string' || !RUN_ID.test(value.runId) ||
-    !['jde', 'maxdb', 'btrieve'].includes(String(value.sourceId)) ||
+    !['jde', 'dynamics', 'ebs'].includes(String(value.sourceId)) ||
     !Number.isSafeInteger(value.globalSequence) || Number(value.globalSequence) < 1 ||
     !Number.isSafeInteger(value.laneSequence) || Number(value.laneSequence) < 1 ||
     typeof value.timestamp !== 'string' || !TIMESTAMP.test(value.timestamp) || Number.isNaN(Date.parse(value.timestamp)) ||

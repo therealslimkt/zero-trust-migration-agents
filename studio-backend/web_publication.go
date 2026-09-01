@@ -43,7 +43,7 @@ var webCredentialKeys = map[string]struct{}{
 }
 
 var webCanonicalSourceHostnames = map[WebSourceID]string{
-	"jde": "legacy-jde-db", "maxdb": "legacy-maxdb", "btrieve": "legacy-btrieve-db",
+	"jde": "legacy-jde-db", "dynamics": "dynamics-ax", "ebs": "oracle-ebs-19c",
 }
 
 var webSourceScopedEventTypes = map[string]bool{
