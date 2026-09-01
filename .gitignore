@@ -26,3 +26,7 @@ worktrees/
 # Editor-local project state
 .nova/
 .DS_Store
+
+# Go build output. The Docker build compiles its own Linux binary;
+# this is a local artifact and must never be committed.
+studio-backend/mission-control
