@@ -23,6 +23,8 @@ import os
 import re
 import subprocess
 import sys
+import threading
+import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -31,8 +33,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-HOST = "127.0.0.1"
-PORT = 4345
+# Loopback by default so a local run is never reachable off-box. The hosted
+# cartridge lab sets this to its VPC address so Cloud Run can reach it.
+HOST = os.environ.get("KERAUN_STAGE_EXECUTOR_HOST", "127.0.0.1")
+PORT = int(os.environ.get("KERAUN_STAGE_EXECUTOR_PORT", "4345"))
 PROJECT = "keraun-cartridge-lab"
 COMPOSE = ("docker", "compose", "--project-name", PROJECT,
            "-f", str(ROOT / "cartridge_runtime/host/compose.yaml"),
@@ -944,6 +948,76 @@ def stage_bq(cartridge: str, sql: str, project: str) -> dict[str, Any]:
 
 
 # ------------------------------------------------------------------ server --
+# ---------------------------------------------------------------------------
+# Rate limiting
+#
+# The hosted lab is open to anyone, and four of the stages spend real money:
+# land runs a BigQuery load job, embed calls Vertex through the warehouse, and
+# search and bq each run a query. A per-IP bucket alone would not protect that,
+# because the only client address available behind the proxy comes from
+# X-Forwarded-For, which the caller controls. So the budget is defended by a
+# global cap that no caller can opt out of, and the per-IP bucket exists only to
+# keep one visitor from crowding out the others.
+# ---------------------------------------------------------------------------
+
+BILLABLE_STAGES = frozenset({"land", "embed", "search", "bq"})
+
+_RATE_WINDOW_SECONDS = 60.0
+_RATE_PER_IP = int(os.environ.get("KERAUN_RATE_PER_IP", "20"))
+_RATE_GLOBAL = int(os.environ.get("KERAUN_RATE_GLOBAL", "60"))
+_BILLABLE_DAILY_CAP = int(os.environ.get("KERAUN_BILLABLE_DAILY_CAP", "150"))
+
+
+class RateLimiter:
+    """Sliding-window counters guarding throughput and daily spend."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._per_ip: dict[str, list[float]] = {}
+        self._global: list[float] = []
+        self._billable: list[float] = []
+
+    @staticmethod
+    def _prune(stamps: list[float], now: float, window: float) -> None:
+        cutoff = now - window
+        while stamps and stamps[0] < cutoff:
+            stamps.pop(0)
+
+    def check(self, client: str, stage: str) -> str | None:
+        """Return a refusal code, or None when the call may proceed."""
+        now = time.monotonic()
+        with self._lock:
+            # The daily cap is the one that protects the bill, so it is checked
+            # first and is never bypassed.
+            if stage in BILLABLE_STAGES:
+                self._prune(self._billable, now, 86400.0)
+                if len(self._billable) >= _BILLABLE_DAILY_CAP:
+                    return "billable_daily_cap"
+
+            self._prune(self._global, now, _RATE_WINDOW_SECONDS)
+            if len(self._global) >= _RATE_GLOBAL:
+                return "rate_limited_global"
+
+            stamps = self._per_ip.setdefault(client, [])
+            self._prune(stamps, now, _RATE_WINDOW_SECONDS)
+            if len(stamps) >= _RATE_PER_IP:
+                return "rate_limited"
+
+            stamps.append(now)
+            self._global.append(now)
+            if stage in BILLABLE_STAGES:
+                self._billable.append(now)
+
+            # Keep the per-IP table from growing without bound.
+            if len(self._per_ip) > 4096:
+                for key in [k for k, v in self._per_ip.items() if not v]:
+                    del self._per_ip[key]
+        return None
+
+
+LIMITER = RateLimiter()
+
+
 def handler_for(token: str, project: str, dataset: str):
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
@@ -954,6 +1028,17 @@ def handler_for(token: str, project: str, dataset: str):
         def authorized(self) -> bool:
             return hmac.compare_digest(
                 self.headers.get("Authorization", ""), f"Bearer {token}")
+
+        def client_id(self) -> str:
+            """Best-effort caller identity for the courtesy per-IP bucket.
+
+            X-Forwarded-For is supplied by the caller, so this is not a
+            security boundary; the global cap is what actually holds.
+            """
+            forwarded = self.headers.get("X-Forwarded-For", "")
+            if forwarded:
+                return forwarded.split(",")[0].strip()[:64]
+            return self.client_address[0]
 
         def send_json(self, status: HTTPStatus, body: dict[str, Any]) -> None:
             payload = json.dumps(body, separators=(",", ":")).encode()
@@ -990,6 +1075,10 @@ def handler_for(token: str, project: str, dataset: str):
                 self.send_json(HTTPStatus.NOT_FOUND, {"code": "not_found"})
                 return
             stage = self.path.rsplit("/", 1)[-1]
+            refusal = LIMITER.check(self.client_id(), stage)
+            if refusal is not None:
+                self.send_json(HTTPStatus.TOO_MANY_REQUESTS, {"code": refusal})
+                return
             try:
                 payload = self.body()
                 cartridge = payload.get("cartridge")
@@ -1039,7 +1128,10 @@ def main() -> int:
     project = os.environ.get("GOOGLE_CLOUD_PROJECT", "ztm-agent-9049c3")
     dataset = os.environ.get("KERAUN_BQ_DATASET", "keraun_demo")
     server = ThreadingHTTPServer((HOST, PORT), handler_for(token, project, dataset))
-    print(f"Keraun stage executor listening on http://{HOST}:{PORT}", flush=True)
+    exposure = "loopback only" if HOST in ("127.0.0.1", "localhost") else "REACHABLE OFF-BOX"
+    print(f"Keraun stage executor listening on http://{HOST}:{PORT}  ({exposure})", flush=True)
+    print(f"  limits: {_RATE_PER_IP}/min per caller, {_RATE_GLOBAL}/min overall, "
+          f"{_BILLABLE_DAILY_CAP}/day for land, embed, search and bq", flush=True)
     try:
         server.serve_forever()
     finally:
