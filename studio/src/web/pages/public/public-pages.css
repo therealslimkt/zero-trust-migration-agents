@@ -1074,7 +1074,8 @@
 
 .about-architecture-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* Four principles, so two-up rather than three-plus-a-widow. */
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 .about-tech-icon { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 auto; border: 1px solid currentColor; background: var(--pixel-surface-sunken); }
@@ -1141,6 +1142,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* The card is a flex column with its own gap; the UA margin doubled it. */
+  margin: 0;
+  line-height: var(--leading-snug);
+}
+
+.about-source-card > p {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--pixel-text-secondary);
 }
 
 .about-source-card__spec-list {
