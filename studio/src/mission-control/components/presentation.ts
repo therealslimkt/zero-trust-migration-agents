@@ -157,7 +157,7 @@ export function presentationFor(sourceId: SourceId): SourcePresentationView {
   const label = raw.humanLabel;
   return {
     label,
-    shortLabel: sourceId === 'jde' ? 'JDE' : sourceId === 'maxdb' ? 'MaxDB' : 'Btrieve',
+    shortLabel: sourceId === 'jde' ? 'JDE' : sourceId === 'dynamics' ? 'Dynamics AX' : 'Oracle EBS',
     hostname: raw.hostname,
     legacyFormat: `${raw.legacyDatabase} · ${raw.encoding}`,
     bigQueryTarget: raw.bigQueryDestination,

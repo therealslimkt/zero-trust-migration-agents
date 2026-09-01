@@ -9,9 +9,9 @@
 
 export const MIGRATION_SCHEMA_VERSION = "1.0.0" as const;
 
-export type SourceId = "jde" | "maxdb" | "btrieve";
+export type SourceId = "jde" | "dynamics" | "ebs";
 
-export type SourceHostname = "legacy-jde-db" | "legacy-maxdb" | "legacy-btrieve-db";
+export type SourceHostname = "legacy-jde-db" | "dynamics-ax" | "oracle-ebs-19c";
 
 export type RunState =
   | "created"
@@ -148,7 +148,7 @@ export interface ProblemDetails {
   requestId?: string;
 }
 
-export const SOURCE_ORDER = ["jde", "maxdb", "btrieve"] as const satisfies readonly SourceId[];
+export const SOURCE_ORDER = ["jde", "dynamics", "ebs"] as const satisfies readonly SourceId[];
 
 export interface SourcePresentation {
   hostname: SourceHostname;
@@ -162,24 +162,24 @@ export const SOURCE_PRESENTATION: Readonly<Record<SourceId, Readonly<SourcePrese
   Object.freeze({
     jde: Object.freeze({
       hostname: "legacy-jde-db",
-      humanLabel: "JD Edwards World",
+      humanLabel: "JD Edwards EnterpriseOne",
       legacyDatabase: "IBM Db2 for i / AS/400",
       encoding: "EBCDIC + packed decimal",
       bigQueryDestination: "legacy_migration.jde_f0101",
     }),
-    maxdb: Object.freeze({
-      hostname: "legacy-maxdb",
-      humanLabel: "SAP ERP",
-      legacyDatabase: "SAP MaxDB 7.9",
-      encoding: "ASCII / binary",
-      bigQueryDestination: "legacy_migration.sap_kna1",
+    dynamics: Object.freeze({
+      hostname: "dynamics-ax",
+      humanLabel: "Microsoft Dynamics AX",
+      legacyDatabase: "Microsoft SQL Server / AX 2012 R3",
+      encoding: "Relational; inheritance across two tables",
+      bigQueryDestination: "legacy_migration.ax_custtable",
     }),
-    btrieve: Object.freeze({
-      hostname: "legacy-btrieve-db",
-      humanLabel: "Sage Accpac",
-      legacyDatabase: "Pervasive Btrieve",
-      encoding: "Btrieve page binary",
-      bigQueryDestination: "legacy_migration.accpac_arcus",
+    ebs: Object.freeze({
+      hostname: "oracle-ebs-19c",
+      humanLabel: "Oracle E-Business Suite",
+      legacyDatabase: "Oracle Database 19c",
+      encoding: "Relational; descriptive flexfields",
+      bigQueryDestination: "legacy_migration.ebs_hz_parties",
     }),
   });
 

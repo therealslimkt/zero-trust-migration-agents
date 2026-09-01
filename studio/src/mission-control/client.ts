@@ -665,7 +665,7 @@ function isRunState(value: unknown): value is RunState {
 }
 
 function isSourceId(value: unknown): value is SourceId {
-  return value === "jde" || value === "maxdb" || value === "btrieve";
+  return value === "jde" || value === "dynamics" || value === "ebs";
 }
 
 function isDateTime(value: unknown): value is string {

@@ -31,8 +31,8 @@ function approvalRun(): MigrationRun {
     // Deliberately shuffled: the view must always emit canonical lane order.
     sources: [
       {
-        sourceId: "btrieve",
-        hostname: "legacy-btrieve-db",
+        sourceId: "ebs",
+        hostname: "oracle-ebs-19c",
         state: "awaiting_approval",
         recordsRead: 1,
         recordsWritten: 0,
@@ -49,8 +49,8 @@ function approvalRun(): MigrationRun {
         planDigest: DIGEST_A,
       },
       {
-        sourceId: "maxdb",
-        hostname: "legacy-maxdb",
+        sourceId: "dynamics",
+        hostname: "dynamics-ax",
         state: "awaiting_approval",
         recordsRead: 4,
         recordsWritten: 0,
@@ -97,7 +97,7 @@ function testModelProjection(): void {
   equal(view.lanes.map((lane) => lane.sourceId).join(","), "jde,maxdb,btrieve", "lane order");
   equal(view.lanes[0]?.counts.read, 4, "JDE read count");
   equal(view.lanes[0]?.evidence.length, 1, "source evidence count");
-  equal(view.lanes[1]?.evidence.length, 0, "MaxDB must not inherit JDE evidence");
+  equal(view.lanes[1]?.evidence.length, 0, "Dynamics AX must not inherit JDE evidence");
   equal(view.portfolioEvidence.length, 1, "portfolio evidence count");
   assert(view.portfolioEvidence[0]?.sourceId === undefined, "portfolio evidence must stay unscoped");
   assert(view.approvalEnabled, "complete trusted gate should enable approval");
@@ -148,8 +148,8 @@ async function testAuthenticatedResumption(): Promise<void> {
   const secondEvent: MigrationSseEvent = {
     ...baseEvent,
     eventId: "evt_SOURCEEVENT02",
-    sourceId: "maxdb",
-    summary: "MaxDB transform plan is ready for portfolio approval.",
+    sourceId: "dynamics",
+    summary: "Dynamics AX transform plan is ready for portfolio approval.",
     evidenceReferences: [{ artifactId: "art_maxdb-plan01", kind: "transform_plan", digest: DIGEST_B }],
   };
   const authorizationHeaders: string[] = [];
@@ -240,8 +240,8 @@ async function testFrozenRestMethods(): Promise<void> {
     portfolioName: run.portfolioName,
     sources: [
       { sourceId: "jde", hostname: "legacy-jde-db" },
-      { sourceId: "maxdb", hostname: "legacy-maxdb" },
-      { sourceId: "btrieve", hostname: "legacy-btrieve-db" },
+      { sourceId: "dynamics", hostname: "dynamics-ax" },
+      { sourceId: "ebs", hostname: "oracle-ebs-19c" },
     ],
     requestedBy: "migration-operator",
   });
@@ -330,8 +330,8 @@ async function testTransportFailureStaysStaleUntilRecovery(): Promise<void> {
   const recoveredEvent: MigrationSseEvent = {
     ...firstEvent,
     eventId: "evt_SOURCEEVENT03",
-    sourceId: "btrieve",
-    summary: "Btrieve transform plan is ready after transport recovery.",
+    sourceId: "ebs",
+    summary: "Oracle EBS transform plan is ready after transport recovery.",
     evidenceReferences: [{ artifactId: "art_btrieve-plan1", kind: "transform_plan", digest: DIGEST_C }],
   };
   const connectionStates: string[] = [];

@@ -6,10 +6,11 @@
   <symbol id="pixel-bigquery" viewBox="0 0 16 16"><path d="M4 0h7v2h2v2h2v7h-2v2h-2v2H4v-2H2v-2H0V4h2V2h2V0zm0 3v9h7v-1h2V4h-2V3H4zm1 6h1v2H5V9zm2-3h1v5H7V6zm2 1h1v4H9V7zm2 5h2v2h-2v-2zm2 2h2v2h-2v-2z"/></symbol>
   <symbol id="pixel-bolt" viewBox="0 0 16 16"><path d="M8 0h3v1h-3zM7 1h3v1h-3zM6 2h3v1h-3zM5 3h3v1h-3zM4 4h3v1h-3zM3 5h7v1h-7zM2 6h7v1h-7zM7 7h3v1h-3zM6 8h3v1h-3zM5 9h3v1h-3zM4 10h3v1h-3zM3 11h3v1h-3zM2 12h3v1h-3zM1 13h3v1h-3z"/></symbol>
   <symbol id="pixel-branch" viewBox="0 0 16 16"><path d="M2 1h3v3H2V1zm1 1v1h1V2H3zm0 2h1v8H3V4zm0 8h1v3H3v-3zm0 3H2v-3h1v3zm8-13h3v3h-3V2zm1 1v1h1V3h-1zm0 2h1v2h-1V5zm-1 3h2v1h-2V8zm-2 1h2v1H8V9zm-2 1h2v1H6v-1zm-2 1h2v1H4v-1zm7 0h3v3h-3v-3zm1 1v1h1v-1h-1z"/></symbol>
-  <symbol id="pixel-btrieve" viewBox="0 0 16 16"><path d="M3 1h9v1h2v12h-2v1H3v-1H1V2h2V1zm2 2v10h5v-1h2V9h-2V7h2V4h-2V3H5zm2 2h3v2H7V5zm0 4h3v2H7V9z"/></symbol>
   <symbol id="pixel-bug" viewBox="0 0 16 16"><path d="M4 1h1v2H4V1zm7 0h1v2h-1V1zM5 3h6v2H5V3zm-3 3h2v1H2V6zm10 0h2v1h-2V6zM1 9h3v1H1V9zm11 0h3v1h-3V9zm1 3h2v1h-2v-1zM2 12h2v1H2v-1zm2-6h8v7H4V6zm2 2h4v4H6V8z"/></symbol>
+  <symbol id="pixel-cassette" viewBox="0 0 32 32"><path d="M2 6h28v2H2V6zM2 8h2v18H2V8zM28 8h2v18H28V8zM6 10h20v2H6V10zM6 13h12v1H6V13zM6 16h20v1H6V16zM6 17h1v5H6V17zM25 17h1v5H25V17zM10 18h3v1H10V18zM19 18h3v1H19V18zM10 19h1v3H10V19zM12 19h1v3H12V19zM19 19h1v3H19V19zM21 19h1v3H21V19zM11 20h1v2H11V20zM20 20h1v2H20V20zM7 21h3v1H7V21zM13 21h6v1H13V21zM22 21h3v1H22V21zM4 24h24v2H4V24zM7 26h4v2H7V26zM21 26h4v2H21V26z"/></symbol>
   <symbol id="pixel-check-pixel" viewBox="0 0 16 16"><path d="M14 3h2v2h-2V3zm-2 2h2v2h-2V5zm-2 2h2v2h-2V7zm-2 2h2v2H8V9zM6 11h2v2H6v-2zM4 9h2v2H4V9zM2 7h2v2H2V7zm-2 0h2v2H0V7z"/></symbol>
   <symbol id="pixel-cloud-run" viewBox="0 0 16 16"><path d="M3 0h10v2h2v4h-2v2h-2V6h2V2H3v4h2v2H3V6H1V2h2V0zm4 4h2v8h3v2H9v2H7v-2H4v-2h3V4zm-2 5h2v2H5V9zm4 0h2v2H9V9z"/></symbol>
+  <symbol id="pixel-compass-draft" viewBox="0 0 32 32"><path d="M14 1h4v10H14V1zM13 3h1v4H13V3zM18 3h1v13H18V3zM13 9h1v10H13V9zM19 9h1v10H19V9zM14 11h2v3H14V11zM17 11h1v3H17V11zM12 12h1v10H12V12zM20 12h1v10H20V12zM11 14h1v10H11V14zM14 14h1v2H14V14zM21 14h1v10H21V14zM10 17h1v10H10V17zM22 17h1v10H22V17zM9 20h1v9H9V20zM23 20h1v10H23V20zM8 22h1v8H8V22zM24 22h1v8H24V22zM7 25h1v5H7V25zM25 25h1v5H25V25zM6 28h1v2H6V28zM12 29h2v1H12V29zM18 29h2v1H18V29zM15 30h2v1H15V30z"/></symbol>
   <symbol id="pixel-compute-engine" viewBox="0 0 16 16"><path d="M4 0h8v2h2v2h2v8h-2v2h-2v2H4v-2H2v-2H0V4h2V2h2V0zm0 3v10h8V3H4zm2 2h4v4H6V5zm1 1v2h2V6H7zm-2 5h6v1H5v-1z"/></symbol>
   <symbol id="pixel-copy" viewBox="0 0 16 16"><path d="M2 1h9v1h-9zM2 2h1v1h-1zM10 2h1v1h-1zM2 3h1v1h-1zM10 3h1v1h-1zM2 4h1v1h-1zM5 4h9v1h-9zM2 5h1v1h-1zM5 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM13 6h1v1h-1zM2 7h4v1h-4zM13 7h1v1h-1zM5 8h1v1h-1zM13 8h1v1h-1zM5 9h1v1h-1zM13 9h1v1h-1zM5 10h1v1h-1zM13 10h1v1h-1zM5 11h1v1h-1zM13 11h1v1h-1zM5 12h9v1h-9z"/></symbol>
   <symbol id="pixel-cpu" viewBox="0 0 16 16"><path d="M4 0h1v2H4V0zm7 0h1v2h-1V0zM0 4h2v1H0V4zm0 7h2v1H0v-1zm14-7h2v1h-2V4zm0 7h2v1h-2v-1zM4 14h1v2H4v-2zm7 0h1v2h-1v-2zM2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5zm1 1v4h4V6H6z"/></symbol>
@@ -26,17 +27,20 @@
   <symbol id="pixel-jdbc-jar" viewBox="0 0 16 16"><path d="M4 0h7v2H4V0zM3 2h9v2H3V2zM2 4h11v10H2V4zm2 2v6h7V6H4zm2 1h3v1H6V7zm0 2h4v1H6V9zm7-4h2v2h-2V5zm0 4h2v2h-2V9zm1-2h2v2h-2V7z"/></symbol>
   <symbol id="pixel-key" viewBox="0 0 16 16"><path d="M10 1h4v1h-4V1zM9 2h1v4H9V2zm5 0h1v4h-1V2zm-4 4h4v1h-4V6zm-8 4h7v2H2v-2zm0-2h2v2H2V8zm3 4h2v2H5v-2zm-3 2h1v1H2v-1zm10-7h2v2h-2V7zm-1-4h2v2h-2V3z"/></symbol>
   <symbol id="pixel-lock" viewBox="0 0 16 16"><path d="M5 2h6v2H5V2zm-2 2h2v3H3V4zm8 0h2v3h-2V4zM1 7h14v8H1V7zm2 2v4h10V9H3zm4 1h2v1H7v-1zm0 1h2v1H7v-1z"/></symbol>
-  <symbol id="pixel-maxdb" viewBox="0 0 16 16"><path d="M3 1h10v1h2v12h-2v1H3v-1H1V2h2V1zm1 2v3h2V4h1v2h2V4h1v2h2V3H4zm0 5v2h8V8H4zm0 4v1h8v-1H4z"/></symbol>
   <symbol id="pixel-moon" viewBox="0 0 16 16"><path d="M6 1h4v1H6V1zM4 2h2v1H4V2zm6 0h2v2h-2V2zM3 3h1v2H3V3zm8 1h1v2h-1V4zM2 5h1v6H2V5zm9 1h1v4h-1V6zM3 11h1v2H3v-2zm8-1h1v2h-1v-2zm-5 4h4v1H6v-1zm4-1h2v-2h-2v2zm-6 0h2v1H4v-1z"/></symbol>
+  <symbol id="pixel-oracle" viewBox="0 0 32 32"><path d="M5 2h22v2H5V2zM5 4h2v26H5V4zM25 4h2v26H25V4zM2 6h3v20H2V6zM27 6h3v20H27V6zM8 8h5v1H8V8zM14 8h5v1H14V8zM20 8h5v16H20V8zM8 9h1v15H8V9zM12 9h1v15H12V9zM14 9h1v15H14V9zM18 9h1v15H18V9zM9 23h3v1H9V23zM15 23h3v1H15V23zM7 28h18v2H7V28z"/></symbol>
   <symbol id="pixel-play" viewBox="0 0 16 16"><path d="M4 2h2v1H4V2zm0 1h3v1H4V3zm0 1h4v1H4V4zm0 1h5v1H4V5zm0 1h6v1H4V6zm0 1h7v2H4V7zm0 2h6v1H4V9zm0 1h5v1H4v-1zm0 1h4v1H4v-1zm0 1h3v1H4v-1zm0 1h2v1H4v-1z"/></symbol>
+  <symbol id="pixel-puppet-hand" viewBox="0 0 32 32"><path d="M15 0h2v8H15V0zM4 5h11v3H4V5zM17 5h11v3H17V5zM8 8h1v14H8V8zM16 8h1v19H16V8zM23 8h1v14H23V8zM13 13h3v2H13V13zM17 13h2v2H17V13zM13 15h1v4H13V15zM15 15h1v12H15V15zM18 15h1v4H18V15zM14 16h1v3H14V16zM17 16h1v3H17V16zM9 20h6v2H9V20zM17 20h6v2H17V20zM13 22h2v10H13V22zM17 22h2v10H17V22zM11 30h2v2H11V30zM19 30h2v2H19V30z"/></symbol>
   <symbol id="pixel-radar" viewBox="0 0 16 16"><path d="M7 0h2v1H7V0zM3 1h2v1H3V1zm8 0h2v1h-2V1zM1 3h2v1H1V3zm12 0h2v1h-2V3zM0 7h1v2H0V7zm15 0h1v2h-1V7zM1 12h2v1H1v-1zm12 0h2v1h-2v-1zM3 14h2v1H3v-1zm8 0h2v1h-2v-1zM7 15h2v1H7v-1zM7 3h2v4h4v2H9v4H7V9H3V7h4V3zm1 3v2h2V6H8z"/></symbol>
   <symbol id="pixel-rewind" viewBox="0 0 16 16"><path d="M7 2h1v12H7V2zm-1 2h1v8H6V4zm-1 1h1v6H5V5zm-1 1h1v4H4V6zm-1 1h1v2H3V7zm11-5h1v12h-1V2zm-1 2h1v8h-1V4zm-1 1h1v6h-1V5zm-1 1h1v4h-1V6zm-1 1h1v2h-1V7z"/></symbol>
   <symbol id="pixel-satellite" viewBox="0 0 16 16"><path d="M0 0h4v2H0V0zm1 2h2v2H1V2zm5 1h1v1H6V3zm1 1h1v1H7V4zm1 1h1v1H8V5zm1 1h1v1H9V6zm-3 2h2v2H6V8zm6-7h4v2h-4V1zm0 2h1v2h-1V3zm2 0h1v2h-1V3zm-2 2h3v1h-3V5zm0 1h1v2h-1V6zm2 0h1v2h-1V6zm-2 2h4v2h-4V8zM1 11h2v4H1v-4zm2 0h2v1H3v-1zm2 2h2v1H5v-1zm-2 2h2v1H3v-1zm8-4h4v4h-4v-4z"/></symbol>
   <symbol id="pixel-server" viewBox="0 0 16 16"><path d="M1 1h14v4H1V1zm1 1v2h12V2H2zm1 1h1v1H3V3zm2 0h1v1H5V3zm6 0h2v1h-2V3zM1 6h14v4H1V6zm1 1v2h12V7H2zm1 1h1v1H3V8zm2 0h1v1H5V8zm6 0h2v1h-2V8zM1 11h14v4H1v-4zm1 1v2h12v-2H2zm1 1h1v1H3v-1zm2 0h1v1H5v-1zm6 0h2v1h-2v-1z"/></symbol>
   <symbol id="pixel-shield-check" viewBox="0 0 16 16"><path d="M2 1h12v7c0 3-3 6-6 7-3-1-6-4-6-7V1zm1 1v6c0 2.5 2.5 5 5 5.8 2.5-.8 5-3.3 5-5.8V2H3zm8 3l-4 5-2-2 1-1 1 1 3-4 1 1z"/></symbol>
   <symbol id="pixel-sparkle" viewBox="0 0 16 16"><path d="M7 0h2v3H7V0zM7 13h2v3H7v-3zM0 7h3v2H0V7zm13 0h3v2h-3V7zm3-4h1v1h-1V3zm-1 1h1v1h-1V4zm-1 1h1v1h-1V5zM3 3h1v1H3V3zm1 1h1v1H4V4zm1 1h1v1H5V5zm6 6h1v1h-1v-1zm1 1h1v1h-1v-1zm1 1h1v1h-1v-1zM5 11h1v1H5v-1zm-1 1h1v1H4v-1zm-1 1h1v1H3v-1zM6 6h4v4H6V6z"/></symbol>
+  <symbol id="pixel-sqlserver" viewBox="0 0 32 32"><path d="M5 2h22v2H5V2zM5 4h2v26H5V4zM25 4h2v26H25V4zM2 6h3v20H2V6zM27 6h3v20H27V6zM9 7h14v5H9V7zM15 12h2v13H15V12zM9 20h6v5H9V20zM17 20h6v5H17V20zM7 28h18v2H7V28z"/></symbol>
   <symbol id="pixel-sun" viewBox="0 0 16 16"><path d="M7 0h2v2H7V0zm0 14h2v2H7v-2zM0 7h2v2H0V7zm14 0h2v2h-2V7zM2 2h2v2H2V2zm10 0h2v2h-2V2zM2 12h2v2H2v-2zm10 0h2v2h-2v-2zM5 5h6v6H5V5zm1 1v4h4V6H6z"/></symbol>
   <symbol id="pixel-tailscale" viewBox="0 0 16 16"><path d="M1 1h4v4H1V1zm5 0h4v4H6V1zm5 0h4v4h-4V1zM1 6h4v4H1V6zm5 0h4v4H6V6zm5 0h4v4h-4V6zM1 11h4v4H1v-4zm5 0h4v4H6v-4zm5 0h4v4h-4v-4zM2 2v2h2V2H2zm5 5v2h2V7H7zm5 5v2h2v-2h-2z"/></symbol>
+  <symbol id="pixel-telescope" viewBox="0 0 32 32"><path d="M23 2h7v5H23V2zM21 7h7v2H21V7zM20 8h1v7H20V8zM19 9h1v7H19V9zM21 9h6v1H21V9zM18 10h1v6H18V10zM21 10h5v1H21V10zM17 11h1v6H17V11zM21 11h3v1H21V11zM15 12h2v18H15V12zM21 12h2v1H21V12zM14 13h1v7H14V13zM21 13h1v1H21V13zM13 14h1v7H13V14zM12 15h1v6H12V15zM11 16h1v6H11V16zM9 17h2v6H9V17zM4 18h5v5H4V18zM17 23h1v3H17V23zM14 24h1v3H14V24zM18 24h1v3H18V24zM13 25h1v3H13V25zM19 25h1v3H19V25zM12 26h1v3H12V26zM20 26h1v3H20V26zM11 27h1v3H11V27zM21 27h1v3H21V27zM10 28h1v3H10V28zM22 28h1v3H22V28zM9 29h1v2H9V29zM23 29h1v2H23V29z"/></symbol>
   <symbol id="pixel-terminal" viewBox="0 0 16 16"><path d="M1 2h14v12H1V2zm1 1v10h12V3H2zm2 2h2v1H4V5zm2 1h2v1H6V6zm-2 1h2v1H4V7zm5 3h4v1H9v-1z"/></symbol>
   <symbol id="pixel-vertex-ai" viewBox="0 0 16 16"><path d="M5 0h6v2h2v2h2v8h-2v2h-2v2H5v-2H3v-2H1V4h2V2h2V0zm1 3v3H3v4h3v3h4v-3h3V6h-3V3H6zm1 2h2v2h2v2H9v2H7V9H5V7h2V5z"/></symbol>
   <symbol id="pixel-zoom-in" viewBox="0 0 16 16"><path d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM3 4h5v1h-5zM10 4h1v1h-1zM0 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h1v1h-1zM3 9h5v1h-5zM8 10h3v1h-3zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></symbol>
@@ -198,12 +202,12 @@
 <use fill="currentColor" href="#pixel-db2" x="1640" y="904" width="19" height="19" color="var(--dg-blue)"/>
 <text x="1670" y="918" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">RUNE</text>
 <text x="1724.4" y="918" font-size="12.5" fill="var(--dg-dim)">decodes JDE EBCDIC and packed decimal</text>
-<use fill="currentColor" href="#pixel-maxdb" x="60" y="966" width="19" height="19" color="var(--dg-blue)"/>
-<text x="90" y="980" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">MARA</text>
-<text x="144.4" y="980" font-size="12.5" fill="var(--dg-dim)">maps MaxDB clustered records</text>
-<use fill="currentColor" href="#pixel-btrieve" x="850" y="966" width="19" height="19" color="var(--dg-blue)"/>
-<text x="880" y="980" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">BRIX</text>
-<text x="934.4" y="980" font-size="12.5" fill="var(--dg-dim)">reconstructs Btrieve pages</text>
+<use fill="currentColor" href="#pixel-sqlserver" x="60" y="966" width="19" height="19" color="var(--dg-blue)"/>
+<text x="90" y="980" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">AXIOM</text>
+<text x="154.0" y="980" font-size="12.5" fill="var(--dg-dim)">resolves AX table inheritance</text>
+<use fill="currentColor" href="#pixel-oracle" x="850" y="966" width="19" height="19" color="var(--dg-blue)"/>
+<text x="880" y="980" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">FLEX</text>
+<text x="934.4" y="980" font-size="12.5" fill="var(--dg-dim)">names EBS descriptive flexfields</text>
 <use fill="currentColor" href="#pixel-jdbc-jar" x="1640" y="966" width="19" height="19" color="var(--dg-blue)"/>
 <text x="1670" y="980" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">MAVEN</text>
 <text x="1734.0" y="980" font-size="12.5" fill="var(--dg-dim)">fingerprints drivers; never runs the JAR</text>
