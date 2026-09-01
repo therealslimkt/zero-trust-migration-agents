@@ -57,7 +57,7 @@ IMAGES = {
 }
 
 CARTRIDGES = {
-    "jde": {"service": "jde-e1-ibmi", "db": "keraun_jde", "source": "jde",
+    "jde": {"service": "jde-e1-ibmi", "db": "keraun_jde", "source": "jde", "addr": "172.28.0.11",
             "label": "JD Edwards EnterpriseOne 9.2 / IBM i",
             "queries": [
                 ("The address book as the source system presents it",
@@ -85,7 +85,7 @@ CARTRIDGES = {
                  "SELECT max(upmj) AS max_upmj, max(upmt) AS max_upmt,\n"
                  "       count(*) AS rows FROM f0911"),
             ]},
-    "dynamics": {"service": "dynamics-ax", "db": "keraun_ax", "source": "dynamics",
+    "dynamics": {"service": "dynamics-ax", "db": "keraun_ax", "source": "dynamics", "addr": "172.28.0.12",
               "label": "Microsoft Dynamics AX 2012 R3 / SQL Server",
               "queries": [
                   ("Orphan-derived RecIds (base row is gone)",
@@ -102,7 +102,7 @@ CARTRIDGES = {
                    "SELECT table_id, physical_name, logical_name FROM sqldictionary\n"
                    "ORDER BY table_id LIMIT 20"),
               ]},
-    "ebs": {"service": "oracle-ebs-19c", "db": "keraun_ebs", "source": "ebs",
+    "ebs": {"service": "oracle-ebs-19c", "db": "keraun_ebs", "source": "ebs", "addr": "172.28.0.13",
                 "label": "Oracle E-Business Suite / Oracle 19c",
                 "queries": [
                     ("Flexfields with no meaning in the catalog",
@@ -189,12 +189,19 @@ def ensure_query_runner() -> None:
 
 
 def psql(cartridge: str, sql: str) -> list[list[str]]:
-    """Run one read-only query as cartridge_reader inside the sealed network."""
+    """Run one read-only query as cartridge_reader inside the sealed network.
+
+    Addressed by the static IP compose pins rather than the service name.
+    cartridge-internal is an internal network with fixed ipv4_address entries,
+    and the embedded resolver is not reachable from the locked-down runner on
+    every host, so the name lookup is the one part of this that is not portable.
+    compose.yaml already hands the evidence runner these same addresses.
+    """
     spec = CARTRIDGES[cartridge]
     ensure_query_runner()
     done = subprocess.run(
         ("docker", "exec", "-e", "PGPASSWORD=synthetic-only-reader", QUERY_RUNNER,
-         "psql", "-h", spec["service"], "-U", "cartridge_reader", "-d", spec["db"],
+         "psql", "-h", spec["addr"], "-U", "cartridge_reader", "-d", spec["db"],
          "-A", "-F", "\x1f", "--pset", "footer=off", "-c", sql),
         capture_output=True, text=True, timeout=60, check=False)
     if done.returncode != 0:
