@@ -57,6 +57,12 @@
       "grid": 16
     },
     {
+      "name": "cartridge",
+      "file": "icons/cartridge.svg",
+      "symbol": "pixel-cartridge",
+      "grid": 32
+    },
+    {
       "name": "cassette",
       "file": "icons/cassette.svg",
       "symbol": "pixel-cassette",
@@ -199,6 +205,12 @@
       "file": "icons/play.svg",
       "symbol": "pixel-play",
       "grid": 16
+    },
+    {
+      "name": "press",
+      "file": "icons/press.svg",
+      "symbol": "pixel-press",
+      "grid": 32
     },
     {
       "name": "puppet-hand",

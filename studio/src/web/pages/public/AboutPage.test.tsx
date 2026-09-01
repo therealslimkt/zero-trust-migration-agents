@@ -13,7 +13,17 @@ describe("AboutPage enterprise fleet", () => {
     expect(screen.getByText("PRISMA", { selector: ".about-agent-card header span" })).toBeInTheDocument();
     expect(screen.getByText("STEWARD", { selector: ".about-agent-card header span" })).toBeInTheDocument();
     expect(screen.getByText("HARDENING")).toBeInTheDocument();
-    expect(screen.getByText(/“Next” items are architectural targets, not demo claims/i)).toBeInTheDocument();
+  });
+
+  it("shows the factory line that builds the cartridges", () => {
+    const { container } = render(<AboutPage />);
+
+    expect(screen.getByRole("heading", { name: /A legacy engine goes in; a sealed cartridge comes out/i })).toBeInTheDocument();
+    // The belt is decorative; the stations carry the same three steps as text so
+    // the section still says something to a reader who cannot watch it move.
+    expect([...container.querySelectorAll(".pf-station strong")].map((n) => n.textContent))
+      .toEqual(["Read", "Decode", "Certify"]);
+    expect(container.querySelector(".plugin-factory__line")).toHaveAttribute("aria-hidden", "true");
   });
 });
 

@@ -57,6 +57,36 @@ def region(x, y, w, h, label, sub, accent, dashed=False):
     if sub:
         p.append(f'<text x="{x+26}" y="{y+56}" font-size="15" fill="{FAINT}">{esc(sub)}</text>')
 
+def bits(d, accent, count=6, dur=2.4, size=15):
+    """Ones and zeros down a lane, for the places that carry bytes.
+
+    A neutral dot says "traffic". Digits say what kind, which is the difference
+    between a terminal stream and a credential check.
+    """
+    for i in range(count):
+        glyph = "1" if i % 2 == 0 else "0"
+        begin = f"{(dur / count) * i:.2f}s"
+        p.append(f'<g class="dg-packets">'
+                 f'<text font-size="{size}" font-weight="700" fill="{accent}" text-anchor="middle" '
+                 f'dominant-baseline="central" font-family="var(--font-mono-tactical)">{glyph}</text>'
+                 f'<animateMotion dur="{dur}s" begin="{begin}" repeatCount="indefinite" '
+                 f'path="{d}" calcMode="linear"/></g>')
+
+
+def shuttle(d, accent, dur=4.4, size=30):
+    """A runner that works a lane in both directions.
+
+    Traffic flows one way; an agent goes and comes back, so the reversal is the
+    point rather than a saving on sprites.
+    """
+    half = size / 2
+    p.append(f'<g class="dg-packets" color="{accent}">'
+             f'<use href="#pixel-robot-head" x="{-half:.0f}" y="{-half:.0f}" '
+             f'width="{size}" height="{size}" fill="currentColor"/>'
+             f'<animateMotion dur="{dur}s" repeatCount="indefinite" path="{d}" '
+             f'keyPoints="0;1;0" keyTimes="0;0.5;1" calcMode="linear"/></g>')
+
+
 def packets(d, accent, count=3, dur=2.8, size=9, kind="byte"):
     """Send discrete things along a path so a lane reads as traffic.
 
@@ -105,8 +135,8 @@ node(500, 420, "lock", "Query runner", ["the only container", "allowed to ask"],
 pulse(500, 420, 34, GREEN, 2.6)
 for sy in (260, 420, 580):
     # Raw bytes leaving a sealed emulator, one lane per cartridge.
-    packets(curve(206, sy, 466, 420, 0.10 if sy == 420 else 0.16, BLUE, flow=True),
-            BLUE, count=4, dur=2.6, size=8, kind="byte")
+    bits(curve(206, sy, 466, 420, 0.10 if sy == 420 else 0.16, BLUE, flow=True),
+         BLUE, count=5, dur=2.6)
 node(500, 620, "cpu", "Gemma 2", ["reviews at the edge", "before anything leaves"], GOLD, 26)
 curve(500, 586, 500, 458, -0.12, GOLD, flow=True)
 
@@ -137,7 +167,7 @@ region(1220, 116, 560, 620, "THE FLEET DECIDES", "reasoning on Vertex AI, bounde
 node(1360, 250, "gemini", "PRISMA", ["plans on gemini-3.5-flash", "rename · cast · drop only"], BLUE, 32)
 node(1640, 250, "shield-check", "VALE", ["certifies or rejects;", "cannot widen authority"], GREEN, 32)
 node(1500, 500, "key", "THE STEWARD", ["one irreversible decision,", "bound to an exact digest"], GOLD, 34)
-curve(1392, 282, 1608, 282, 0.30, BLUE)
+shuttle(curve(1392, 282, 1608, 282, 0.30, BLUE), BLUE, dur=4.4)
 note(1500, 196, "a closed declarative contract", FAINT, 14, "middle")
 curve(1640, 282, 1534, 468, 0.16, GREEN)
 curve(1360, 282, 1466, 468, -0.16, BLUE, flow=False)

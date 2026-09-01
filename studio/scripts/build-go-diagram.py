@@ -36,6 +36,36 @@ def curve(x1, y1, x2, y2, bow=0.24, accent=GO, flow=True, head=True, dash="10 16
         p.append(f'<polygon points="{x2:.0f},{y2:.0f} {ax+px_:.0f},{ay+py_:.0f} {ax-px_:.0f},{ay-py_:.0f}" fill="{accent}"/>')
     return d
 
+def bits(d, accent, count=6, dur=2.4, size=15):
+    """Ones and zeros down a lane, for the places that carry bytes.
+
+    A neutral dot says "traffic". Digits say what kind, which is the difference
+    between a terminal stream and a credential check.
+    """
+    for i in range(count):
+        glyph = "1" if i % 2 == 0 else "0"
+        begin = f"{(dur / count) * i:.2f}s"
+        p.append(f'<g class="dg-packets">'
+                 f'<text font-size="{size}" font-weight="700" fill="{accent}" text-anchor="middle" '
+                 f'dominant-baseline="central" font-family="var(--font-mono-tactical)">{glyph}</text>'
+                 f'<animateMotion dur="{dur}s" begin="{begin}" repeatCount="indefinite" '
+                 f'path="{d}" calcMode="linear"/></g>')
+
+
+def shuttle(d, accent, dur=4.4, size=30):
+    """A runner that works a lane in both directions.
+
+    Traffic flows one way; an agent goes and comes back, so the reversal is the
+    point rather than a saving on sprites.
+    """
+    half = size / 2
+    p.append(f'<g class="dg-packets" color="{accent}">'
+             f'<use href="#pixel-robot-head" x="{-half:.0f}" y="{-half:.0f}" '
+             f'width="{size}" height="{size}" fill="currentColor"/>'
+             f'<animateMotion dur="{dur}s" repeatCount="indefinite" path="{d}" '
+             f'keyPoints="0;1;0" keyTimes="0;0.5;1" calcMode="linear"/></g>')
+
+
 def packets(d, accent, count=3, dur=2.8, size=9, kind="frame"):
     """Send discrete things along a path, so a lane reads as traffic not decoration.
 
@@ -98,7 +128,7 @@ for i in range(3):
     # The terminal door is where mirrored frames enter. Five in flight at once,
     # close together, so it reads as a stream rather than an occasional call.
     if i == 0:
-        packets(lane, GO, count=5, dur=2.2, size=10)
+        bits(lane, GO, count=6, dur=2.2)
 
 # ── the state machine as a ring ─────────────────────────────────────────
 region(1080, 130, 700, 560, "FROZEN STATE MACHINE", "each step names the evidence it requires", GO)
@@ -144,7 +174,7 @@ pulse(1200, 830, 30, GO, 1.8)
 # Frames leave the state machine and the durable store and converge on the
 # fan-out. This lane is the terminal mirroring: what the browser renders is
 # these, in this order, and nothing else.
-packets(curve(1430, 616, 1240, 796, 0.10, GO), GO, count=4, dur=1.9, size=10)
+bits(curve(1430, 616, 1240, 796, 0.10, GO), GO, count=6, dur=2.0)
 packets(curve(2110, 462, 1256, 806, 0.06, GREEN), GREEN, count=4, dur=2.4, size=9)
 note(1200, 930, "no timer · no random value · no generated line", GREEN, 15, "middle", "700")
 note(1200, 958, "every visible frame originates in a persisted event", FAINT, 14, "middle")

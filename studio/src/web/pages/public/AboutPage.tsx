@@ -1,6 +1,7 @@
 import type { MouseEvent } from "react";
 import { ArchitectureDiagram } from "./ArchitectureDiagram";
 import { PixelIcon, StatusBeacon, type PixelIconName, type ThemeMode } from "../../shared/ui/index";
+import { PluginFactory } from "./PluginFactory";
 import { SiteFooter } from "../../widgets/site/SiteFooter";
 import { SiteHeader, type PublishedDemoDescriptor, type SiteAuthStatus } from "../../widgets/site/SiteHeader";
 import { CreatorSpotlight } from "./CreatorSpotlight";
@@ -81,20 +82,7 @@ const fleetAgents: ReadonlyArray<{
   { codename: "FLOW + LEDGER", role: "Execution and reconciliation", icon: "dataflow", color: "google-green", status: "hardening", mission: "Turns an approved Beam plan into Dataflow work, then proves BigQuery rows against jobs, tables, and audit evidence.", boundary: "Execute only after approval · publish only after reconciliation" },
 ];
 
-const enterpriseControls: ReadonlyArray<{
-  readonly name: string;
-  readonly icon: PixelIconName;
-  readonly now: string;
-  readonly next: string;
-}> = [
-  { name: "Agent Registry", icon: "artifact-registry", now: "Versioned specialist contracts and immutable driver artifacts", next: "Queryable catalog, capabilities, owners, and rollout policy" },
-  { name: "Agent Runtime", icon: "cloud-run", now: "Durable Go orchestration with resumable typed commands", next: "Isolated workers, leases, quotas, and regional placement" },
-  { name: "Memory Bank", icon: "database", now: "Atomic run snapshots and append-only evidence events", next: "Weeks-long scoped context with retention and sovereignty policy" },
-  { name: "Agent Identity", icon: "identity-platform", now: "User identity and server-side credential boundaries", next: "Per-agent workload identity and least-privilege tool grants" },
-  { name: "Agent Gateway", icon: "tailscale", now: "Private Tailscale path and authenticated control-plane APIs", next: "Central tool policy, egress controls, rate limits, and revocation" },
-  { name: "Model Armor", icon: "shield-check", now: "Protected metadata, schema validation, and fail-closed gates", next: "Prompt and response inspection with explicit policy evidence" },
-  { name: "Observability", icon: "radar", now: "Persisted events, exact terminal streams, and run evidence", next: "Fleet-wide OpenTelemetry traces, SLOs, and delegation views" },
-];
+
 
 /** Architecture narrative with owner-supplied creators and submission facts only. */
 export function AboutPage({
@@ -156,15 +144,10 @@ export function AboutPage({
             </div>
           </section>
 
-          <section className="about-story-card" aria-labelledby="platform-heading">
-            <div className="about-story-card__header"><PixelIcon name="server" size="md" color="google-green" glow /><div><span className="section-head__eyebrow">ENTERPRISE CONTROL PLANE</span><h2 id="platform-heading" className="about-story-card__title">A foundation that can become an institutional agent platform</h2></div></div>
-            <p className="about-story-card__text">Each control names the working foundation in this repository and the explicit hardening step required for a production fleet. “Next” items are architectural targets, not demo claims.</p>
-            <div className="about-platform-grid">
-              {enterpriseControls.map((control) => <article className="about-platform-card" key={control.name}>
-                <header><PixelIcon name={control.icon} size="sm" color="google-blue" /><h3>{control.name}</h3></header>
-                <dl><div><dt>NOW</dt><dd>{control.now}</dd></div><div><dt>NEXT</dt><dd>{control.next}</dd></div></dl>
-              </article>)}
-            </div>
+          <section className="about-story-card" aria-labelledby="factory-heading">
+            <div className="about-story-card__header"><PixelIcon name="cartridge" size="md" color="google-green" glow /><div><span className="section-head__eyebrow">THE PLUGIN FACTORY</span><h2 id="factory-heading" className="about-story-card__title">A legacy engine goes in; a sealed cartridge comes out</h2></div></div>
+            <p className="about-story-card__text">Keraun is not one migration. It is the line that builds them: each cartridge is a sealed, digest-pinned image of a legacy engine plus the code that decodes it, and adding a system means adding a cartridge rather than rewriting the pipeline.</p>
+            <PluginFactory />
           </section>
 
           <section className="about-story-card" aria-labelledby="principles-heading">
