@@ -32,6 +32,21 @@ export function CreatorSpotlight() {
   return (
     <div className="creator-spotlight">
       <figure className="creator-portrait">
+        {/* The band and the spark were ::before and ::after. Motion cannot
+            target a pseudo-element, so they are real elements now and the
+            rotation is driven here rather than by a CSS keyframe. */}
+        <motion.span
+          className="creator-portrait__band"
+          aria-hidden="true"
+          animate={reducedMotion ? undefined : { rotate: 360 }}
+          transition={{ duration: 26, ease: "linear", repeat: Infinity }}
+        />
+        <motion.span
+          className="creator-portrait__spark"
+          aria-hidden="true"
+          animate={reducedMotion ? undefined : { rotate: 360 }}
+          transition={{ duration: 2.8, ease: "linear", repeat: Infinity }}
+        />
         <img className="creator-portrait__photo" src={portrait} alt="Katie O’Halloran" width={184} height={184} loading="lazy" decoding="async" />
       </figure>
       <h3 className="creator-spotlight__name">Katie O’Halloran</h3>

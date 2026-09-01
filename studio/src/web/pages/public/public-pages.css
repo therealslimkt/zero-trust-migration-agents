@@ -1266,29 +1266,17 @@
   position: absolute;
   top: 10px;
   left: 0;
-  animation: pf-travel-raw 7.2s linear infinite;
+  width: 24px;
+  height: 24px;
 }
 
-/* Distance is expressed with `left`, not `translateX`. A transform percentage
-   resolves against the element's own width, so the parts crawled a few pixels
-   instead of crossing the belt. */
-.pf-part--raw { animation-name: pf-travel-raw; }
-.pf-part--sealed { animation-name: pf-travel-sealed; }
-
-/* A part is raw up to the press and sealed after it, so the handover reads as
-   the press doing something rather than an icon quietly changing. */
-@keyframes pf-travel-raw {
-  0% { left: 0; opacity: 0; }
-  8% { opacity: 1; }
-  44% { left: calc(50% - 12px); opacity: 1; }
-  48%, 100% { left: calc(50% - 12px); opacity: 0; }
-}
-
-@keyframes pf-travel-sealed {
-  0%, 52% { left: calc(50% - 12px); opacity: 0; }
-  56% { opacity: 1; }
-  94% { left: calc(100% + 10px); opacity: 1; }
-  100% { left: calc(100% + 10px); opacity: 0; }
+/* Both faces occupy the same cell; motion cross-fades them as the part passes
+   the press, driven by the same value that moves it. */
+.pf-part__face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
 }
 
 .pf-press {
@@ -1296,13 +1284,6 @@
   top: -14px;
   left: 50%;
   margin-left: -16px;
-  animation: pf-stamp 2.4s var(--ease-tactical) infinite;
-}
-
-@keyframes pf-stamp {
-  0%, 60%, 100% { transform: translateX(-50%) translateY(0); }
-  72% { transform: translateX(-50%) translateY(9px); }
-  84% { transform: translateX(-50%) translateY(0); }
 }
 
 .pf-stations {
@@ -1383,9 +1364,8 @@
 }
 
 /* Both pseudo-elements are masked to the same annulus. */
-.creator-portrait::before,
-.creator-portrait::after {
-  content: "";
+.creator-portrait__band,
+.creator-portrait__spark {
   position: absolute;
   inset: 0;
   border-radius: 50%;
@@ -1394,7 +1374,7 @@
 }
 
 /* The iris band: sage and magenta hold equal arcs of the ring. */
-.creator-portrait::before {
+.creator-portrait__band {
   background: conic-gradient(
     from 210deg,
     var(--keraun-sage-neon) 0deg,
@@ -1406,11 +1386,10 @@
     var(--keraun-magenta-light) 310deg,
     var(--keraun-sage-neon) 360deg
   );
-  animation: iris-drift 26s var(--ease-linear) infinite;
 }
 
 /* A specular spark that laps the ring faster than the band beneath it. */
-.creator-portrait::after {
+.creator-portrait__spark {
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
@@ -1421,10 +1400,11 @@
     transparent 360deg
   );
   filter: drop-shadow(0 0 5px var(--keraun-spark)) drop-shadow(0 0 12px var(--keraun-magenta));
-  animation: iris-spark 2.8s var(--ease-linear) infinite;
 }
 
 .creator-portrait__photo {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
@@ -1433,12 +1413,8 @@
   box-shadow: 0 0 0 2px var(--pixel-surface-panel);
 }
 
-@keyframes iris-drift {
-  to { transform: rotate(360deg); }
 }
 
-@keyframes iris-spark {
-  to { transform: rotate(360deg); }
 }
 
 .creator-spotlight__name {
@@ -1574,11 +1550,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .creator-portrait::before,
-  .creator-portrait::after {
-    animation: none;
-  }
-
   .creator-spotlight__letter {
     animation: none;
     color: var(--hue-3);
