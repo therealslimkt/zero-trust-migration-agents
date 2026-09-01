@@ -9,14 +9,21 @@ RUN npm run build
 
 FROM nginx:1.27-alpine
 COPY --from=build /app/dist /usr/share/nginx/html
+
 # Cloud Run sends traffic to $PORT, which defaults to 8080; nginx listens on 80
 # out of the box, so the server block is replaced rather than inherited. The
-# try_files fallback keeps client-side routes working on a hard refresh.
-RUN printf 'server {\n\
-  listen 8080;\n\
-  root /usr/share/nginx/html;\n\
-  index index.html;\n\
-  location / { try_files $uri $uri/ /index.html; }\n\
-}\n' > /etc/nginx/conf.d/default.conf
+# config is a template because the hosted deployment injects the stage executor
+# credential at start-up rather than baking it into the image.
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# Defaults keep the image runnable with no configuration: the proxy points at a
+# loopback nobody is listening on, so /api/stages returns 502 instead of
+# preventing nginx from starting. The hosted service overrides both.
+ENV STAGE_UPSTREAM=127.0.0.1:4345 \
+    STAGE_TOKEN="" \
+    # No trailing anchor: Dockerfile ENV escaping of $ is ambiguous, and no
+    # other variable name starts with either of these.
+    NGINX_ENVSUBST_FILTER="^(STAGE_UPSTREAM|STAGE_TOKEN)"
+
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
