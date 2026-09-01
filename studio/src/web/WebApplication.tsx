@@ -14,8 +14,8 @@ const LoginPage = lazy(() => import('./pages/public/LoginPage').then((module) =>
 const AboutPage = lazy(() => import('./pages/public/AboutPage').then((module) => ({ default: module.AboutPage })))
 const NotFoundPage = lazy(() => import('./pages/public/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 const RecordedDemoRoute = lazy(() => import('./pages/replay/RecordedDemoRoute').then((module) => ({ default: module.RecordedDemoRoute })))
-const PluginFactoryPage = lazy(() => import('./pages/lab/M4FixtureLabPage').then((module) => ({ default: module.M4FixtureLabPage })))
-const DashboardRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.DashboardRoute })))
+const MissionControlPage = lazy(() => import("./pages/protected/MissionControlPage").then((m) => ({ default: m.MissionControlPage })))
+const KeraunDemoRoute = lazy(() => import("./pages/replay/KeraunDemoRoute").then((m) => ({ default: m.KeraunDemoRoute })))
 const LiveRunRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.LiveRunRoute })))
 const SourceDetailRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.SourceDetailRoute })))
 const SourceOnboardingRoute = lazy(() => import('./pages/protected/ProtectedRoutes').then((module) => ({ default: module.SourceOnboardingRoute })))
@@ -34,6 +34,10 @@ const AppearanceContext = createContext<AppearanceValue | null>(null);
 function AppearanceProvider({ children }: { readonly children: ReactNode }) {
   const [theme, setTheme] = useState<ThemeMode>(() => {
     if (typeof window === "undefined") return "dark";
+    // An explicit ?theme= wins over the stored preference so a link can carry
+    // the appearance it was captured in.
+    const requested = new URLSearchParams(window.location.search).get("theme");
+    if (requested === "light" || requested === "dark") return requested;
     return window.localStorage.getItem("ztm-theme") === "light" ? "light" : "dark";
   });
   useEffect(() => {
@@ -142,10 +146,13 @@ const router = createBrowserRouter([
   { path: "/login", element: <LoginRoute /> },
   { path: "/about", element: <AboutRoute /> },
   { path: "/demo/:demoId", element: <RecordedDemoRoute /> },
-  { path: "/factory", element: <PluginFactoryPage /> },
+  { path: "/factory", element: <Navigate to="/mission-control" replace /> },
+  { path: "/mission-control", element: <AuthenticatedSiteLayout><MissionControlPage /></AuthenticatedSiteLayout> },
+  { path: "/recorded", element: <KeraunDemoRoute /> },
+  { path: "/terminals", element: <Navigate to="/mission-control" replace /> },
   { path: "/lab/m4", element: <Navigate to="/factory" replace /> },
   { path: "/internal-hitl", element: <InternalHITLRoute /> },
-  { path: "/dashboard", element: <Protected><DashboardRoute /></Protected> },
+  { path: "/dashboard", element: <Navigate to="/mission-control" replace /> },
   { path: "/runs/:runId", element: <Protected><LiveRunRoute /></Protected> },
   { path: "/runs/:runId/sources/:sourceId", element: <Protected><SourceDetailRoute /></Protected> },
   { path: "/sources/new", element: <Protected><SourceOnboardingRoute /></Protected> },

@@ -146,8 +146,19 @@ export function TerminalWindow({
                 type="button"
                 className="terminal-window__dot terminal-window__dot--yellow"
                 onClick={handleToggleMinimize}
-                aria-label={isMinimized ? "Expand window" : "Minimize window"}
-                title={isMinimized ? "Expand" : "Minimize"}
+                // A maximized window cannot also be minimized, so the control
+                // greys out the way a macOS traffic light does rather than
+                // accepting a click that produces a nonsense state.
+                disabled={isMaximized}
+                aria-disabled={isMaximized || undefined}
+                aria-label={
+                  isMaximized
+                    ? "Minimize unavailable while maximized"
+                    : isMinimized
+                      ? "Expand window"
+                      : "Minimize window"
+                }
+                title={isMaximized ? "Restore the window first" : isMinimized ? "Expand" : "Minimize"}
               />
               <button
                 type="button"

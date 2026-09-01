@@ -180,19 +180,19 @@ export function M4FixtureLabPage() {
     <main className="m4-lab" aria-labelledby="m4-lab-title">
       <header className="m4-lab__header">
         <div>
-          <p className="m4-lab__eyebrow">KERAUN / OPEN PLUGIN FACTORY</p>
-          <h1 id="m4-lab-title">Turn a sticky source into a portable migration agent.</h1>
-          <p>Start with a vetted cartridge or ask the research fleet to discover one. The three preloaded examples show the deterministic source contracts, translation rules, and evidence gates that a candidate must satisfy before Mission Control can authorize a migration test.</p>
+          <p className="m4-lab__eyebrow">KERAUN / MISSION CONTROL</p>
+          <h1 id="m4-lab-title">Mission Control — prove a migration before you run one.</h1>
+          <p>Pick one of the three legacy adversaries below. Each declares a deterministic source contract, translation rules, and the evidence gates it must pass before any migration is authorized.</p>
         </div>
         <span className="m4-lab__badge"><BrandBolt /><span>PRELOADED DEMOS</span></span>
       </header>
 
       <section className="m4-lab__truth" aria-label="What this preflight proves">
         <span className="m4-lab__truth-icon"><BrandBolt /></span>
-        <div><strong>This is a plugin verification gate—not a second product.</strong><p>These are synthetic source emulators and deterministic evidence packets for three preloaded demo cartridges. No customer data, live source, Apache Beam job, or BigQuery write occurs on this page. Passing the gate produces a candidate for the authenticated Mission Control run, where its sandbox, compiler, and warehouse evidence must be reviewed.</p></div>
+        <div><strong>Select an adversary, then run the sealed evidence pass.</strong><p>These are synthetic source emulators and deterministic evidence packets for three preloaded demo cartridges. No customer data, live source, Apache Beam job, or BigQuery write occurs on this page. Passing the gate produces a candidate for the authenticated Mission Control run, where its sandbox, compiler, and warehouse evidence must be reviewed.</p></div>
       </section>
 
-      <section className="m4-lab__guide" aria-label="Plugin factory lifecycle">
+      <section className="m4-lab__guide" aria-label="Mission Control lifecycle">
         <span><b>01</b>Discover or research a cartridge</span><span><b>02</b>Verify its source contract</span><span><b>03</b>Review a sealed Mission Control run</span><span><b>04</b>Download the portable plugin</span>
       </section>
 

@@ -9,12 +9,12 @@ export type PortraitId =
 
 const PALETTES: Record<string, Record<string, string>> = {
   villain: {
-    o: "#2b0f12", // outline
-    s: "#5c1a1f", // shell
-    m: "#8f2730", // mid
-    h: "#d73027", // hot
-    g: "#fad2cf", // glint
-    k: "#0a0407", // void
+    o: "#ffd9d4", // outline — light, so the silhouette reads on any background
+    s: "#c8323c", // shell
+    m: "#e8555e", // mid
+    h: "#ff8a7a", // hot
+    g: "#fff3f1", // glint
+    k: "#3d0f14", // void
   },
   hero: {
     o: "#0a1420", // outline

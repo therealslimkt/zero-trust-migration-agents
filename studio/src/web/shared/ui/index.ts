@@ -59,3 +59,4 @@ export {
   PIXEL_ICON_NAMES,
   type PixelIconName,
 } from "../../assets/pixel/index";
+export { GoGopher } from "./GoGopher";

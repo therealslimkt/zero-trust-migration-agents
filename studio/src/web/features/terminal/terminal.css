@@ -84,3 +84,21 @@
 @media (prefers-reduced-motion: reduce) {
   .live-terminal-frame[data-active="true"]::before { animation: none; }
 }
+
+/* Light theme: the frame identity, tool and body text all default to
+   near-white, which disappears on a paper surface. Bind them to the ink
+   tokens instead so every stream stays legible in both themes. */
+[data-theme="light"] .live-terminal-frame__identity { color: var(--pixel-text-primary); }
+[data-theme="light"] .live-terminal-frame__tool { color: var(--pixel-text-muted); }
+[data-theme="light"] .live-terminal-frame__keyword { color: var(--pixel-accent-primary); }
+[data-theme="light"] .live-terminal-frame__comment { color: var(--pixel-text-muted); }
+[data-theme="light"] .live-terminal-frame--command .live-terminal-frame__line { color: var(--pixel-text-primary); }
+[data-theme="light"] .live-terminal-frame--stdout .live-terminal-frame__line,
+[data-theme="light"] .live-terminal-frame--metric .live-terminal-frame__line { color: var(--pixel-text-secondary); }
+[data-theme="light"] .live-terminal-frame--system .live-terminal-frame__line,
+[data-theme="light"] .live-terminal-frame--debug .live-terminal-frame__line { color: var(--pixel-text-muted); }
+[data-theme="light"] .live-terminal-frame--stderr .live-terminal-frame__line,
+[data-theme="light"] .live-terminal-frame--error .live-terminal-frame__line { color: var(--pixel-status-critical); }
+[data-theme="light"] .live-terminal-actors strong { color: var(--pixel-text-primary); }
+[data-theme="light"] .live-terminal-actors small,
+[data-theme="light"] .live-terminal-actors__empty { color: var(--pixel-text-secondary); }

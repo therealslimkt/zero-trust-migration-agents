@@ -129,6 +129,19 @@
   cursor: default;
 }
 
+/* A disabled traffic light drains to the inert grey macOS uses, so the control
+   reads as unavailable before it is clicked rather than after. */
+.terminal-window__dot:disabled,
+.terminal-window__dot[aria-disabled="true"] {
+  background-color: var(--pixel-border-muted, #cbd5e1) !important;
+  box-shadow: none !important;
+  opacity: 0.55;
+}
+.terminal-window__dot:disabled:hover,
+.terminal-window__dot[aria-disabled="true"]:hover {
+  transform: none;
+}
+
 .terminal-window__dot--red {
   background-color: var(--google-red);
   box-shadow: 0 0 4px rgba(234, 67, 53, 0.4);

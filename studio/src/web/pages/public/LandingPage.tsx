@@ -1,8 +1,10 @@
 import type { MouseEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { PixelIcon, ReplayBadge, StatusBeacon, TerminalWindow, type ThemeMode } from "../../shared/ui/index";
+import { BrandBolt, PixelIcon, type ThemeMode } from "../../shared/ui/index";
 import { SiteFooter } from "../../widgets/site/SiteFooter";
 import { SiteHeader, type PublishedDemoDescriptor, type SiteAuthStatus } from "../../widgets/site/SiteHeader";
+import { PixelPortrait, type PortraitId } from "../lab/PixelPortrait";
+import { ClusterDecodePanel } from "./ClusterDecodePanel";
 import "./public-pages.css";
 
 export interface LandingPageProps {
@@ -34,6 +36,31 @@ function hasReplay(demo?: PublishedDemoDescriptor): demo is PublishedDemoDescrip
 }
 
 /** Visual public entry point; it deliberately does not invent a run or operating state. */
+
+const LANDING_BAD_GUYS: ReadonlyArray<{
+  alias: string; portrait: PortraitId; source: string; crime: string; tell: string;
+  team: ReadonlyArray<{ id: PortraitId; name: string; role: string }>;
+}> = [
+  { alias: "DAY ZERO", portrait: "day-zero", source: "JD Edwards EnterpriseOne 9.2 / IBM i",
+    crime: "Dates that are not dates.",
+    tell: "CYYDDD julian integers. 124001 is not January 24th, and 100000 is not a date at all.",
+    team: [{ id: "analyst", name: "source_analyst_jde", role: "frozen single-turn profiler" },
+           { id: "prisma", name: "PRISMA", role: "compiles the declarative cast" },
+           { id: "vale", name: "VALE", role: "rejects any lossy narrowing" }] },
+  { alias: "THE HEIR", portrait: "the-heir", source: "Microsoft Dynamics AX 2012 R3 / SQL Server",
+    crime: "Children of parents that no longer exist.",
+    tell: "64-bit RecId table inheritance. A derived row whose base row is gone still looks valid.",
+    team: [{ id: "analyst", name: "source_analyst_ax", role: "resolves the inheritance chain" },
+           { id: "vale", name: "VALE", role: "fails closed on orphan-derived rows" },
+           { id: "ledger", name: "LEDGER", role: "reconciles accepted vs rejected" }] },
+  { alias: "ALIAS", portrait: "alias", source: "Oracle E-Business Suite / Oracle 19c",
+    crime: "Real columns wearing a disguise.",
+    tell: "ATTRIBUTE1..15 descriptive flexfields whose meaning lives in a separate FND catalog.",
+    team: [{ id: "analyst", name: "source_analyst_oracle", role: "reads FND flexfield context" },
+           { id: "prisma", name: "PRISMA", role: "emits typed output columns" },
+           { id: "atlas", name: "ATLAS", role: "coordinates, never approves" }] },
+];
+
 export function LandingPage({
   onNavigate,
   theme = "dark",
@@ -51,7 +78,7 @@ export function LandingPage({
   sourceRepoUrl,
 }: LandingPageProps) {
   const reducedMotion = useReducedMotion();
-  const replayAvailable = hasReplay(demo);
+  void hasReplay;
   const navigate = (event: MouseEvent<HTMLAnchorElement>, route: string) => {
     if (!onNavigate) return;
     event.preventDefault();
@@ -59,24 +86,53 @@ export function LandingPage({
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
   };
 
+  void navigate;
+
   return (
     <div className="public-page">
       <SiteHeader activeRoute="/" onNavigate={onNavigate} authStatus={authStatus} userName={userName} userEmail={userEmail} userPhoto={userPhoto} onSignInClick={onSignInClick} onSignOutClick={onSignOutClick} theme={theme} onThemeChange={onThemeChange} demo={demo} loginRoute={loginRoute} aboutRoute={aboutRoute} dashboardRoute={dashboardRoute} />
       <main id="main-content" className="public-main" tabIndex={-1}>
         <div className="public-container">
           <section className="landing-hero" aria-labelledby="hero-title">
-            <div className="landing-hero__badge-group">
-              {replayAvailable ? <ReplayBadge mode="replay" detail="owner-published synthetic recording" size="md" /> : <StatusBeacon status="neutral" label="PUBLIC REPLAY NOT SUPPLIED" mode="steady" size="sm" />}
-            </div>
-            <h1 id="hero-title" className="landing-hero__headline">A visual control surface for <span className="landing-hero__headline-gradient">governed migration work</span></h1>
-            <p className="landing-hero__subtitle">Explore the architecture, connect an authenticated control surface, or open an exact synthetic recorded replay when an owner has published one. The page never substitutes sample activity for a real descriptor.</p>
+            <h1 id="hero-title" className="landing-hero__headline"><span className="landing-hero__headline-gradient">Set your data free!</span></h1>
+            <p className="landing-hero__tagline">Let insight strike.<span className="landing-hero__bolt" aria-hidden="true"><BrandBolt title="Keraun" /></span><b>Open source. Free of charge.</b></p>
+            <p className="landing-hero__promise">Prove the move. Forge the plugin. Grow the fleet.</p>
+            <p className="landing-hero__subtitle">Free valuable data from legacy systems without paying for a permanent middleware layer. Prove a migration in an isolated sandbox, inspect the evidence, forge a portable execution plugin, and promote validated expertise into a discoverable enterprise agent.</p>
             <div className="landing-hero__actions">
-              {replayAvailable ? <a href={demo.route} className="landing-hero__btn landing-hero__btn--primary" onClick={(event) => navigate(event, demo.route)}><PixelIcon name="play" size="xs" color="black" /><span>Open exact recorded replay</span></a> : null}
-              {dashboardRoute ? <a href={dashboardRoute} className="landing-hero__btn landing-hero__btn--outline" onClick={(event) => navigate(event, dashboardRoute)}><PixelIcon name="satellite" size="xs" color="google-blue" /><span>Open mission control</span></a> : null}
-              <a href="/factory" className="landing-hero__btn landing-hero__btn--outline" onClick={(event) => navigate(event, "/factory")}><PixelIcon name="database" size="xs" color="google-yellow" /><span>Explore plugin factory</span></a>
-              <a href={aboutRoute} className="landing-hero__btn landing-hero__btn--outline" onClick={(event) => navigate(event, aboutRoute)}><PixelIcon name="radar" size="xs" color="muted" /><span>Read architecture</span></a>
+                            <a href="/mission-control" className="landing-hero__btn landing-hero__btn--outline"><PixelIcon name="satellite" size="xs" color="google-blue" /><span>Open Mission Control</span></a>
+              <a href="/architecture.html" target="_blank" rel="noreferrer" className="landing-hero__btn landing-hero__btn--outline"><PixelIcon name="radar" size="xs" color="muted" /><span>Architecture diagram</span></a>
             </div>
           </section>
+
+          <section className="landing-badguys" aria-labelledby="badguys-heading">
+            <div className="landing-control__heading">
+              <span className="landing-control__eyebrow"><PixelIcon name="bug" size="xs" color="google-red" />THE ADVERSARIES</span>
+              <h2 id="badguys-heading">Three legacy systems that refuse to let go.</h2>
+              <p>Each one hides its data behind a different, well-documented pathology. Keraun assigns a least-authority agent team to each.</p>
+            </div>
+            <div className="landing-badguys__grid">
+              {LANDING_BAD_GUYS.map((v) => (
+                <article key={v.alias} className="landing-villain">
+                  <div className="landing-villain__top">
+                    <PixelPortrait id={v.portrait} size={92} title={v.alias} />
+                    <div>
+                      <h3>{v.alias}</h3>
+                      <p className="landing-villain__src">{v.source}</p>
+                    </div>
+                  </div>
+                  <p className="landing-villain__crime">{v.crime}</p>
+                  <p className="landing-villain__tell">{v.tell}</p>
+                  <ul className="landing-villain__team">
+                    {v.team.map((a) => (
+                      <li key={a.name}><PixelPortrait id={a.id} size={30} title={a.name} /><span><b>{a.name}</b>{a.role}</span></li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <ClusterDecodePanel />
 
           <section className="landing-pipeline" aria-labelledby="capability-heading">
             <div className="landing-control__heading">
@@ -93,14 +149,7 @@ export function LandingPage({
             </div>
           </section>
 
-          <section aria-labelledby="replay-heading">
-            <TerminalWindow title="Public replay availability" breadcrumb="public/replay" accent="google-yellow" variant="glass" scanlines>
-              <div className="landing-code-panel">
-                <div><h2 id="replay-heading">{replayAvailable ? demo.title : "No replay descriptor supplied"}</h2><p>{replayAvailable ? "This link is an exact synthetic recorded replay selected by its owner. Its identifier and route come from the descriptor, not a page default." : "An exact synthetic recorded replay can be shown here only after the application receives an owner-published descriptor."}</p></div>
-                {replayAvailable ? <a href={demo.route} className="landing-hero__btn landing-hero__btn--secondary" onClick={(event) => navigate(event, demo.route)}><PixelIcon name="rewind" size="xs" color="google-yellow" /><span>Review replay</span></a> : null}
-              </div>
-            </TerminalWindow>
-          </section>
+
         </div>
       </main>
       <SiteFooter onNavigate={onNavigate} demo={demo} documentationUrl={aboutRoute} sourceRepoUrl={sourceRepoUrl} links={[{ label: "About", route: aboutRoute }, ...(dashboardRoute ? [{ label: "Mission control", route: dashboardRoute }] : [])]} />

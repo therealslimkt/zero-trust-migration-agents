@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type {
   ListLiveRunsResponse,
   LiveRunSummary,
@@ -111,6 +112,7 @@ function RunCard({
           onClick={() => onOpenRun(run.runId)}
         />
       ) : null}
+      <SealedEvidenceRunner />
       <header className="dashboard-run__header">
         <div>
           <div className="dashboard-run__title-row">
@@ -160,6 +162,56 @@ export interface DashboardPageProps {
   readonly onCreateRun?: () => void
   readonly onOpenRun?: (runId: string) => void
   readonly onOpenSource?: (runId: string, sourceId: SourceId) => void
+}
+
+
+type EvidenceChecks = { jdeInvalidCyyddd?: number; axOrphanDerived?: number; ebsUnmappedFlexfield?: number }
+
+function SealedEvidenceRunner() {
+  const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [checks, setChecks] = useState<EvidenceChecks | null>(null)
+  const [detail, setDetail] = useState<string | null>(null)
+
+  const start = async () => {
+    setStatus('running'); setChecks(null); setDetail(null)
+    try {
+      const res = await fetch('/api/local-cartridge/v1/evidence-runs', { method: 'POST', cache: 'no-store' })
+      if (!res.ok) throw new Error(`agent returned ${res.status}`)
+      for (let i = 0; i < 150; i += 1) {
+        await new Promise((r) => setTimeout(r, 2000))
+        const poll = await fetch('/api/local-cartridge/v1/evidence-runs/current', { cache: 'no-store' })
+        const body = await poll.json()
+        if (body.status === 'succeeded') { setChecks(body.result?.checks ?? null); setStatus('done'); return }
+        if (body.status === 'failed') { setDetail(body.detail ?? 'evidence run failed'); setStatus('error'); return }
+      }
+      setDetail('timed out waiting for the sealed agent'); setStatus('error')
+    } catch (error) {
+      setDetail(error instanceof Error ? error.message : 'unreachable'); setStatus('error')
+    }
+  }
+
+  return (
+    <section className="sealed-runner">
+      <div className="sealed-runner__bar">
+        <div>
+          <h3>Sealed sandbox evidence pass</h3>
+          <p>Runs the three source emulators on an internal-only network. Count-only output; no raw records leave the sandbox.</p>
+        </div>
+        <button type="button" className="sealed-runner__play" onClick={() => void start()} disabled={status === 'running'}>
+          {status === 'running' ? 'Running…' : '▶  Run JDE · AX · EBS'}
+        </button>
+      </div>
+      {status === 'running' ? <p className="sealed-runner__note">Building images, waiting for source health, certifying count-only guardrails…</p> : null}
+      {status === 'error' ? <p className="sealed-runner__err">Evidence run failed: {detail}</p> : null}
+      {status === 'done' && checks ? (
+        <dl className="sealed-runner__results">
+          <div><dt>JDE · invalid CYYDDD</dt><dd>{checks.jdeInvalidCyyddd ?? 0}</dd></div>
+          <div><dt>AX · orphan-derived RecId</dt><dd>{checks.axOrphanDerived ?? 0}</dd></div>
+          <div><dt>EBS · unmapped flexfield</dt><dd>{checks.ebsUnmappedFlexfield ?? 0}</dd></div>
+        </dl>
+      ) : null}
+    </section>
+  )
 }
 
 export function DashboardPage({ runs, onRetry, onCreateRun, onOpenRun, onOpenSource }: DashboardPageProps) {

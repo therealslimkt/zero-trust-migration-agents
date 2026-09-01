@@ -94,11 +94,15 @@
   margin: 0 auto;
   padding: 0 20px;
   min-height: 68px;
-  display: flex;
+  /* Three tracks keep the nav centred on the header, not on whatever space the
+     brand and the actions happen to leave behind. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
 }
+.site-header__container > .site-header__nav { justify-self: center; }
+.site-header__container > .site-header__actions { justify-self: end; }
 
 /* Brand Identity */
 .site-header__brand {

@@ -54,7 +54,7 @@ export function SiteHeader({
   activeRoute = "/",
   onNavigate,
   brandTitle = "KERAUN",
-  tagline = "THUNDERBOLT GOVERNANCE",
+  tagline = "DATA INSIGHT STRIKES. MAYBE ONCE. MAYBE TWICE!",
   mode = "public",
   authStatus = "unconfigured",
   userName,
@@ -67,7 +67,7 @@ export function SiteHeader({
   demo,
   loginRoute = "/login",
   aboutRoute = "/about",
-  dashboardRoute,
+  dashboardRoute: _dashboardRoute,
   cloudSettingsRoute,
   skipTargetId = "main-content",
   className = "",
@@ -81,7 +81,7 @@ export function SiteHeader({
   const navItems: readonly NavItem[] = [
     { id: "home", label: "Overview", route: "/", icon: "shield-check" },
     ...(replayAvailable ? [{ id: "replay", label: "Recorded replay", route: demo.route, icon: "play" as const }] : []),
-    ...(dashboardRoute ? [{ id: "dashboard", label: "Mission control", route: dashboardRoute, icon: "satellite" as const }] : []),
+    { id: "dashboard", label: "Mission control", route: "/mission-control", icon: "satellite" as const },
     ...(signedInCloudSettingsRoute ? [{ id: "cloud", label: "Google Cloud", route: signedInCloudSettingsRoute, icon: "google-cloud" as const }] : []),
     ...(aboutRoute ? [{ id: "about", label: "About", route: aboutRoute, icon: "radar" as const }] : []),
   ];
@@ -96,7 +96,7 @@ export function SiteHeader({
   const navLink = (item: NavItem, mobile = false) => {
     const active = item.route === "/" ? activeRoute === "/" : activeRoute.startsWith(item.route);
     return (
-      <a href={item.route} className={mobile ? "site-header__mobile-nav-link" : "site-header__nav-link"} aria-current={active ? "page" : undefined} onClick={(event) => navigate(event, item.route)}>
+      <a href={item.route} className={mobile ? "site-header__mobile-nav-link" : "site-header__nav-link"} aria-current={active ? "page" : undefined} onClick={item.id === "dashboard" ? undefined : (event) => navigate(event, item.route)}>
         {item.icon ? <PixelIcon name={item.icon} size="xs" color={active ? "google-blue" : "secondary"} /> : null}
         <span>{item.label}</span>
       </a>
@@ -122,7 +122,7 @@ export function SiteHeader({
                 <span className="site-header__user-info"><span className="site-header__user-name">{userName || userEmail || "Authenticated session"}</span><span className="site-header__user-tag">VERIFIED</span></span>
                 {onSignOutClick ? <button type="button" className="site-header__btn" onClick={onSignOutClick}>Sign out</button> : null}
               </div>
-            ) : authStatus === "unconfigured" ? <button type="button" className="site-header__btn" disabled title="Sign-in has not been configured">Sign-in unavailable</button> : canSignIn ? <button type="button" className="site-header__btn site-header__btn--primary" onClick={onSignInClick}><PixelIcon name="key" size="xs" color="white" /><span>Sign in</span></button> : <a href={loginRoute} className="site-header__btn site-header__btn--primary" onClick={(event) => navigate(event, loginRoute)}><span>Sign in</span></a>}
+            ) : authStatus === "unconfigured" ? <span className="site-header__chip" title="This hosted deployment is read-only by design: it holds no credentials and no source access."><PixelIcon name="lock" size="xs" color="google-green" /><span>Read-only demo</span></span> : canSignIn ? <button type="button" className="site-header__btn site-header__btn--primary" onClick={onSignInClick}><PixelIcon name="key" size="xs" color="white" /><span>Sign in</span></button> : <a href={loginRoute} className="site-header__btn site-header__btn--primary" onClick={(event) => navigate(event, loginRoute)}><span>Sign in</span></a>}
             <button type="button" className="site-header__mobile-toggle" aria-expanded={mobileOpen} aria-controls={drawerId} aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} onClick={() => setMobileOpen((open) => !open)}><PixelIcon name={mobileOpen ? "cross-pixel" : "terminal"} size="sm" color="google-blue" /></button>
           </div>
         </div>

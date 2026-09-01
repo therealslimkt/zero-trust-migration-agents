@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 
 const LOOPBACK_HOST = '127.0.0.1'
 const DEFAULT_API_TARGET = 'http://127.0.0.1:8080'
+const STAGE_EXECUTOR_TARGET = 'http://127.0.0.1:4345'
 const LOCAL_CARTRIDGE_AGENT_TARGET = 'http://127.0.0.1:4344'
 
 function requireProxyToken(): string {
@@ -60,13 +61,47 @@ function missionControlProxy(): ProxyOptions {
 }
 
 function webBffProxy(): ProxyOptions {
+  // Identity Platform bearer tokens belong to the browser-facing BFF and are
+  // deliberately preserved. Unlike `/api/v1`, this route never injects or
+  // substitutes the Mission Control service credential.
+  //
+  // Exception: when the Go control plane is started with
+  // MISSION_CONTROL_LOCAL_DEMO=true it accepts one fixed loopback-only demo
+  // identity instead of Identity Platform. Injecting exactly that identity here
+  // keeps the credential-free local demo usable. It is a dev-server-only path.
+  const localDemo =
+    String(process.env.MISSION_CONTROL_LOCAL_DEMO ?? '').trim().toLowerCase() === 'true'
   return {
     target: requireLoopbackTarget(),
     changeOrigin: false,
     ws: false,
-    // Identity Platform bearer tokens belong to the browser-facing BFF and
-    // are deliberately preserved. Unlike `/api/v1`, this route never injects
-    // or substitutes the Mission Control service credential.
+    configure: localDemo
+      ? (proxy) => {
+          proxy.on('proxyReq', (request) => {
+            request.setHeader('Authorization', 'Bearer ztm-loopback-demo-v1')
+          })
+        }
+      : undefined,
+  }
+}
+
+function stageExecutorProxy(): ProxyOptions {
+  const token = process.env.KERAUN_STAGE_EXECUTOR_TOKEN
+  if (!token) {
+    throw new Error('Stage executor authentication is not configured.')
+  }
+  return {
+    target: STAGE_EXECUTOR_TARGET,
+    changeOrigin: false,
+    ws: false,
+    rewrite: (path) => path.replace(/^\/api\/stages/, ''),
+    configure: (proxy) => {
+      proxy.on('proxyReq', (request) => {
+        // The executor credential is held by this dev server and is never
+        // compiled into browser JavaScript.
+        request.setHeader('Authorization', `Bearer ${token}`)
+      })
+    },
   }
 }
 
@@ -96,14 +131,22 @@ export default defineConfig(({ command }) => {
   const localFixtureLab = process.env.MISSION_CONTROL_LOCAL_FIXTURE_LAB === 'true'
   const proxy: Record<string, ProxyOptions> | undefined = command !== 'serve'
     ? undefined
-    : localFixtureLab
-      ? process.env.VITE_LOCAL_CARTRIDGE_AGENT === 'true'
-        ? { '/api/local-cartridge': localCartridgeAgentProxy() }
-        : undefined
-      : {
-          '/api/v1': missionControlProxy(),
-          '/api/web/v1': webBffProxy(),
-        }
+    : {
+        ...(process.env.VITE_LOCAL_CARTRIDGE_AGENT === 'true'
+          ? { '/api/local-cartridge': localCartridgeAgentProxy() }
+          : {}),
+        ...(process.env.KERAUN_STAGE_EXECUTOR_TOKEN
+          ? { '/api/stages': stageExecutorProxy() }
+          : {}),
+        // The fixture lab alone needs no Mission Control credential, so those
+        // proxies are only mounted when one is actually available.
+        ...(localFixtureLab && !process.env.MISSION_CONTROL_API_TOKEN
+          ? {}
+          : {
+              '/api/v1': missionControlProxy(),
+              '/api/web/v1': webBffProxy(),
+            }),
+      }
   const localServer = {
     host: LOOPBACK_HOST,
     strictPort: !localFixtureLab,

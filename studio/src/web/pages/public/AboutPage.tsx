@@ -1,5 +1,6 @@
 import type { MouseEvent } from "react";
-import { PixelIcon, StatusBeacon, TerminalWindow, type PixelIconName, type ThemeMode } from "../../shared/ui/index";
+import { ArchitectureDiagram } from "./ArchitectureDiagram";
+import { PixelIcon, StatusBeacon, type PixelIconName, type ThemeMode } from "../../shared/ui/index";
 import { SiteFooter } from "../../widgets/site/SiteFooter";
 import { SiteHeader, type PublishedDemoDescriptor, type SiteAuthStatus } from "../../widgets/site/SiteHeader";
 import "./public-pages.css";
@@ -135,7 +136,7 @@ export function AboutPage({
   theme = "dark",
   onThemeChange,
   creators,
-  submissionFacts,
+  submissionFacts: _submissionFacts,
   authStatus = "unconfigured",
   userName,
   userEmail,
@@ -152,7 +153,8 @@ export function AboutPage({
     event.preventDefault();
     onNavigate(route);
   };
-  const entries = Object.entries(submissionFacts ?? {}).filter(([, value]) => Boolean(value));
+
+  void navigate;
 
   return (
     <div className="public-page">
@@ -219,19 +221,20 @@ export function AboutPage({
             <div className="about-architecture-grid">{architecturePrinciples.map(([title, text]) => <article key={title} className="about-source-card"><h3 className="about-source-card__title">{title}</h3><p>{text}</p></article>)}</div>
           </section>
 
-          <section className="about-story-card" aria-labelledby="facts-heading">
-            <div className="about-story-card__header"><PixelIcon name="terminal" size="md" color="google-yellow" glow /><h2 id="facts-heading" className="about-story-card__title">Submission information</h2></div>
-            {entries.length ? <dl className="submission-facts-table">{entries.map(([key, value]) => <div key={key}><dt>{key.replace(/([A-Z])/g, " $1")}</dt><dd>{value}</dd></div>)}</dl> : <p className="about-story-card__text">No submission information has been supplied.</p>}
-          </section>
-
           <section className="about-story-card" aria-labelledby="creators-heading">
             <div className="about-story-card__header"><PixelIcon name="satellite" size="md" color="google-green" glow /><h2 id="creators-heading" className="about-story-card__title">Creators and contributors</h2></div>
             {creators?.length ? <div className="about-creators-grid">{creators.map((creator) => <article key={`${creator.name}-${creator.role ?? ""}`} className="creator-card"><h3 className="creator-card__name">{creator.name}</h3>{creator.role ? <span className="creator-card__role">{creator.role}</span> : null}{creator.affiliation ? <span className="creator-card__affiliation">{creator.affiliation}</span> : null}{creator.bio ? <p className="creator-card__bio">{creator.bio}</p> : null}{creator.profileUrl ? <a href={creator.profileUrl} target="_blank" rel="noopener noreferrer" className="site-footer__link">Profile →</a> : null}</article>)}</div> : <p className="about-story-card__text">No creator or contributor information has been supplied.</p>}
           </section>
 
-          <TerminalWindow title="Public-data contract" breadcrumb="public/disclosure" accent="google-blue" variant="glass"><p className="about-story-card__text">Routes and public details are supplied by the embedding application. <a href="/" onClick={(event) => navigate(event, "/")}>Return to the overview</a>.</p></TerminalWindow>
+          
         </div>
-      </main>
+      
+        <section className="about-architecture" aria-labelledby="arch-diagram-heading">
+          <h2 id="arch-diagram-heading">System architecture</h2>
+          <p>What is actually deployed and verified, not a target-state drawing. Green borders mark components confirmed running on 2026-08-31.</p>
+          <ArchitectureDiagram />
+        </section>
+</main>
       <SiteFooter onNavigate={onNavigate} demo={demo} documentationUrl="/about" sourceRepoUrl={sourceRepoUrl} links={[{ label: "Overview", route: "/" }, ...(dashboardRoute ? [{ label: "Mission control", route: dashboardRoute }] : [])]} />
     </div>
   );

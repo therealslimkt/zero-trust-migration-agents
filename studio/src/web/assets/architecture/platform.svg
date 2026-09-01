@@ -1,31 +1,4 @@
-<title>Keraun Architecture</title>
-<style>
-  :root {
-    --dg-bg:#f4f6fa; --dg-panel:#ffffff; --dg-tile:#f8fafc; --dg-line:#cbd5e1;
-    --dg-ink:#0f172a; --dg-dim:#334155; --dg-faint:#64748b; --dg-arrow:#94a3b8;
-    --dg-blue:#1a73e8; --dg-green:#188038; --dg-gold:#b06000; --dg-red:#d93025;
-    --dg-go:#007d9c; --dg-gold-tint:#fef7e0;
-  }
-  :root:not([data-theme="light"]) {
-    --dg-bg:#070a0f; --dg-panel:#0b111a; --dg-tile:#0e1622; --dg-line:#1d2a3c;
-    --dg-ink:#eaf1fa; --dg-dim:#a9bbd0; --dg-faint:#8497ad; --dg-arrow:#4b5e7a;
-    --dg-blue:#8cb2f8; --dg-green:#82c996; --dg-gold:#fde193; --dg-red:#ff8a7a;
-    --dg-go:#00ADD8; --dg-gold-tint:#161206;
-  }
-  [data-theme="light"] {
-    --dg-bg:#f4f6fa; --dg-panel:#ffffff; --dg-tile:#f8fafc; --dg-line:#cbd5e1;
-    --dg-ink:#0f172a; --dg-dim:#334155; --dg-faint:#64748b; --dg-arrow:#94a3b8;
-    --dg-blue:#1a73e8; --dg-green:#188038; --dg-gold:#b06000; --dg-red:#d93025;
-    --dg-go:#007d9c; --dg-gold-tint:#fef7e0;
-  }
-  html,body{background:var(--dg-bg);margin:0;padding:0}
-  body{font-family:"Berkeley Mono","IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-  .wrap{padding:20px;max-width:2100px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
-  svg{width:100%;height:auto;display:block;shape-rendering:crispEdges}
-  text{font-family:"Berkeley Mono","IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-</style>
-<div class="wrap">
-<svg viewBox="0 0 2000 1420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keraun platform architecture">
+<svg font-family="var(--font-mono-tactical)" viewBox="0 0 2000 1420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keraun platform architecture">
 <defs>
 <marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,1 L8,4.5 L0,8 Z" fill="var(--dg-arrow)"/></marker>
 <symbol id="pixel-activity" viewBox="0 0 16 16"><path d="M0 8h4v2H0V8zm3 0h2v-4H3v4zm2-4h2v10H5V4zm2 10h2v-7H7v7zm2-7h2v5H9V7zm2 5h2v-2h-2v2zm2-2h3v2h-3v-2z"/></symbol>
@@ -33,12 +6,14 @@
   <symbol id="pixel-apache-beam" viewBox="0 0 16 16"><path d="M1 1h6v14H1V1zm2 2v4h2V3H3zm0 6v4h2V9H3zm5-7h2v2H8V2zm2 2h2v2h-2V4zm2 2h3v2h-3V6zm-2 4h5v2h-5v-2zm-2 2h2v2H8v-2z"/></symbol>
   <symbol id="pixel-artifact-registry" viewBox="0 0 16 16"><path d="M7 0h2v2h4v2h2v8h-2v2H9v2H7v-2H3v-2H1V4h2V2h4V0zM4 4h8v2H4V4zm0 3v5h3V7H4zm5 0v5h3V7H9zM5 8h1v2H5V8zm5 0h1v2h-1V8z"/></symbol>
   <symbol id="pixel-bigquery" viewBox="0 0 16 16"><path d="M4 0h7v2h2v2h2v7h-2v2h-2v2H4v-2H2v-2H0V4h2V2h2V0zm0 3v9h7v-1h2V4h-2V3H4zm1 6h1v2H5V9zm2-3h1v5H7V6zm2 1h1v4H9V7zm2 5h2v2h-2v-2zm2 2h2v2h-2v-2z"/></symbol>
+  <symbol id="pixel-bolt" viewBox="0 0 16 16"><path d="M8 0h3v1h-3zM7 1h3v1h-3zM6 2h3v1h-3zM5 3h3v1h-3zM4 4h3v1h-3zM3 5h7v1h-7zM2 6h7v1h-7zM7 7h3v1h-3zM6 8h3v1h-3zM5 9h3v1h-3zM4 10h3v1h-3zM3 11h3v1h-3zM2 12h3v1h-3zM1 13h3v1h-3z"/></symbol>
   <symbol id="pixel-branch" viewBox="0 0 16 16"><path d="M2 1h3v3H2V1zm1 1v1h1V2H3zm0 2h1v8H3V4zm0 8h1v3H3v-3zm0 3H2v-3h1v3zm8-13h3v3h-3V2zm1 1v1h1V3h-1zm0 2h1v2h-1V5zm-1 3h2v1h-2V8zm-2 1h2v1H8V9zm-2 1h2v1H6v-1zm-2 1h2v1H4v-1zm7 0h3v3h-3v-3zm1 1v1h1v-1h-1z"/></symbol>
   <symbol id="pixel-btrieve" viewBox="0 0 16 16"><path d="M3 1h9v1h2v12h-2v1H3v-1H1V2h2V1zm2 2v10h5v-1h2V9h-2V7h2V4h-2V3H5zm2 2h3v2H7V5zm0 4h3v2H7V9z"/></symbol>
   <symbol id="pixel-bug" viewBox="0 0 16 16"><path d="M4 1h1v2H4V1zm7 0h1v2h-1V1zM5 3h6v2H5V3zm-3 3h2v1H2V6zm10 0h2v1h-2V6zM1 9h3v1H1V9zm11 0h3v1h-3V9zm1 3h2v1h-2v-1zM2 12h2v1H2v-1zm2-6h8v7H4V6zm2 2h4v4H6V8z"/></symbol>
   <symbol id="pixel-check-pixel" viewBox="0 0 16 16"><path d="M14 3h2v2h-2V3zm-2 2h2v2h-2V5zm-2 2h2v2h-2V7zm-2 2h2v2H8V9zM6 11h2v2H6v-2zM4 9h2v2H4V9zM2 7h2v2H2V7zm-2 0h2v2H0V7z"/></symbol>
   <symbol id="pixel-cloud-run" viewBox="0 0 16 16"><path d="M3 0h10v2h2v4h-2v2h-2V6h2V2H3v4h2v2H3V6H1V2h2V0zm4 4h2v8h3v2H9v2H7v-2H4v-2h3V4zm-2 5h2v2H5V9zm4 0h2v2H9V9z"/></symbol>
   <symbol id="pixel-compute-engine" viewBox="0 0 16 16"><path d="M4 0h8v2h2v2h2v8h-2v2h-2v2H4v-2H2v-2H0V4h2V2h2V0zm0 3v10h8V3H4zm2 2h4v4H6V5zm1 1v2h2V6H7zm-2 5h6v1H5v-1z"/></symbol>
+  <symbol id="pixel-copy" viewBox="0 0 16 16"><path d="M2 1h9v1h-9zM2 2h1v1h-1zM10 2h1v1h-1zM2 3h1v1h-1zM10 3h1v1h-1zM2 4h1v1h-1zM5 4h9v1h-9zM2 5h1v1h-1zM5 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM13 6h1v1h-1zM2 7h4v1h-4zM13 7h1v1h-1zM5 8h1v1h-1zM13 8h1v1h-1zM5 9h1v1h-1zM13 9h1v1h-1zM5 10h1v1h-1zM13 10h1v1h-1zM5 11h1v1h-1zM13 11h1v1h-1zM5 12h9v1h-9z"/></symbol>
   <symbol id="pixel-cpu" viewBox="0 0 16 16"><path d="M4 0h1v2H4V0zm7 0h1v2h-1V0zM0 4h2v1H0V4zm0 7h2v1H0v-1zm14-7h2v1h-2V4zm0 7h2v1h-2v-1zM4 14h1v2H4v-2zm7 0h1v2h-1v-2zM2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5zm1 1v4h4V6H6z"/></symbol>
   <symbol id="pixel-cross-pixel" viewBox="0 0 16 16"><path d="M2 2h3v2H2V2zm9 0h3v2h-3V2zm-2 2h2v2H9V4zm-4 0h2v2H5V4zm2 2h2v2H7V6zm-2 2h2v2H5V8zm4 0h2v2H9V8zm-4 2h2v2H5v-2zm4 0h2v2H9v-2zm-6 2h3v2H3v-2zm8 0h3v2h-3v-2z"/></symbol>
   <symbol id="pixel-database" viewBox="0 0 16 16"><path d="M4 1h8v1H4V1zM2 2h2v1H2V2zm10 0h2v1h-2V2zM1 3h1v2H1V3zm14 0h1v2h-1V3zM2 5h2v1H2V5zm10 0h2v1h-2V5zm-8 1h8v1H4V6zm-3 1h1v2H1V7zm14 0h1v2h-1V7zM2 9h2v1H2V9zm10 0h2v1h-2V9zm-8 1h8v1H4v-1zm-3 1h1v2H1v-2zm14 0h1v2h-1v-2zm-13 2h2v1H2v-1zm10 0h2v1h-2v-1zm-8 1h8v1H4v-1z"/></symbol>
@@ -46,6 +21,7 @@
   <symbol id="pixel-db2" viewBox="0 0 16 16"><path d="M3 1h10v1h2v3h-2v8h-2v2H3v-2H1V5h1V2h1V1zm1 2v2h8V3H4zM3 7h10V6H3v1zm0 3h7V8H3v2zm0 3h8v-2H3v2zm8-5h2v1h-2V8zm0 2h2v1h-2v-1z"/></symbol>
   <symbol id="pixel-gemini" viewBox="0 0 16 16"><path d="M7 0h2v3h2v2h2v2h3v2h-3v2h-2v2H9v3H7v-3H5v-2H3V9H0V7h3V5h2V3h2V0zm0 5v2H5v2h2v2h2V9h2V7H9V5H7z"/></symbol>
   <symbol id="pixel-gemma" viewBox="0 0 16 16"><path d="M3 1h10v2h2v4h-2v2h-2v2H9v2H7v-2H5V9H3V7H1V3h2V1zm1 2v3h3V3H4zm5 0v3h3V3H9zM3 7l4 4V7H3zm6 0v4l4-4H9z"/></symbol>
+  <symbol id="pixel-go-gopher" viewBox="0 0 16 16"><path d="M4 0h1v1h-1zM11 0h1v1h-1zM4 1h1v1h-1zM11 1h1v1h-1zM3 2h3v1h-3zM10 2h3v1h-3zM3 3h10v1h-10zM2 4h12v1h-12zM2 5h1v1h-1zM4 5h2v1h-2zM10 5h2v1h-2zM13 5h1v1h-1zM2 6h12v1h-12zM2 7h5v1h-5zM9 7h5v1h-5zM2 8h4v1h-4zM7 8h2v1h-2zM10 8h4v1h-4zM2 9h12v1h-12zM3 10h10v1h-10zM3 11h10v1h-10zM3 12h10v1h-10zM3 13h10v1h-10zM3 14h2v1h-2zM7 14h2v1h-2zM11 14h2v1h-2zM3 15h1v1h-1zM8 15h1v1h-1zM13 15h1v1h-1z"/></symbol>
   <symbol id="pixel-google-cloud" viewBox="0 0 16 16"><path d="M6 2h5v2h2v2h2v6h-2v2H3v-1H1v-2H0V8h2V6h2V4h2V2zm0 3v2H4v2H2v2h2v1h8v-1h1V8h-2V6H9V5H6z"/></symbol>
   <symbol id="pixel-identity-platform" viewBox="0 0 16 16"><path d="M2 1h12v7c0 4-3 6-6 8-3-2-6-4-6-8V1zm2 2v5c0 2 2 4 4 5 2-1 4-3 4-5V3H4zm3 1h2v3H7V4zM5 8h6v3H5V8zm2 1v1h2V9H7z"/></symbol>
   <symbol id="pixel-jdbc-jar" viewBox="0 0 16 16"><path d="M4 0h7v2H4V0zM3 2h9v2H3V2zM2 4h11v10H2V4zm2 2v6h7V6H4zm2 1h3v1H6V7zm0 2h4v1H6V9zm7-4h2v2h-2V5zm0 4h2v2h-2V9zm1-2h2v2h-2V7z"/></symbol>
@@ -64,17 +40,19 @@
   <symbol id="pixel-tailscale" viewBox="0 0 16 16"><path d="M1 1h4v4H1V1zm5 0h4v4H6V1zm5 0h4v4h-4V1zM1 6h4v4H1V6zm5 0h4v4H6V6zm5 0h4v4h-4V6zM1 11h4v4H1v-4zm5 0h4v4H6v-4zm5 0h4v4h-4v-4zM2 2v2h2V2H2zm5 5v2h2V7H7zm5 5v2h2v-2h-2z"/></symbol>
   <symbol id="pixel-terminal" viewBox="0 0 16 16"><path d="M1 2h14v12H1V2zm1 1v10h12V3H2zm2 2h2v1H4V5zm2 1h2v1H6V6zm-2 1h2v1H4V7zm5 3h4v1H9v-1z"/></symbol>
   <symbol id="pixel-vertex-ai" viewBox="0 0 16 16"><path d="M5 0h6v2h2v2h2v8h-2v2h-2v2H5v-2H3v-2H1V4h2V2h2V0zm1 3v3H3v4h3v3h4v-3h3V6h-3V3H6zm1 2h2v2h2v2H9v2H7V9H5V7h2V5z"/></symbol>
+  <symbol id="pixel-zoom-in" viewBox="0 0 16 16"><path d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM3 4h5v1h-5zM10 4h1v1h-1zM0 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h1v1h-1zM3 9h5v1h-5zM8 10h3v1h-3zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></symbol>
+  <symbol id="pixel-zoom-out" viewBox="0 0 16 16"><path d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM3 4h5v1h-5zM10 4h1v1h-1zM0 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h1v1h-1zM3 9h5v1h-5zM8 10h3v1h-3zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></symbol>
 </defs>
 <rect width="2000" height="1580" fill="var(--dg-bg)"/>
-<rect x="44" y="30" width="9" height="34" fill="var(--dg-gold)"/>
-<text x="70" y="58" font-size="28" font-weight="700" fill="var(--dg-ink)" letter-spacing="2.5">KERAUN</text>
-<text x="238" y="58" font-size="15" font-weight="400" fill="var(--dg-faint)" text-anchor="start">PLATFORM ARCHITECTURE</text>
+<g transform="translate(40 22) scale(0.83)"><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" transform="translate(1.6 1.4)" fill="#e2b0e8" opacity="0.68"/><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" fill="#e2b0e8" stroke="#e2b0e8" stroke-width="1.25" stroke-linejoin="round"/><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" transform="translate(7.2 6.9) scale(0.7)" fill="#fa07c9"/></g><rect x="96" y="30" width="9" height="34" fill="var(--dg-gold)"/>
+<text x="122" y="58" font-size="28" font-weight="700" fill="var(--dg-ink)" letter-spacing="2.5">KERAUN</text>
+<text x="292" y="58" font-size="15" font-weight="400" fill="var(--dg-faint)" text-anchor="start">PLATFORM ARCHITECTURE</text>
 <text x="1956" y="58" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="end">google cloud · ztm-agent-9049c3</text>
 <rect x="44" y="88" width="560" height="340" fill="var(--dg-panel)" stroke="var(--dg-red)" stroke-width="2.5" stroke-dasharray="8 5"/>
 <rect x="60" y="104" width="9" height="9" fill="var(--dg-red)"/>
 <text x="79" y="113" font-size="14" font-weight="700" fill="var(--dg-red)" letter-spacing="1.6">PRIVATE LEGACY PERIMETER</text>
-<text x="354.6" y="113" font-size="12.5" fill="var(--dg-faint)">gVisor · internal-only · no external IP</text>
-<rect x="70" y="132" width="268" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
+<text x="354.6" y="113" font-size="12.5" fill="var(--dg-faint)">gVisor · no external IP</text>
+<rect x="70" y="144.0" width="268" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
 <rect x="79" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
 <use fill="currentColor" href="#pixel-db2" x="84" y="147" width="16" height="16" color="var(--dg-blue)"/>
 <text x="115" y="153" font-size="14" fill="var(--dg-ink)">IBM Db2 for i</text>
@@ -96,7 +74,7 @@
 <text x="115" y="342" font-size="11.5" fill="var(--dg-faint)">the only container permitted to query</text>
 <text x="70" y="380" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="start">read-only role · count-only egress</text>
 <text x="70" y="404" font-size="12.5" font-weight="700" fill="var(--dg-red)" text-anchor="start">sanitized artifacts only</text>
-<rect x="356" y="132" width="226" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
+<rect x="356" y="144.0" width="226" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
 <rect x="365" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
 <use fill="currentColor" href="#pixel-cpu" x="370" y="147" width="16" height="16" color="var(--dg-gold)"/>
 <text x="401" y="153" font-size="14" fill="var(--dg-ink)">Gemma 2 · edge</text>
@@ -108,8 +86,8 @@
 <rect x="636" y="88" width="380" height="340" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
 <rect x="652" y="104" width="9" height="9" fill="var(--dg-go)"/>
 <text x="671" y="113" font-size="14" font-weight="700" fill="var(--dg-go)" letter-spacing="1.6">GO CONTROL PLANE</text>
-<text x="863.4" y="113" font-size="12.5" fill="var(--dg-faint)">the only source of truth</text>
-<rect x="662" y="132" width="328" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
+<text x="863.4" y="113" font-size="12.5" fill="var(--dg-faint)">source of truth</text>
+<rect x="662" y="144.0" width="328" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
 <rect x="671" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
 <use fill="currentColor" href="#pixel-server" x="676" y="147" width="16" height="16" color="var(--dg-go)"/>
 <text x="707" y="161" font-size="14" fill="var(--dg-ink)">Three ingress doors</text>
@@ -135,7 +113,7 @@
 <rect x="1064" y="104" width="9" height="9" fill="var(--dg-blue)"/>
 <text x="1083" y="113" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1.6">VERTEX AI</text>
 <text x="1202.6" y="113" font-size="12.5" fill="var(--dg-faint)">Antigravity SDK 0.1.14</text>
-<rect x="1074" y="132" width="388" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
+<rect x="1074" y="144.0" width="388" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
 <rect x="1083" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
 <use fill="currentColor" href="#pixel-vertex-ai" x="1088" y="147" width="16" height="16" color="var(--dg-blue)"/>
 <text x="1119" y="153" font-size="14" fill="var(--dg-ink)">gemini-3.5-flash</text>
@@ -157,7 +135,7 @@
 <rect x="1536" y="104" width="9" height="9" fill="var(--dg-green)"/>
 <text x="1555" y="113" font-size="14" font-weight="700" fill="var(--dg-green)" letter-spacing="1.6">TRUSTED EXECUTION</text>
 <text x="1757.8" y="113" font-size="12.5" fill="var(--dg-faint)">after approval only</text>
-<rect x="1546" y="132" width="384" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
+<rect x="1546" y="144.0" width="384" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
 <rect x="1555" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
 <use fill="currentColor" href="#pixel-apache-beam" x="1560" y="147" width="16" height="16" color="var(--dg-green)"/>
 <text x="1591" y="153" font-size="14" fill="var(--dg-ink)">Apache Beam 2.75.0</text>
@@ -182,7 +160,7 @@
 <rect x="44" y="456" width="1912" height="330" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="2.5"/>
 <rect x="60" y="472" width="9" height="9" fill="var(--dg-blue)"/>
 <text x="79" y="481" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1.6">THE FLEET · every agent, its authority, and its limit</text>
-<text x="656.2" y="481" font-size="12.5" fill="var(--dg-faint)">a typed task envelope, a scoped identity, an allowlisted tool set, and an evidence obligation</text>
+<text x="656.2" y="481" font-size="12.5" fill="var(--dg-faint)">typed envelope · scoped identity · allowlisted tools · evidence obligation</text>
 <rect x="70" y="500" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
 <rect x="70" y="500" width="4" height="62" fill="var(--dg-go)"/>
 <rect x="84" y="517" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
@@ -264,7 +242,7 @@
 <rect x="44" y="914.0" width="1912" height="200" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="2.5"/>
 <rect x="60" y="930.0" width="9" height="9" fill="var(--dg-gold)"/>
 <text x="79" y="939.0" font-size="14" font-weight="700" fill="var(--dg-gold)" letter-spacing="1.6">DISCOVERY &amp; CATALOGING</text>
-<text x="333.8" y="1109" font-size="12.5" fill="var(--dg-faint)">the fleet extends itself · no run auto-publishes</text>
+<text x="333.8" y="1109" font-size="12.5" fill="var(--dg-faint)">no run auto-publishes</text>
 <rect x="70" y="960.0" width="340" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
 <rect x="79" y="970.0" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
 <use fill="currentColor" href="#pixel-radar" x="84" y="975.0" width="16" height="16" color="var(--dg-blue)"/>
@@ -316,194 +294,3 @@
 <use fill="currentColor" href="#pixel-check-pixel" x="70" y="1328.0" width="14" height="14" color="var(--dg-green)"/>
 <text x="94" y="1340.0" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="start">sealed emulators on an internal-only network, read-only role</text>
 </svg>
-<svg viewBox="0 0 1640 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keraun Go control plane">
-<defs>
-<marker id="g" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,1 L7,4 L0,7 Z" fill="var(--dg-arrow)"/></marker>
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-</defs>
-<rect width="1640" height="720" fill="var(--dg-bg)"/>
-<rect x="36" y="26" width="8" height="28" fill="var(--dg-go)"/>
-<text x="58" y="48" font-size="26.8" font-weight="700" fill="var(--dg-ink)" letter-spacing="2">GO CONTROL PLANE</text>
-<text x="330" y="48" font-size="15.2" fill="var(--dg-dim)" text-anchor="start">studio-backend/ · deterministic · zero LLM</text>
-<text x="1604" y="48" font-size="13.4" fill="var(--dg-go)" text-anchor="end">the browser holds no authority</text>
-<rect x="36" y="72" width="372" height="250" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="50" y="85" width="7" height="7" fill="var(--dg-go)"/>
-<text x="66" y="92" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">INGRESS · THREE DOORS</text>
-<text x="56" y="104" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">loopback-only · Origin refused</text>
-<rect x="56" y="118" width="332" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="63" y="125" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-terminal" x="68" y="130" width="14" height="14" color="var(--dg-go)"/>
-<text x="96" y="142" font-size="14.6" fill="var(--dg-ink)">/internal/v1/terminal</text>
-<text x="96" y="174" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">producer token</text>
-<rect x="56" y="180" width="332" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="63" y="187" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-branch" x="68" y="192" width="14" height="14" color="var(--dg-go)"/>
-<text x="96" y="204" font-size="14.6" fill="var(--dg-ink)">/internal/v1/orchestration</text>
-<text x="96" y="236" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">orchestrator token</text>
-<rect x="56" y="242" width="332" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="63" y="249" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-identity-platform" x="68" y="254" width="14" height="14" color="var(--dg-go)"/>
-<text x="96" y="266" font-size="14.6" fill="var(--dg-ink)">/api/web/v1/…</text>
-<text x="96" y="298" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">Identity Platform</text>
-<rect x="444" y="72" width="340" height="250" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="458" y="85" width="7" height="7" fill="var(--dg-go)"/>
-<text x="474" y="92" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">ADMISSION</text>
-<text x="464" y="104" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">a frame is data, never a command</text>
-<rect x="464" y="118" width="300" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="471" y="125" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-shield-check" x="476" y="130" width="14" height="14" color="var(--dg-go)"/>
-<text x="504" y="142" font-size="14.6" fill="var(--dg-ink)">Schema + enum checks</text>
-<rect x="464" y="180" width="300" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="471" y="187" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-lock" x="476" y="192" width="14" height="14" color="var(--dg-go)"/>
-<text x="504" y="204" font-size="14.6" fill="var(--dg-ink)">Credential suppression</text>
-<rect x="464" y="242" width="300" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="471" y="249" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-activity" x="476" y="254" width="14" height="14" color="var(--dg-go)"/>
-<text x="504" y="266" font-size="14.6" fill="var(--dg-ink)">Monotonic ordering</text>
-<text x="504" y="174" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">lane · stream · severity</text>
-<text x="504" y="236" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">patterns refused at the door</text>
-<text x="504" y="298" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">backward stamps rejected</text>
-<path d="M408 197 L442 197" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="820" y="72" width="380" height="250" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="834" y="85" width="7" height="7" fill="var(--dg-go)"/>
-<text x="850" y="92" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">FROZEN STATE MACHINE</text>
-<text x="840" y="104" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">control_plane.go · cpAdvanceSteps</text>
-<rect x="840" y="118" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="893" y="138" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">created</text>
-<path d="M946 134 L956 134" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="958" y="118" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="1011" y="138" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">inventorying</text>
-<path d="M1064 134 L1074 134" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1076" y="118" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="1129" y="138" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">redacting</text>
-<path d="M1129 150 L1129 156 L893 156 L893 162" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="840" y="162" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="893" y="182" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">planning</text>
-<path d="M946 178 L956 178" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="958" y="162" width="106" height="32" fill="var(--dg-gold-tint)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<text x="1011" y="182" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">awaiting_approval</text>
-<path d="M1064 178 L1074 178" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1076" y="162" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="1129" y="182" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">approved</text>
-<path d="M1129 194 L1129 200 L893 200 L893 206" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="840" y="206" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="893" y="226" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">executing</text>
-<path d="M946 222 L956 222" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="958" y="206" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="1011" y="226" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">verifying</text>
-<path d="M1064 222 L1074 222" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1076" y="206" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<text x="1129" y="226" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">completed</text>
-<text x="840" y="288" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">each step names the evidence it requires</text>
-<text x="840" y="306" font-size="12.8" fill="var(--dg-red)" text-anchor="start">any other transition fails closed</text>
-<path d="M784 197 L818 197" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1236" y="72" width="368" height="250" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="1250" y="85" width="7" height="7" fill="var(--dg-go)"/>
-<text x="1266" y="92" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">AUTHORITY</text>
-<text x="1256" y="104" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">web_identity.go · m3_approval.go</text>
-<rect x="1256" y="118" width="328" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1263" y="125" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-key" x="1268" y="130" width="14" height="14" color="var(--dg-go)"/>
-<text x="1296" y="142" font-size="14.6" fill="var(--dg-ink)">Approver = verified UID</text>
-<rect x="1256" y="180" width="328" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1263" y="187" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-shield-check" x="1268" y="192" width="14" height="14" color="var(--dg-gold)"/>
-<text x="1296" y="204" font-size="14.6" fill="var(--dg-ink)">Digest-bound ledger</text>
-<rect x="1256" y="242" width="328" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1263" y="249" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-check-pixel" x="1268" y="254" width="14" height="14" color="var(--dg-go)"/>
-<text x="1296" y="266" font-size="14.6" fill="var(--dg-ink)">Idempotency + leases</text>
-<text x="1296" y="174" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">a spoofed decidedBy is refused</text>
-<text x="1296" y="236" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">a stale digest is refused</text>
-<text x="1296" y="298" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">duplicate dispatch returns prior</text>
-<path d="M1200 197 L1234 197" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="36" y="348" width="748" height="200" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="50" y="361" width="7" height="7" fill="var(--dg-go)"/>
-<text x="66" y="368" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">DURABLE STATE</text>
-<rect x="56" y="392" width="222" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="63" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-database" x="68" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="96" y="416" font-size="14.6" fill="var(--dg-ink)">Firestore</text>
-<text x="56" y="448" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">runs · events · approvals</text>
-<rect x="298" y="392" width="222" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="305" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-server" x="310" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="338" y="416" font-size="14.6" fill="var(--dg-ink)">Cloud SQL</text>
-<text x="298" y="448" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">replayable episodic history</text>
-<rect x="540" y="392" width="222" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="547" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-artifact-registry" x="552" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="580" y="416" font-size="14.6" fill="var(--dg-ink)">GCS</text>
-<text x="540" y="448" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">content-addressed artifacts</text>
-<text x="56" y="486" font-size="12.8" fill="var(--dg-red)" text-anchor="start">on disagreement Cloud SQL wins and execution fails closed</text>
-<text x="56" y="508" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">state survives process restart; nothing authoritative lives in the browser</text>
-<path d="M410 322 L410 346" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="820" y="348" width="380" height="200" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="834" y="361" width="7" height="7" fill="var(--dg-go)"/>
-<text x="850" y="368" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">EVENT FAN-OUT</text>
-<rect x="840" y="392" width="340" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="847" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-activity" x="852" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="880" y="416" font-size="14.6" fill="var(--dg-ink)">SSE · text/event-stream</text>
-<text x="840" y="448" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">GET …/runs/{id}/events</text>
-<text x="840" y="468" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">GET …/sources/{id}/terminal</text>
-<text x="840" y="496" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">resumable by frame id</text>
-<text x="840" y="516" font-size="12.8" fill="var(--dg-green)" text-anchor="start">no timer · no random value</text>
-<path d="M1010 322 L1010 346" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1236" y="348" width="368" height="200" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="1250" y="361" width="7" height="7" fill="var(--dg-go)"/>
-<text x="1266" y="368" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">EVIDENCE</text>
-<rect x="1256" y="392" width="328" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1263" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-radar" x="1268" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="1296" y="416" font-size="14.6" fill="var(--dg-ink)">trace · job · digest</text>
-<text x="1256" y="448" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">reconciliation rows</text>
-<text x="1256" y="468" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">policy denials recorded</text>
-<text x="1256" y="496" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">a success claim without an</text>
-<text x="1256" y="516" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">evidence link is unproven</text>
-<path d="M1420 322 L1420 346" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="560" y="592" width="520" height="46" fill="var(--dg-tile)" stroke="var(--dg-blue)" stroke-width="2"/>
-<rect x="574" y="600" width="30" height="30" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-terminal" x="581" y="607" width="16" height="16" color="var(--dg-blue)"/>
-<text x="616" y="613" font-size="15.9" font-weight="700" fill="var(--dg-blue)">Mission Control · three mirrors</text>
-<text x="616" y="628" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">every visible frame originates in a persisted backend event</text>
-<path d="M1010 548 L1010 590" stroke="var(--dg-go)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<text x="1024" y="576" font-size="12.8" fill="var(--dg-go)" text-anchor="start">SSE</text>
-</svg>
-</div>

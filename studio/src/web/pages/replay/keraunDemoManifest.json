@@ -1,0 +1,1211 @@
+{
+ "schemaVersion": "1.0.0",
+ "demoId": "demo_keraun_jde_portfolio",
+ "experienceMode": "recorded_demo",
+ "dataClass": "synthetic_demo",
+ "title": "JDE, SAP MaxDB and Btrieve to BigQuery",
+ "sourceRunId": "mig_BXVYoLJUIPvFwKYB",
+ "runState": "completed",
+ "portfolioPlanDigest": "sha256:0e6a8e0b849ed9b064c5a25e1ee5592f427e3eb9d250e42069ce46147d00e8d4",
+ "publishedAt": "2026-08-31T23:19:38.524Z",
+ "bundleDigest": "sha256:1e6ed65d77d6364eeaed5a745ba5c4985ae2b700dd85d7cf7f027bdf294a33fc",
+ "practiceApproval": {
+  "pauseAfterSequence": 2,
+  "planDigest": "sha256:0e6a8e0b849ed9b064c5a25e1ee5592f427e3eb9d250e42069ce46147d00e8d4",
+  "prompt": "Approve this exact portfolio digest to allow the pre-registered transform to run."
+ },
+ "sources": [
+  {
+   "sourceId": "jde",
+   "hostname": "legacy-jde-db",
+   "displayName": "JD Edwards EnterpriseOne",
+   "source": {
+    "databaseFamily": "IBM Db2 for i",
+    "databaseVersion": "7.4",
+    "applicationLayer": "JD Edwards EnterpriseOne 9.2",
+    "schema": [
+     {
+      "name": "ABAN8",
+      "dataType": "CHAR(8)",
+      "nullable": false
+     },
+     {
+      "name": "ABALPH",
+      "dataType": "CHAR(40)",
+      "nullable": false
+     },
+     {
+      "name": "ABUPMJ",
+      "dataType": "NUMERIC(6)",
+      "nullable": false
+     }
+    ],
+    "samples": [
+     {
+      "recordId": "sample-1",
+      "rawBytesHex": "f0f0f0f0f0f0f0f14e6f72746873746172",
+      "decodedFields": [
+       {
+        "name": "ABAN8",
+        "dataType": "string",
+        "value": "00000001"
+       },
+       {
+        "name": "ABALPH",
+        "dataType": "string",
+        "value": "Northstar Components LLC"
+       },
+       {
+        "name": "ABUPMJ",
+        "dataType": "string",
+        "value": "124001"
+       }
+      ]
+     }
+    ],
+    "exampleQueries": [
+     "SELECT * FROM jde_f0101 LIMIT 10"
+    ]
+   },
+   "compiler": {
+    "actions": [
+     {
+      "sequence": 1,
+      "eventId": "evt_jde0000000001",
+      "timestamp": "2026-08-31T23:19:38.524Z",
+      "stage": "plan",
+      "agent": "PRISMA",
+      "tool": "vertex.gemini-3.5-flash",
+      "summary": "Proposed a closed declarative transform contract",
+      "result": "Schema-valid; no executable output",
+      "evidenceReferences": []
+     }
+    ],
+    "transforms": [
+     {
+      "sequence": 1,
+      "operation": "rename",
+      "sourceField": "ABAN8",
+      "targetField": "address_number"
+     },
+     {
+      "sequence": 2,
+      "operation": "rename",
+      "sourceField": "ABALPH",
+      "targetField": "alpha_name"
+     },
+     {
+      "sequence": 3,
+      "operation": "rename",
+      "sourceField": "ABUPMJ",
+      "targetField": "updated_date"
+     }
+    ],
+    "driver": {
+     "coordinates": "synthetic-emulator/no-vendor-driver",
+     "version": "n/a",
+     "sourceUrl": "https://github.com/therealslimkt/zero-trust-migration-agents",
+     "license": "synthetic fixture; no vendor driver used",
+     "sha256": "sha256:db502f592b59715f17f1f56e548512bd15bbe926bf9abb2ac849da8785f7e74a",
+     "signatureVerified": false
+    },
+    "localGemmaEvidence": {
+     "artifactId": "art_gemma_jde",
+     "kind": "redaction_report",
+     "digest": "sha256:94f29c646c66f743d7e1095882b4109056ff7f0b4172fa89c88f321537fb78d6"
+    },
+    "geminiVertexEvidence": {
+     "artifactId": "art_vertex_jde",
+     "kind": "transform_plan",
+     "digest": "sha256:58101b95e6feb0775f875fdcd9adabcb854e694c1c89083d87cd1fc366e82c79"
+    },
+    "beamTransformIds": [
+     "decode",
+     "cast",
+     "write"
+    ],
+    "dataflowJobId": "cloud-run-trusted-runner-not-dataflow",
+    "approval": {
+     "approvalId": "apr_jde00000000001",
+     "decision": "approved",
+     "decidedAt": "2026-08-31T23:19:38.524Z",
+     "planDigest": "sha256:d9dc91eafc0080c0a2d22da3c56d84e46b986ddbdc8b81afdf5e56432eaad59e"
+    }
+   },
+   "destination": {
+    "dataset": "keraun_demo",
+    "table": "jde_f0101",
+    "schema": [
+     {
+      "name": "address_number",
+      "dataType": "STRING",
+      "nullable": true
+     },
+     {
+      "name": "alpha_name",
+      "dataType": "STRING",
+      "nullable": true
+     },
+     {
+      "name": "updated_date",
+      "dataType": "DATE",
+      "nullable": true
+     }
+    ],
+    "rows": [
+     {
+      "recordId": "1",
+      "fields": [
+       {
+        "name": "address_number",
+        "dataType": "string",
+        "value": "00000001"
+       },
+       {
+        "name": "alpha_name",
+        "dataType": "string",
+        "value": "Northstar Components LLC"
+       },
+       {
+        "name": "updated_date",
+        "dataType": "string",
+        "value": "2024-01-01"
+       }
+      ]
+     }
+    ],
+    "reconciliation": {
+     "status": "matched",
+     "recordsRead": 1,
+     "recordsWritten": 1,
+     "recordsRejected": 0,
+     "outputRows": 1,
+     "sourceChecksum": "sha256:1709f2d37262eac75e429f6681898f952f7dd9911dd842d483b517395c0c0c06",
+     "destinationChecksum": "sha256:bd91df476f9875dd1004bdd4edb4f0ade8b5657b4cf04f00d0bd3f0145ac1446",
+     "evidence": {
+      "artifactId": "art_reconcile_jde",
+      "kind": "reconciliation",
+      "digest": "sha256:103c0ba72af36e89db5ccf2c8d30c501b730128fc7abc659db3a6f4fbdd13910"
+     }
+    },
+    "dataflowEvidence": {
+     "artifactId": "art_exec_jde",
+     "kind": "dataflow_job",
+     "digest": "sha256:e81455742388ed25eb48ddba32a434d92570f445352ff12e223d0883d9a537a0"
+    },
+    "bigQueryEvidence": {
+     "artifactId": "art_bq_jde",
+     "kind": "bigquery_table",
+     "digest": "sha256:6592e38ab8c992278636e370bf31073e456d4948ff6f7320fea9a1000f582d9a"
+    },
+    "suggestedQueries": [
+     "SELECT * FROM `ztm-agent-9049c3.keraun_demo.jde_f0101`"
+    ]
+   },
+   "terminalFrames": [
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000000000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 1,
+     "laneSequence": 1,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "command",
+     "producer": "legacy-jde-db",
+     "tool": "jdbc",
+     "line": "$ SELECT ABAN8, ABALPH, ABUPMJ FROM F0101 FETCH FIRST 4 ROWS ONLY",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000100000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 2,
+     "laneSequence": 2,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "stdout",
+     "producer": "legacy-jde-db",
+     "tool": "jdbc",
+     "line": "EBCDIC cp037 payload returned; 4 records",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000200000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 3,
+     "laneSequence": 3,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "stdout",
+     "producer": "legacy-jde-db",
+     "tool": "jdbc",
+     "line": "ABUPMJ is CYYDDD julian, not a DATE",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000300000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 4,
+     "laneSequence": 4,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "edge",
+     "stream": "system",
+     "producer": "edge-runtime",
+     "tool": "redactor",
+     "line": "deterministic policy applied; ABALPH classified name",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000400000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 5,
+     "laneSequence": 5,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "stdout",
+     "producer": "prisma",
+     "tool": "vertex",
+     "line": "gemini-3.5-flash proposed: map_date ABUPMJ -> updated_date",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000500000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 6,
+     "laneSequence": 6,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "stdout",
+     "producer": "vale",
+     "tool": "validator",
+     "line": "closed-schema check passed; no executable output",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000600000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 7,
+     "laneSequence": 7,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "system",
+     "producer": "steward",
+     "tool": "approval",
+     "line": "plan digest bound; awaiting one human decision",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000700000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 8,
+     "laneSequence": 8,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "destination",
+     "stream": "stdout",
+     "producer": "ledger",
+     "tool": "bigquery",
+     "line": "4 rows written to keraun_demo.jde_f0101",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_jde000800000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "jde",
+     "globalSequence": 9,
+     "laneSequence": 9,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "destination",
+     "stream": "metric",
+     "producer": "ledger",
+     "tool": "bigquery",
+     "line": "reconcile read=4 written=4 rejected=0 MATCHED",
+     "severity": "info",
+     "evidenceReferences": []
+    }
+   ]
+  },
+  {
+   "sourceId": "maxdb",
+   "hostname": "legacy-maxdb",
+   "displayName": "SAP ERP (MaxDB)",
+   "source": {
+    "databaseFamily": "SAP MaxDB",
+    "databaseVersion": "7.9",
+    "applicationLayer": "SAP ECC 6.0",
+    "schema": [
+     {
+      "name": "KUNNR",
+      "dataType": "CHAR(10)",
+      "nullable": false
+     },
+     {
+      "name": "NAME1",
+      "dataType": "CHAR(35)",
+      "nullable": false
+     },
+     {
+      "name": "ORT01",
+      "dataType": "CHAR(35)",
+      "nullable": false
+     },
+     {
+      "name": "LAND1",
+      "dataType": "CHAR(3)",
+      "nullable": false
+     }
+    ],
+    "samples": [
+     {
+      "recordId": "sample-1",
+      "rawBytesHex": "4d5844424b4e41310101040058000000",
+      "decodedFields": [
+       {
+        "name": "KUNNR",
+        "dataType": "string",
+        "value": "0000000001"
+       },
+       {
+        "name": "NAME1",
+        "dataType": "string",
+        "value": "Northstar Components LLC"
+       },
+       {
+        "name": "ORT01",
+        "dataType": "string",
+        "value": "Chicago"
+       },
+       {
+        "name": "LAND1",
+        "dataType": "string",
+        "value": "US"
+       }
+      ]
+     }
+    ],
+    "exampleQueries": [
+     "SELECT * FROM sap_kna1_clustered LIMIT 10"
+    ]
+   },
+   "compiler": {
+    "actions": [
+     {
+      "sequence": 1,
+      "eventId": "evt_maxdb0000000001",
+      "timestamp": "2026-08-31T23:19:38.524Z",
+      "stage": "plan",
+      "agent": "PRISMA",
+      "tool": "vertex.gemini-3.5-flash",
+      "summary": "Proposed a closed declarative transform contract",
+      "result": "Schema-valid; no executable output",
+      "evidenceReferences": []
+     }
+    ],
+    "transforms": [
+     {
+      "sequence": 1,
+      "operation": "rename",
+      "sourceField": "KUNNR",
+      "targetField": "customer_number"
+     },
+     {
+      "sequence": 2,
+      "operation": "rename",
+      "sourceField": "NAME1",
+      "targetField": "name"
+     },
+     {
+      "sequence": 3,
+      "operation": "rename",
+      "sourceField": "ORT01",
+      "targetField": "city"
+     },
+     {
+      "sequence": 4,
+      "operation": "rename",
+      "sourceField": "LAND1",
+      "targetField": "country"
+     }
+    ],
+    "driver": {
+     "coordinates": "synthetic-emulator/no-vendor-driver",
+     "version": "n/a",
+     "sourceUrl": "https://github.com/therealslimkt/zero-trust-migration-agents",
+     "license": "synthetic fixture; no vendor driver used",
+     "sha256": "sha256:96cf421af8c1d59b33d0c6ae51b1c26a84db8e44933f1d6fbfeb28a15fa328d6",
+     "signatureVerified": false
+    },
+    "localGemmaEvidence": {
+     "artifactId": "art_gemma_maxdb",
+     "kind": "redaction_report",
+     "digest": "sha256:2355fdde09c0c81d7dcc84d5c2c375a80c227350d4b03bd642d1c90edd3b5a3f"
+    },
+    "geminiVertexEvidence": {
+     "artifactId": "art_vertex_maxdb",
+     "kind": "transform_plan",
+     "digest": "sha256:f04f90b94164c96dafbee304f5dcdca3f763234025644852e2d3f2be4e023dd9"
+    },
+    "beamTransformIds": [
+     "decode",
+     "cast",
+     "write"
+    ],
+    "dataflowJobId": "cloud-run-trusted-runner-not-dataflow",
+    "approval": {
+     "approvalId": "apr_maxdb00000000001",
+     "decision": "approved",
+     "decidedAt": "2026-08-31T23:19:38.524Z",
+     "planDigest": "sha256:dcfffb5339c89c96ca7fcd16fdbcfeca832f8ce3778b2d8af18db0b90640f421"
+    }
+   },
+   "destination": {
+    "dataset": "keraun_demo",
+    "table": "sap_kna1_clustered",
+    "schema": [
+     {
+      "name": "customer_number",
+      "dataType": "STRING",
+      "nullable": true
+     },
+     {
+      "name": "name",
+      "dataType": "STRING",
+      "nullable": true
+     },
+     {
+      "name": "city",
+      "dataType": "STRING",
+      "nullable": true
+     },
+     {
+      "name": "country",
+      "dataType": "STRING",
+      "nullable": true
+     }
+    ],
+    "rows": [
+     {
+      "recordId": "1",
+      "fields": [
+       {
+        "name": "customer_number",
+        "dataType": "string",
+        "value": "0000000001"
+       },
+       {
+        "name": "name",
+        "dataType": "string",
+        "value": "Northstar Components LLC"
+       },
+       {
+        "name": "city",
+        "dataType": "string",
+        "value": "Chicago"
+       },
+       {
+        "name": "country",
+        "dataType": "string",
+        "value": "US"
+       }
+      ]
+     },
+     {
+      "recordId": "2",
+      "fields": [
+       {
+        "name": "customer_number",
+        "dataType": "string",
+        "value": "0000000002"
+       },
+       {
+        "name": "name",
+        "dataType": "string",
+        "value": "Blue Heron Manufacturing Ltd"
+       },
+       {
+        "name": "city",
+        "dataType": "string",
+        "value": "Toronto"
+       },
+       {
+        "name": "country",
+        "dataType": "string",
+        "value": "CA"
+       }
+      ]
+     },
+     {
+      "recordId": "3",
+      "fields": [
+       {
+        "name": "customer_number",
+        "dataType": "string",
+        "value": "0000000003"
+       },
+       {
+        "name": "name",
+        "dataType": "string",
+        "value": "Juniper Industrial GmbH"
+       },
+       {
+        "name": "city",
+        "dataType": "string",
+        "value": "Berlin"
+       },
+       {
+        "name": "country",
+        "dataType": "string",
+        "value": "DE"
+       }
+      ]
+     },
+     {
+      "recordId": "4",
+      "fields": [
+       {
+        "name": "customer_number",
+        "dataType": "string",
+        "value": "0000000004"
+       },
+       {
+        "name": "name",
+        "dataType": "string",
+        "value": "Copper Finch Systems KK"
+       },
+       {
+        "name": "city",
+        "dataType": "string",
+        "value": "Tokyo"
+       },
+       {
+        "name": "country",
+        "dataType": "string",
+        "value": "JP"
+       }
+      ]
+     }
+    ],
+    "reconciliation": {
+     "status": "matched",
+     "recordsRead": 4,
+     "recordsWritten": 4,
+     "recordsRejected": 0,
+     "outputRows": 4,
+     "sourceChecksum": "sha256:0777e84cd8b323ab7671f5ff49fa39b1d6039273635a8b7994b944aafb50b55d",
+     "destinationChecksum": "sha256:becb145f736b8560d17c0ae761e601dc850df65087931fd482d6be84c88b7412",
+     "evidence": {
+      "artifactId": "art_reconcile_maxdb",
+      "kind": "reconciliation",
+      "digest": "sha256:dd49fc6c78a1c636bc9502c9143510e5ed236eab6d08fcc3c71ee150be93dd45"
+     }
+    },
+    "dataflowEvidence": {
+     "artifactId": "art_exec_maxdb",
+     "kind": "dataflow_job",
+     "digest": "sha256:0909a0c5b460aa17937930606f7dab022b5dbf6082f9aa6a746499be2f5b35fb"
+    },
+    "bigQueryEvidence": {
+     "artifactId": "art_bq_maxdb",
+     "kind": "bigquery_table",
+     "digest": "sha256:875e11f24e1e2c11fcb891994aa5f6f7ed7e1a41a3627a981d82d34709b52f53"
+    },
+    "suggestedQueries": [
+     "SELECT * FROM `ztm-agent-9049c3.keraun_demo.sap_kna1_clustered`"
+    ]
+   },
+   "terminalFrames": [
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00000000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 10,
+     "laneSequence": 1,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "command",
+     "producer": "legacy-maxdb",
+     "tool": "export",
+     "line": "$ export KNA1 cluster",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00010000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 11,
+     "laneSequence": 2,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "stdout",
+     "producer": "legacy-maxdb",
+     "tool": "export",
+     "line": "386 bytes; every record separately zlib-compressed",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00020000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 12,
+     "laneSequence": 3,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "stdout",
+     "producer": "legacy-maxdb",
+     "tool": "export",
+     "line": "4d 58 44 42 4b 4e 41 31 |MXDBKNA1|",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00030000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 13,
+     "laneSequence": 4,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "edge",
+     "stream": "system",
+     "producer": "edge-runtime",
+     "tool": "maxdb-adapter",
+     "line": "length + CRC32 verified BEFORE decompress",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00040000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 14,
+     "laneSequence": 5,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "stdout",
+     "producer": "prisma",
+     "tool": "vertex",
+     "line": "gemini-3.5-flash: rename + cast only; no code emitted",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00050000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 15,
+     "laneSequence": 6,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "stdout",
+     "producer": "vale",
+     "tool": "validator",
+     "line": "keys outside {KUNNR,NAME1,ORT01,LAND1} rejected",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00060000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 16,
+     "laneSequence": 7,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "system",
+     "producer": "steward",
+     "tool": "approval",
+     "line": "digest bound; approved once",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00070000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 17,
+     "laneSequence": 8,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "destination",
+     "stream": "stdout",
+     "producer": "ledger",
+     "tool": "bigquery",
+     "line": "load job ce235d05-810e-4457-b134-76dc9dfa4717",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_maxdb00080000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "maxdb",
+     "globalSequence": 18,
+     "laneSequence": 9,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "destination",
+     "stream": "metric",
+     "producer": "ledger",
+     "tool": "bigquery",
+     "line": "reconcile 4 decoded = 4 loaded MATCHED",
+     "severity": "info",
+     "evidenceReferences": []
+    }
+   ]
+  },
+  {
+   "sourceId": "btrieve",
+   "hostname": "legacy-btrieve-db",
+   "displayName": "Sage 300 (Btrieve)",
+   "source": {
+    "databaseFamily": "Actian Zen / Pervasive PSQL",
+    "databaseVersion": "13",
+    "applicationLayer": "Sage 300 CRE",
+    "schema": [
+     {
+      "name": "IDCUST",
+      "dataType": "CHAR(6)",
+      "nullable": false
+     },
+     {
+      "name": "NAMECUST",
+      "dataType": "CHAR(60)",
+      "nullable": false
+     },
+     {
+      "name": "DATELASTMN",
+      "dataType": "NUMERIC(8)",
+      "nullable": false
+     }
+    ],
+    "samples": [
+     {
+      "recordId": "sample-1",
+      "rawBytesHex": "303030303031436f707065722046696e6368",
+      "decodedFields": [
+       {
+        "name": "IDCUST",
+        "dataType": "string",
+        "value": "000001"
+       },
+       {
+        "name": "NAMECUST",
+        "dataType": "string",
+        "value": "Copper Finch Systems KK"
+       },
+       {
+        "name": "DATELASTMN",
+        "dataType": "string",
+        "value": "20260101"
+       }
+      ]
+     }
+    ],
+    "exampleQueries": [
+     "SELECT * FROM accpac_arcus LIMIT 10"
+    ]
+   },
+   "compiler": {
+    "actions": [
+     {
+      "sequence": 1,
+      "eventId": "evt_btrieve000000000",
+      "timestamp": "2026-08-31T23:19:38.524Z",
+      "stage": "plan",
+      "agent": "PRISMA",
+      "tool": "vertex.gemini-3.5-flash",
+      "summary": "Proposed a closed declarative transform contract",
+      "result": "Schema-valid; no executable output",
+      "evidenceReferences": []
+     }
+    ],
+    "transforms": [
+     {
+      "sequence": 1,
+      "operation": "rename",
+      "sourceField": "IDCUST",
+      "targetField": "customer_id"
+     },
+     {
+      "sequence": 2,
+      "operation": "rename",
+      "sourceField": "NAMECUST",
+      "targetField": "customer_name"
+     },
+     {
+      "sequence": 3,
+      "operation": "rename",
+      "sourceField": "DATELASTMN",
+      "targetField": "last_modified"
+     }
+    ],
+    "driver": {
+     "coordinates": "synthetic-emulator/no-vendor-driver",
+     "version": "n/a",
+     "sourceUrl": "https://github.com/therealslimkt/zero-trust-migration-agents",
+     "license": "synthetic fixture; no vendor driver used",
+     "sha256": "sha256:1c471cc2214864abfd712a3c88f9758a46f5ea424ff9d95acb3c15adb00d753f",
+     "signatureVerified": false
+    },
+    "localGemmaEvidence": {
+     "artifactId": "art_gemma_btrieve",
+     "kind": "redaction_report",
+     "digest": "sha256:264111937b08743cd7634df40295a02af0486404703d6d9cf55059fbeb58d3f5"
+    },
+    "geminiVertexEvidence": {
+     "artifactId": "art_vertex_btrieve",
+     "kind": "transform_plan",
+     "digest": "sha256:ddc788ec832170c876ad3543a5b64aeef364feb5ee9966b2674cd22c8ba880ea"
+    },
+    "beamTransformIds": [
+     "decode",
+     "cast",
+     "write"
+    ],
+    "dataflowJobId": "cloud-run-trusted-runner-not-dataflow",
+    "approval": {
+     "approvalId": "apr_btrieve000000000",
+     "decision": "approved",
+     "decidedAt": "2026-08-31T23:19:38.524Z",
+     "planDigest": "sha256:54f3f5636921e8dbf002e22a787bd0c6b5f1d4f8a40f956b081c24c985bc2fc2"
+    }
+   },
+   "destination": {
+    "dataset": "keraun_demo",
+    "table": "accpac_arcus",
+    "schema": [
+     {
+      "name": "customer_id",
+      "dataType": "STRING",
+      "nullable": true
+     },
+     {
+      "name": "customer_name",
+      "dataType": "STRING",
+      "nullable": true
+     },
+     {
+      "name": "last_modified",
+      "dataType": "DATE",
+      "nullable": true
+     }
+    ],
+    "rows": [
+     {
+      "recordId": "1",
+      "fields": [
+       {
+        "name": "customer_id",
+        "dataType": "string",
+        "value": "000001"
+       },
+       {
+        "name": "customer_name",
+        "dataType": "string",
+        "value": "Copper Finch Systems KK"
+       },
+       {
+        "name": "last_modified",
+        "dataType": "string",
+        "value": "2026-01-01"
+       }
+      ]
+     }
+    ],
+    "reconciliation": {
+     "status": "matched",
+     "recordsRead": 1,
+     "recordsWritten": 1,
+     "recordsRejected": 0,
+     "outputRows": 1,
+     "sourceChecksum": "sha256:624cb45ecbba4f8c5ce3deff34160e78cfd7b589be770620f78c53f94aa31394",
+     "destinationChecksum": "sha256:a220f633ef551c83c93566e02bbdc7421dbc2b846ed4acf5e6e5661bd5e01d92",
+     "evidence": {
+      "artifactId": "art_reconcile_btrieve",
+      "kind": "reconciliation",
+      "digest": "sha256:d12f3f9af5adf4d26aeab340a08c503a9723a02bbfdb1a04cdfb9498aa913a18"
+     }
+    },
+    "dataflowEvidence": {
+     "artifactId": "art_exec_btrieve",
+     "kind": "dataflow_job",
+     "digest": "sha256:3ff4e5de4b80904df9e6b9420e0eeaf11a14abe75aab061ef21690183f7bec6a"
+    },
+    "bigQueryEvidence": {
+     "artifactId": "art_bq_btrieve",
+     "kind": "bigquery_table",
+     "digest": "sha256:e27ede82da17b1a6aa0217c232bf4f98f1ea4d28b3a8015776b4e32fd9c9f9e7"
+    },
+    "suggestedQueries": [
+     "SELECT * FROM `ztm-agent-9049c3.keraun_demo.accpac_arcus`"
+    ]
+   },
+   "terminalFrames": [
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000000000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 19,
+     "laneSequence": 1,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "command",
+     "producer": "legacy-btrieve-db",
+     "tool": "ddf",
+     "line": "$ open FILE.DDF / FIELD.DDF",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000100000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 20,
+     "laneSequence": 2,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "stdout",
+     "producer": "legacy-btrieve-db",
+     "tool": "ddf",
+     "line": "record layout reconstructed from data dictionary",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000200000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 21,
+     "laneSequence": 3,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "source",
+     "stream": "stdout",
+     "producer": "legacy-btrieve-db",
+     "tool": "ddf",
+     "line": "fixed-length pages; no native SQL layer",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000300000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 22,
+     "laneSequence": 4,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "edge",
+     "stream": "system",
+     "producer": "edge-runtime",
+     "tool": "btrieve-adapter",
+     "line": "allowlisted page layouts only; fail closed",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000400000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 23,
+     "laneSequence": 5,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "stdout",
+     "producer": "prisma",
+     "tool": "vertex",
+     "line": "gemini-3.5-flash: map_date DATELASTMN -> last_modified",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000500000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 24,
+     "laneSequence": 6,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "stdout",
+     "producer": "vale",
+     "tool": "validator",
+     "line": "no unmapped keys; narrowing rejected",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000600000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 25,
+     "laneSequence": 7,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "compiler",
+     "stream": "system",
+     "producer": "steward",
+     "tool": "approval",
+     "line": "same portfolio digest",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000700000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 26,
+     "laneSequence": 8,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "destination",
+     "stream": "stdout",
+     "producer": "ledger",
+     "tool": "bigquery",
+     "line": "1 row written to keraun_demo.accpac_arcus",
+     "severity": "info",
+     "evidenceReferences": []
+    },
+    {
+     "schemaVersion": "1.0.0",
+     "frameId": "frm_btrieve000800000",
+     "runId": "mig_BXVYoLJUIPvFwKYB",
+     "sourceId": "btrieve",
+     "globalSequence": 27,
+     "laneSequence": 9,
+     "timestamp": "2026-08-31T23:19:38.524Z",
+     "lane": "destination",
+     "stream": "metric",
+     "producer": "ledger",
+     "tool": "bigquery",
+     "line": "reconcile read=1 written=1 rejected=0 MATCHED",
+     "severity": "info",
+     "evidenceReferences": []
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "sequence": 1,
+   "eventId": "evt_migration0001",
+   "timestamp": "2026-08-31T23:19:38.524Z",
+   "eventType": "migration.created",
+   "state": "created",
+   "summary": "Portfolio created with three legacy sources",
+   "evidenceReferences": []
+  },
+  {
+   "sequence": 2,
+   "eventId": "evt_awaitapprov01",
+   "timestamp": "2026-08-31T23:19:38.524Z",
+   "eventType": "portfolio.awaiting_approval",
+   "state": "awaiting_approval",
+   "summary": "All three plans schema-valid; one digest awaits a human",
+   "evidenceReferences": []
+  },
+  {
+   "sequence": 3,
+   "eventId": "evt_approved0001",
+   "timestamp": "2026-08-31T23:19:38.524Z",
+   "eventType": "portfolio.approved",
+   "state": "approved",
+   "summary": "Approved once against the exact portfolio digest",
+   "evidenceReferences": []
+  },
+  {
+   "sequence": 4,
+   "eventId": "evt_completed001",
+   "timestamp": "2026-08-31T23:19:38.524Z",
+   "eventType": "migration.completed",
+   "state": "completed",
+   "summary": "All lanes reconciled",
+   "evidenceReferences": []
+  }
+ ],
+ "evidence": [
+  {
+   "artifactId": "art_bundle_0",
+   "kind": "audit_log",
+   "digest": "sha256:615921839459f33285cdfb9e96956cbdf23e37aea109fe0cd6dd6589dbbf5381"
+  },
+  {
+   "artifactId": "art_bundle_1",
+   "kind": "audit_log",
+   "digest": "sha256:44de9b5536b8af56a43a88457800d3433a32d6d20f4ecf17753bf44aa911daf9"
+  },
+  {
+   "artifactId": "art_bundle_2",
+   "kind": "audit_log",
+   "digest": "sha256:de04a852d56f747934fc3eeb0c50c85ac7a3738984febb0e94b49a8b277d7377"
+  },
+  {
+   "artifactId": "art_bundle_3",
+   "kind": "audit_log",
+   "digest": "sha256:c5404d424ab76db377730dbd4baace4b5b797f775cc26686b188d3b4eb492e7e"
+  },
+  {
+   "artifactId": "art_bundle_4",
+   "kind": "audit_log",
+   "digest": "sha256:69d79431718e6209aee79430b3f7ec44b793e82b5e1ca3145fce51d27cd742a4"
+  },
+  {
+   "artifactId": "art_bundle_5",
+   "kind": "audit_log",
+   "digest": "sha256:03ee79ac7117c628ddc313231a7022c8a517646d73e80aa943d055c3e37d7131"
+  },
+  {
+   "artifactId": "art_bundle_6",
+   "kind": "audit_log",
+   "digest": "sha256:a6b183172d2efa13a650ab704a9cbe1ce1f568673e743822afeb83f2ed0a361b"
+  }
+ ],
+ "reconciliation": {
+  "status": "matched",
+  "recordsRead": 9,
+  "recordsWritten": 9,
+  "recordsRejected": 0,
+  "outputRows": 9,
+  "sourceChecksum": "sha256:a3e36461600d35a773efe4af5681c7e2ebc3dd0f3f4e5621b96c6dce2479f47e",
+  "destinationChecksum": "sha256:114b3fc8d473119c523d412e0f3c508543b71e165c7bb02c363b720bba818d62",
+  "evidence": {
+   "artifactId": "art_reconcile_portfolio",
+   "kind": "reconciliation",
+   "digest": "sha256:4323ac10f6aa38449caffa52d1edf73fa3677da432cb0f810b72a8fa2d69016f"
+  }
+ }
+}

@@ -31,6 +31,11 @@
       "symbol": "pixel-bigquery"
     },
     {
+      "name": "bolt",
+      "file": "icons/bolt.svg",
+      "symbol": "pixel-bolt"
+    },
+    {
       "name": "branch",
       "file": "icons/branch.svg",
       "symbol": "pixel-branch"
@@ -61,6 +66,11 @@
       "symbol": "pixel-compute-engine"
     },
     {
+      "name": "copy",
+      "file": "icons/copy.svg",
+      "symbol": "pixel-copy"
+    },
+    {
       "name": "cpu",
       "file": "icons/cpu.svg",
       "symbol": "pixel-cpu"
@@ -86,6 +96,11 @@
       "symbol": "pixel-db2"
     },
     {
+      "name": "docker",
+      "file": "icons/docker.svg",
+      "symbol": "pixel-docker"
+    },
+    {
       "name": "gemini",
       "file": "icons/gemini.svg",
       "symbol": "pixel-gemini"
@@ -94,6 +109,11 @@
       "name": "gemma",
       "file": "icons/gemma.svg",
       "symbol": "pixel-gemma"
+    },
+    {
+      "name": "go-gopher",
+      "file": "icons/go-gopher.svg",
+      "symbol": "pixel-go-gopher"
     },
     {
       "name": "google-cloud",
@@ -184,6 +204,16 @@
       "name": "vertex-ai",
       "file": "icons/vertex-ai.svg",
       "symbol": "pixel-vertex-ai"
+    },
+    {
+      "name": "zoom-in",
+      "file": "icons/zoom-in.svg",
+      "symbol": "pixel-zoom-in"
+    },
+    {
+      "name": "zoom-out",
+      "file": "icons/zoom-out.svg",
+      "symbol": "pixel-zoom-out"
     }
   ]
 }

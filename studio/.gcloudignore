@@ -1,5 +1,4 @@
+# The image builds from source; node_modules and local build output are noise.
 node_modules/
-src/
-public/
-*.md
-!dist/
+dist/
+.vite/
