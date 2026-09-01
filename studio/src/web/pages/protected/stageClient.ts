@@ -33,6 +33,14 @@ export type CompileResult = {
   readonly quarantine: readonly QuarantineRow[]
   readonly mapping: readonly { readonly column: string; readonly dataClass: string }[]
 }
+export type EmbedResult = {
+  readonly table: string
+  readonly rows: number
+  readonly dimensions: number
+  readonly failures: number
+  readonly jobId: string
+  readonly examples: readonly string[]
+}
 export type QuarantineManifest = {
   readonly cartridge: string
   readonly count: number
@@ -59,6 +67,8 @@ const MESSAGES: Record<string, string> = {
   stage_timeout: 'The stage did not finish in time.',
   stage_failed: 'The stage failed and reported nothing further.',
   command_failed: 'The sealed lab refused the command.',
+  nothing_compiled: 'Run the conversion first.',
+  nothing_embedded: 'Embed the landed rows first.',
 }
 
 export class StageError extends Error {
@@ -94,4 +104,6 @@ export const stages = {
   land: (cartridge: string) => post<LandResult>('land', { cartridge }),
   bq: (cartridge: string, sql: string) => post<StageRows>('bq', { cartridge, sql }),
   quarantine: (cartridge: string) => post<QuarantineManifest>('quarantine', { cartridge }),
+  embed: (cartridge: string) => post<EmbedResult>('embed', { cartridge }),
+  search: (cartridge: string, q: string) => post<StageRows>('search', { cartridge, q }),
 }

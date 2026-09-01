@@ -94,6 +94,10 @@ function stageExecutorProxy(): ProxyOptions {
     target: STAGE_EXECUTOR_TARGET,
     changeOrigin: false,
     ws: false,
+    // Embedding a table in BigQuery runs well past the proxy's default
+    // timeout; a dropped socket here reads to the user as a failed stage.
+    timeout: 15 * 60 * 1000,
+    proxyTimeout: 15 * 60 * 1000,
     rewrite: (path) => path.replace(/^\/api\/stages/, ''),
     configure: (proxy) => {
       proxy.on('proxyReq', (request) => {

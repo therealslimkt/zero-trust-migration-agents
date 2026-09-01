@@ -108,6 +108,7 @@ CARTRIDGES = {
 }
 
 COMPILED: dict[str, Any] = {}
+EMBEDDED: dict[str, Any] = {}
 
 SELECT_ONLY = re.compile(r"^\s*select\s", re.IGNORECASE)
 FORBIDDEN = re.compile(
@@ -554,6 +555,125 @@ def stage_land(cartridge: str, project: str, dataset: str) -> dict[str, Any]:
                         f"SELECT count(*) AS rows FROM `{ref}`"]}
 
 
+EMBED_MODEL = "keraun_demo.embedder"
+EMBED_CONNECTION = "us.keraun_vertex"
+
+
+def stage_embed(cartridge: str, project: str, dataset: str) -> dict[str, Any]:
+    """Embed the landed rows inside BigQuery so the table is queryable by meaning.
+
+    ML.GENERATE_EMBEDDING runs the model through a CLOUD_RESOURCE connection, so
+    the vectors are produced in the warehouse. Row values are never sent
+    anywhere by us, and nothing is downloaded to be embedded.
+    """
+    from google.cloud import bigquery
+    from scripts.mission_control_pipeline import CARTRIDGES as PIPE
+
+    source = CARTRIDGES[cartridge]["source"]
+    table = PIPE[source]["table"]
+    ref = f"{project}.{dataset}.{table}"
+    target = f"{ref}_embeddings"
+    mc = mirror()
+
+    mc.frame(source, "destination", f"$ ML.GENERATE_EMBEDDING over {table}",
+             stream="command", producer="bigquery", tool="bigquery-ml")
+    mc.frame(source, "destination",
+             f"model      {EMBED_MODEL}  (remote, text-embedding-005)",
+             producer="bigquery", tool="bigquery-ml")
+    mc.frame(source, "destination",
+             f"connection {EMBED_CONNECTION}  ·  embeddings are generated in the warehouse",
+             stream="system", producer="bigquery", tool="policy")
+
+    client = bigquery.Client(project=project)
+    job = client.query(f"""
+        CREATE OR REPLACE TABLE `{target}` AS
+        SELECT source_ordinal, address_number, alpha_name, tax_id, content,
+               ml_generate_embedding_result AS embedding,
+               ml_generate_embedding_status AS status
+        FROM ML.GENERATE_EMBEDDING(
+          MODEL `{project}.{EMBED_MODEL}`,
+          (SELECT source_ordinal, address_number, alpha_name, tax_id,
+                  FORMAT('Customer %d, %s, registered in %s.',
+                         address_number, alpha_name, tax_id) AS content
+           FROM `{ref}`),
+          STRUCT(TRUE AS flatten_json_output, 'RETRIEVAL_DOCUMENT' AS task_type))
+    """)
+    job.result(timeout=600)
+
+    stats = list(client.query(f"""
+        SELECT count(*) AS row_count, ARRAY_LENGTH(ANY_VALUE(embedding)) AS dims,
+               countif(status != '') AS failures
+        FROM `{target}`""").result(timeout=120))[0]
+
+    mc.frame(source, "destination",
+             f"{stats['row_count']} rows embedded · {stats['dims']} dimensions · "
+             f"{stats['failures']} failures",
+             stream="metric", producer="bigquery", tool="bigquery-ml",
+             severity="info" if stats["failures"] == 0 else "error")
+    mc.frame(source, "destination",
+             "the table is now searchable by meaning, not just by column",
+             producer="bigquery", tool="bigquery-ml")
+
+    EMBEDDED[cartridge] = {"table": target, "rows": int(stats["row_count"]),
+                           "dims": int(stats["dims"])}
+    return {"table": target, "rows": int(stats["row_count"]), "dimensions": int(stats["dims"]),
+            "failures": int(stats["failures"]), "jobId": job.job_id,
+            "examples": ["metal foundry and castings business in Australia",
+                         "logistics company in continental Europe",
+                         "industrial manufacturer in Japan"]}
+
+
+def stage_search(cartridge: str, question: str, project: str, dataset: str) -> dict[str, Any]:
+    """Answer a plain-language question with a governed VECTOR_SEARCH.
+
+    The caller supplies one parameter. The query itself is fixed here, so no
+    model and no visitor ever composes SQL against the warehouse.
+    """
+    from google.cloud import bigquery
+
+    text = (question or "").strip()
+    if not text or len(text) > 400:
+        raise StageError("query_length")
+    source = CARTRIDGES[cartridge]["source"]
+    target = EMBEDDED.get(cartridge, {}).get("table")
+    if not target:
+        raise StageError("nothing_embedded")
+    mc = mirror()
+    mc.frame(source, "destination", f"$ VECTOR_SEARCH  \"{text}\"",
+             stream="command", producer="analyst", tool="bigquery-ml")
+
+    client = bigquery.Client(project=project)
+    rows = list(client.query(
+        f"""
+        SELECT base.address_number AS address_number, base.alpha_name AS alpha_name,
+               base.tax_id AS tax_id, ROUND(distance, 4) AS distance
+        FROM VECTOR_SEARCH(
+          TABLE `{target}`, 'embedding',
+          (SELECT ml_generate_embedding_result AS embedding
+           FROM ML.GENERATE_EMBEDDING(
+             MODEL `{project}.{EMBED_MODEL}`,
+             (SELECT @q AS content),
+             STRUCT(TRUE AS flatten_json_output, 'RETRIEVAL_QUERY' AS task_type))),
+          top_k => 5, distance_type => 'COSINE')
+        """,
+        job_config=bigquery.QueryJobConfig(
+            query_parameters=[bigquery.ScalarQueryParameter("q", "STRING", text)]),
+    ).result(timeout=180))
+
+    for r in rows:
+        mc.frame(source, "destination",
+                 f"  {r['address_number']:<6} {r['alpha_name']:<34} {r['tax_id']:<4} "
+                 f"distance {r['distance']}",
+                 producer="bigquery", tool="vector-search")
+    mc.frame(source, "destination",
+             f"{len(rows)} nearest by meaning · the words need not appear in the row",
+             stream="metric", producer="bigquery", tool="vector-search")
+    return {"columns": ["address_number", "alpha_name", "tax_id", "distance"],
+            "rows": [[str(r["address_number"]), r["alpha_name"], r["tax_id"], str(r["distance"])]
+                     for r in rows],
+            "rowCount": len(rows)}
+
+
 def stage_quarantine(cartridge: str) -> dict[str, Any]:
     """Return the refused records: why each failed, and how to find it again."""
     compiled = COMPILED.get(cartridge)
@@ -657,6 +777,10 @@ def handler_for(token: str, project: str, dataset: str):
                     result = stage_compile(cartridge)
                 elif stage == "land":
                     result = stage_land(cartridge, project, dataset)
+                elif stage == "embed":
+                    result = stage_embed(cartridge, project, dataset)
+                elif stage == "search":
+                    result = stage_search(cartridge, payload.get("q", ""), project, dataset)
                 elif stage == "quarantine":
                     result = stage_quarantine(cartridge)
                 elif stage == "bq":

@@ -22,6 +22,13 @@ type Props = {
   /** Already run: the control stays visible but refuses a second press. */
   readonly done?: boolean
   readonly doneLabel?: string
+  /** A second control that only appears once the primary stage has run. */
+  readonly extra?: {
+    readonly label: string
+    readonly done?: boolean
+    readonly doneLabel?: string
+    readonly run: () => Promise<unknown>
+  }
   readonly queries?: readonly StageQuery[]
   readonly children: React.ReactNode
 }
@@ -107,6 +114,23 @@ export function StageColumn(props: Props) {
       >
         {busy ? 'Running…' : props.done ? `✓  ${props.doneLabel ?? 'Done'}` : `▶  ${props.runLabel}`}
       </button>
+
+      {props.extra ? (
+        <button
+          type="button"
+          className={props.extra.done ? 'stage__run stage__run--done stage__run--extra'
+                                      : 'stage__run stage__run--extra'}
+          disabled={busy || Boolean(props.extra.done)}
+          onClick={() => {
+            setBusy(true); setError(null)
+            void props.extra!.run()
+              .catch((caught) => setError(caught instanceof StageError ? caught.message : 'The stage failed.'))
+              .finally(() => setBusy(false))
+          }}
+        >
+          {props.extra.done ? `✓  ${props.extra.doneLabel ?? 'Done'}` : `▶  ${props.extra.label}`}
+        </button>
+      ) : null}
 
       <div className="stage__rest">
       {!props.ready && props.blockedReason ? (

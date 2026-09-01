@@ -1982,3 +1982,6 @@
 .stage__head p { font-family: var(--font-sans-mission); font-size: 0.78rem;
   line-height: 1.55; color: var(--pixel-text-secondary); }
 .stage__step { font-family: var(--font-mono-tactical); }
+
+/* The embedding step is a second, subordinate control in the warehouse lane. */
+.stage__run--extra { margin-top: -4px; font-size: 0.78rem; padding: 10px 16px; }

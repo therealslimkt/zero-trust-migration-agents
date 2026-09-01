@@ -9,7 +9,7 @@ import { QuarantinePanel } from './QuarantinePanel'
 import { TerminalBusy } from './TerminalBusy'
 import { TerminalPrompt } from './TerminalPrompt'
 import { usePacedFeed } from './usePacedFeed'
-import { stages, type CompileResult, type LandResult, type StageCartridge } from './stageClient'
+import { stages, type CompileResult, type EmbedResult, type LandResult, type StageCartridge } from './stageClient'
 import { useAuth } from '../../features/auth'
 import { PixelIcon, TerminalWindow } from '../../shared/ui'
 import '../public/public-pages.css'
@@ -126,10 +126,11 @@ export function MissionControlPage() {
   const [loaded, setLoaded] = useState<string | null>(null)
   const [compiled, setCompiled] = useState<CompileResult | null>(null)
   const [landed, setLanded] = useState<LandResult | null>(null)
+  const [embedded, setEmbedded] = useState<EmbedResult | null>(null)
   const [maximized, setMaximized] = useState<'source' | 'compiler' | 'destination' | null>(null)
 
   useEffect(() => { void stages.list().then(setCatalog).catch(() => setCatalog([])) }, [])
-  useEffect(() => { setLoaded(null); setCompiled(null); setLanded(null); setMark(null) }, [selected])
+  useEffect(() => { setLoaded(null); setCompiled(null); setLanded(null); setEmbedded(null); setMark(null) }, [selected])
   useEffect(() => {
     if (!maximized) return
     const leave = (event: KeyboardEvent) => { if (event.key === 'Escape') setMaximized(null) }
@@ -343,9 +344,23 @@ export function MissionControlPage() {
           ready={Boolean(compiled)}
           blockedReason="Run the conversion first."
           onRun={() => beginStage(async () => { setLanded(await stages.land(selected)) }, 'loading BigQuery')}
+          extra={landed ? {
+            label: 'Embed for AI',
+            done: Boolean(embedded),
+            doneLabel: 'Embedded in BigQuery',
+            run: () => beginStage(async () => { setEmbedded(await stages.embed(selected)) },
+                                  'embedding in BigQuery'),
+          } : undefined}
           queries={landed?.queries.map((sql, index) => ({
             title: index === 0 ? 'Read the landed rows' : 'Count the landed rows', sql }))}
         >
+          {embedded ? (
+            <dl className="stage__facts">
+              <div><dt>Embedded</dt><dd>{embedded.rows} rows</dd></div>
+              <div><dt>Dimensions</dt><dd>{embedded.dimensions}</dd></div>
+              <div><dt>Vector table</dt><dd>{embedded.table.split('.').pop()}</dd></div>
+            </dl>
+          ) : null}
           {landed ? (
             <dl className="stage__facts">
               <div><dt>Table</dt><dd>{landed.table}</dd></div>
@@ -374,10 +389,16 @@ export function MissionControlPage() {
               ? <TerminalBusy label={busy} />
               : <TerminalFrameRenderer feed={terminal} lane="destination" label="Verified destination" />}
             <TerminalPrompt
-              placeholder="SELECT … FROM `project.dataset.table`"
+              placeholder={embedded
+                ? 'Ask in plain language, or paste a SELECT'
+                : 'SELECT … FROM `project.dataset.table`'}
               disabled={!landed}
               hint="land the rows first"
-              onSubmit={(sql) => beginStage(() => stages.bq(selected, sql), 'querying BigQuery')}
+              onSubmit={(text) => beginStage(
+                () => (embedded && !/^\s*select\s/i.test(text)
+                  ? stages.search(selected, text)
+                  : stages.bq(selected, text)),
+                embedded && !/^\s*select\s/i.test(text) ? 'searching by meaning' : 'querying BigQuery')}
             />
           </TerminalWindow>
         </StageColumn>
