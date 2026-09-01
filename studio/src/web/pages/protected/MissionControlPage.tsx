@@ -80,7 +80,12 @@ function useLiveClient(): LiveWebClient {
       try {
         return await getIdToken()
       } catch (error) {
-        if (import.meta.env.DEV) return ''
+        // Two deployments have no Identity Platform session and attach the one
+        // fixed demo identity server-side instead: the Vite dev proxy locally,
+        // and the hosted demo's nginx. In both the browser sends a placeholder
+        // and never holds a credential. Any other build still requires a real
+        // token, so this cannot silently downgrade a real deployment.
+        if (import.meta.env.DEV || import.meta.env.VITE_HOSTED_DEMO === 'true') return ''
         throw error
       }
     }),
