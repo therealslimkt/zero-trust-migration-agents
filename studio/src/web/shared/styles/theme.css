@@ -75,6 +75,12 @@
   /* Scanline & Grid Overlays */
   --pixel-scanline-color: rgba(0, 0, 0, 0.28);
   --pixel-grid-dot-color: rgba(255, 255, 255, 0.04);
+
+  /* Keraun Identity Ink (text-safe sage & magenta) */
+  --keraun-sage-ink: var(--keraun-sage-light);
+  --keraun-magenta-ink: var(--keraun-magenta-light);
+  --keraun-spark: #ffffff;
+  --keraun-spark-tail: rgba(255, 255, 255, 0.35);
 }
 
 /* Light Theme (Tactical Mission-Ops Paper) */
@@ -148,4 +154,10 @@
   /* Scanline & Grid Overlays */
   --pixel-scanline-color: rgba(0, 0, 0, 0.04);
   --pixel-grid-dot-color: rgba(0, 0, 0, 0.06);
+
+  /* Keraun Identity Ink (darkened for contrast on paper) */
+  --keraun-sage-ink: #4f6b3d;
+  --keraun-magenta-ink: #a3067f;
+  --keraun-spark: #fff6fd;
+  --keraun-spark-tail: rgba(255, 255, 255, 0.55);
 }

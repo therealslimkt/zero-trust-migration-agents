@@ -62,6 +62,36 @@
   );
 
   /* ==========================================================================
+     1b. Keraun Identity Accents (Bowman Iris Pair)
+     ========================================================================== */
+  --keraun-sage: #8fae7c;
+  --keraun-sage-hover: #a1bd8f;
+  --keraun-sage-active: #6d8b5b;
+  --keraun-sage-dim: #33452b;
+  --keraun-sage-light: #a8c98a;
+  --keraun-sage-tint: rgba(143, 174, 124, 0.14);
+  --keraun-sage-glow: 0 0 16px rgba(143, 174, 124, 0.45);
+
+  --keraun-magenta: #fa07c9;
+  --keraun-magenta-hover: #ff45d8;
+  --keraun-magenta-active: #c40a9f;
+  --keraun-magenta-dim: #4d0a3f;
+  --keraun-magenta-light: #e2b0e8;
+  --keraun-magenta-tint: rgba(250, 7, 201, 0.12);
+  --keraun-magenta-glow: 0 0 16px rgba(250, 7, 201, 0.45);
+
+  /* Identity sweep - sage, blue, magenta, yellow, wrapping back to sage so a
+     0% -> 200% background-position sweep loops with no visible seam. */
+  --keraun-gradient-identity: linear-gradient(
+    90deg,
+    var(--keraun-sage) 0%,
+    var(--google-blue) 25%,
+    var(--keraun-magenta) 50%,
+    var(--google-yellow) 75%,
+    var(--keraun-sage) 100%
+  );
+
+  /* ==========================================================================
      2. Tactical Neutral Slates (Dark Mission Foundation)
      ========================================================================== */
   --slate-950: #06090e;

@@ -3,6 +3,7 @@ import { ArchitectureDiagram } from "./ArchitectureDiagram";
 import { PixelIcon, StatusBeacon, type PixelIconName, type ThemeMode } from "../../shared/ui/index";
 import { SiteFooter } from "../../widgets/site/SiteFooter";
 import { SiteHeader, type PublishedDemoDescriptor, type SiteAuthStatus } from "../../widgets/site/SiteHeader";
+import { CreatorSpotlight } from "./CreatorSpotlight";
 import "./public-pages.css";
 
 export interface CreatorFact {
@@ -223,12 +224,11 @@ export function AboutPage({
 
           <section className="about-story-card" aria-labelledby="creators-heading">
             <div className="about-story-card__header"><PixelIcon name="satellite" size="md" color="google-green" glow /><h2 id="creators-heading" className="about-story-card__title">Creators and contributors</h2></div>
-            {creators?.length ? <div className="about-creators-grid">{creators.map((creator) => <article key={`${creator.name}-${creator.role ?? ""}`} className="creator-card"><h3 className="creator-card__name">{creator.name}</h3>{creator.role ? <span className="creator-card__role">{creator.role}</span> : null}{creator.affiliation ? <span className="creator-card__affiliation">{creator.affiliation}</span> : null}{creator.bio ? <p className="creator-card__bio">{creator.bio}</p> : null}{creator.profileUrl ? <a href={creator.profileUrl} target="_blank" rel="noopener noreferrer" className="site-footer__link">Profile →</a> : null}</article>)}</div> : <p className="about-story-card__text">No creator or contributor information has been supplied.</p>}
+            <CreatorSpotlight />
+            {creators?.length ? <div className="about-creators-grid">{creators.map((creator) => <article key={`${creator.name}-${creator.role ?? ""}`} className="creator-card"><h3 className="creator-card__name">{creator.name}</h3>{creator.role ? <span className="creator-card__role">{creator.role}</span> : null}{creator.affiliation ? <span className="creator-card__affiliation">{creator.affiliation}</span> : null}{creator.bio ? <p className="creator-card__bio">{creator.bio}</p> : null}{creator.profileUrl ? <a href={creator.profileUrl} target="_blank" rel="noopener noreferrer" className="site-footer__link">Profile →</a> : null}</article>)}</div> : null}
           </section>
-
-          
         </div>
-      
+
         <section className="about-architecture" aria-labelledby="arch-diagram-heading">
           <h2 id="arch-diagram-heading">System architecture</h2>
           <p>What is actually deployed and verified, not a target-state drawing. Green borders mark components confirmed running on 2026-08-31.</p>

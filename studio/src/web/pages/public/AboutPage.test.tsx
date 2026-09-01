@@ -16,3 +16,28 @@ describe("AboutPage enterprise fleet", () => {
     expect(screen.getByText(/“Next” items are architectural targets, not demo claims/i)).toBeInTheDocument();
   });
 });
+
+describe("AboutPage creator spotlight", () => {
+  it("names the author, frames the portrait, and lists every identity facet", () => {
+    const { container } = render(<AboutPage />);
+
+    expect(screen.getByRole("heading", { name: "Katie O’Halloran", level: 3 })).toBeInTheDocument();
+    expect(screen.getByAltText("Katie O’Halloran")).toBeInTheDocument();
+
+    for (const word of ["Creator", "Artist", "Architect", "Explorer"]) {
+      expect(screen.getByText(word, { selector: ".creator-facet__word" })).toBeInTheDocument();
+    }
+
+    // The phrase animates letter by letter, so it is split across spans. It has
+    // to keep reading as one line for anyone using a screen reader.
+    expect(container.querySelector(".creator-spotlight__phrase")?.textContent).toBe("Dancing Through Life");
+    expect(container.querySelectorAll(".creator-spotlight__letter")).toHaveLength(18);
+  });
+
+  it("omits the contributor grid until creators are supplied", () => {
+    const { container } = render(<AboutPage />);
+
+    expect(container.querySelector(".about-creators-grid")).toBeNull();
+    expect(screen.queryByText(/No creator or contributor information/i)).not.toBeInTheDocument();
+  });
+});

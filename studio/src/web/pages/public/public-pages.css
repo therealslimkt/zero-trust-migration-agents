@@ -1221,6 +1221,243 @@
   color: var(--pixel-text-muted);
 }
 
+/* ==========================================================================
+   Creator spotlight - portrait, identity facets, signature phrase
+   ========================================================================== */
+
+.creator-spotlight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0 4px 0;
+  text-align: center;
+}
+
+/* --- Portrait with the Bowman iris rim --- */
+
+.creator-portrait {
+  --rim: 9px;
+
+  position: relative;
+  width: 184px;
+  height: 184px;
+  margin: 0;
+  padding: var(--rim);
+  border-radius: 50%;
+  isolation: isolate;
+  box-shadow: 0 0 26px -2px var(--keraun-magenta-tint), 0 0 14px -4px var(--keraun-sage-tint);
+}
+
+/* Both pseudo-elements are masked to the same annulus. */
+.creator-portrait::before,
+.creator-portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--rim)), #000 calc(100% - var(--rim)));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--rim)), #000 calc(100% - var(--rim)));
+}
+
+/* The iris band: sage and magenta hold equal arcs of the ring. */
+.creator-portrait::before {
+  background: conic-gradient(
+    from 210deg,
+    var(--keraun-sage) 0deg,
+    var(--keraun-sage) 80deg,
+    var(--keraun-magenta-light) 140deg,
+    var(--keraun-magenta) 180deg,
+    var(--keraun-magenta) 260deg,
+    var(--keraun-magenta-light) 310deg,
+    var(--keraun-sage) 360deg
+  );
+  animation: iris-drift 26s var(--ease-linear) infinite;
+}
+
+/* A specular spark that laps the ring faster than the band beneath it. */
+.creator-portrait::after {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 330deg,
+    var(--keraun-spark-tail) 351deg,
+    var(--keraun-spark) 357.5deg,
+    var(--keraun-spark) 359.5deg,
+    transparent 360deg
+  );
+  filter: drop-shadow(0 0 5px var(--keraun-spark)) drop-shadow(0 0 12px var(--keraun-magenta));
+  animation: iris-spark 2.8s var(--ease-linear) infinite;
+}
+
+.creator-portrait__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px var(--pixel-surface-panel);
+}
+
+@keyframes iris-drift {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes iris-spark {
+  to { transform: rotate(360deg); }
+}
+
+.creator-spotlight__name {
+  font-family: var(--font-mono-tactical);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  color: var(--pixel-text-primary);
+  margin: 0;
+}
+
+/* --- Identity facets --- */
+
+.creator-facets {
+  --facet-creator: var(--keraun-sage-ink);
+  --facet-artist: var(--google-blue-light);
+  --facet-architect: var(--keraun-magenta-ink);
+  --facet-explorer: var(--google-yellow);
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.creator-facet {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.creator-facet[data-facet="creator"] { --facet-color: var(--facet-creator); }
+.creator-facet[data-facet="artist"] { --facet-color: var(--facet-artist); }
+.creator-facet[data-facet="architect"] { --facet-color: var(--facet-architect); }
+.creator-facet[data-facet="explorer"] { --facet-color: var(--facet-explorer); }
+
+.creator-facet__icon {
+  display: inline-flex;
+  color: var(--facet-color);
+  filter: drop-shadow(0 0 4px var(--facet-color));
+}
+
+.creator-facet__word {
+  font-family: var(--font-mono-tactical);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  color: var(--pixel-text-primary);
+}
+
+.creator-facet__shape {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  background-color: var(--facet-color);
+}
+
+.creator-facet__shape--circle { border-radius: 50%; }
+.creator-facet__shape--square { border-radius: 0; }
+.creator-facet__shape--triangle { clip-path: polygon(50% 0%, 100% 100%, 0% 100%); }
+.creator-facet__shape--diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+
+/* --- Signature phrase --- */
+/* Set in the tactical mono like the rest of the system; the character comes
+   from the motion, not from a decorative face. Each letter steps through the
+   identity palette on a staggered delay, so colour travels along the phrase. */
+
+.creator-spotlight__phrase {
+  --hue-1: var(--keraun-sage-ink);
+  --hue-2: var(--google-blue-light);
+  --hue-3: var(--keraun-magenta-ink);
+  --hue-4: var(--google-yellow);
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 6px 0 0 0;
+  font-family: var(--font-mono-tactical);
+  font-size: clamp(1.125rem, 2.6vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.creator-spotlight__letter {
+  display: inline-block;
+  color: var(--hue-3);
+  animation: phrase-wave 6s var(--ease-linear) infinite;
+  animation-delay: calc(var(--i) * -0.28s);
+  will-change: color;
+}
+
+.creator-spotlight__space {
+  display: inline-block;
+  width: 0.5em;
+}
+
+@keyframes phrase-wave {
+  0%, 13% { color: var(--hue-1); }
+  25%, 38% { color: var(--hue-2); }
+  50%, 63% { color: var(--hue-3); }
+  75%, 88% { color: var(--hue-4); }
+  100% { color: var(--hue-1); }
+}
+
+/* --- Light theme --- */
+
+[data-theme="light"] .creator-facets {
+  --facet-artist: #1a73e8;
+  --facet-explorer: #b06000;
+}
+
+[data-theme="light"] .creator-spotlight__phrase {
+  --hue-2: #1a73e8;
+  --hue-4: #b06000;
+}
+
+[data-theme="light"] .creator-facet__icon {
+  filter: none;
+}
+
+[data-theme="light"] .creator-portrait {
+  box-shadow: 0 0 26px -4px rgba(250, 7, 201, 0.3), 0 0 16px -6px rgba(143, 174, 124, 0.4);
+}
+
+[data-theme="light"] .creator-portrait__photo {
+  box-shadow: 0 0 0 2px var(--pixel-surface-panel), 0 0 0 3px var(--pixel-border-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creator-portrait::before,
+  .creator-portrait::after {
+    animation: none;
+  }
+
+  .creator-spotlight__letter {
+    animation: none;
+    color: var(--hue-3);
+  }
+}
+
+@media (max-width: 600px) {
+  .creator-facets {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
 .submission-facts-table {
   width: 100%;
   border-collapse: collapse;

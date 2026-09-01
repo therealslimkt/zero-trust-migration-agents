@@ -1,5 +1,5 @@
 import type { SVGProps } from "react";
-import { PIXEL_ICON_PATHS, type PixelIconName } from "../../assets/pixel/index";
+import { PIXEL_ICON_GRIDS, PIXEL_ICON_PATHS, type PixelIconName } from "../../assets/pixel/index";
 
 export type PixelIconColor =
   | "google-blue"
@@ -70,12 +70,14 @@ export function PixelIcon({
   ...svgProps
 }: PixelIconProps) {
   const pathData = path || (name ? PIXEL_ICON_PATHS[name] : "");
+  // Most icons are drawn on a 16x16 grid; denser motifs are authored at 32x32.
+  const grid = (name && PIXEL_ICON_GRIDS[name]) || 16;
   const numericSize = typeof size === "number" ? size : PRESET_SIZES[size] || 16;
   const isNamedColor = color in COLOR_CLASSES;
   const colorClass = isNamedColor ? COLOR_CLASSES[color] : "";
   const customColorStyle = !isNamedColor && color ? { color } : undefined;
 
-  const dimension = pixelScale ? 16 * pixelScale : numericSize;
+  const dimension = pixelScale ? grid * pixelScale : numericSize;
   const isAriaHidden = !ariaLabel && !title;
 
   return (
@@ -100,7 +102,7 @@ export function PixelIcon({
       aria-hidden={isAriaHidden ? "true" : undefined}
     >
       <svg
-        viewBox="0 0 16 16"
+        viewBox={`0 0 ${grid} ${grid}`}
         fill="currentColor"
         shapeRendering="crispEdges"
         xmlns="http://www.w3.org/2000/svg"

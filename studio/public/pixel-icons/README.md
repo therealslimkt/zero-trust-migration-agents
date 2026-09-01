@@ -15,4 +15,4 @@ Same-document symbol example:
 
 `<svg viewBox="0 0 16 16"><use href="/pixel-icons/pixel-icons.svg#pixel-radar" /></svg>`
 
-All artwork uses `currentColor`, a `16 16` view box, and crisp integer-grid geometry.
+All artwork uses `currentColor`, a square `16 16` or `32 32` view box, and crisp integer-grid geometry. See `manifest.json` for each icon's grid.

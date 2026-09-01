@@ -1,6 +1,9 @@
 {
   "formatVersion": 1,
-  "sourceSize": 16,
+  "sourceSizes": [
+    16,
+    32
+  ],
   "rendering": "crispEdges",
   "spriteSheet": "pixel-icons.svg",
   "previewSheet": "pixel-icons-sheet.svg",
@@ -8,212 +11,278 @@
     {
       "name": "activity",
       "file": "icons/activity.svg",
-      "symbol": "pixel-activity"
+      "symbol": "pixel-activity",
+      "grid": 16
     },
     {
       "name": "alert-triangle",
       "file": "icons/alert-triangle.svg",
-      "symbol": "pixel-alert-triangle"
+      "symbol": "pixel-alert-triangle",
+      "grid": 16
     },
     {
       "name": "apache-beam",
       "file": "icons/apache-beam.svg",
-      "symbol": "pixel-apache-beam"
+      "symbol": "pixel-apache-beam",
+      "grid": 16
     },
     {
       "name": "artifact-registry",
       "file": "icons/artifact-registry.svg",
-      "symbol": "pixel-artifact-registry"
+      "symbol": "pixel-artifact-registry",
+      "grid": 16
     },
     {
       "name": "bigquery",
       "file": "icons/bigquery.svg",
-      "symbol": "pixel-bigquery"
+      "symbol": "pixel-bigquery",
+      "grid": 16
     },
     {
       "name": "bolt",
       "file": "icons/bolt.svg",
-      "symbol": "pixel-bolt"
+      "symbol": "pixel-bolt",
+      "grid": 16
     },
     {
       "name": "branch",
       "file": "icons/branch.svg",
-      "symbol": "pixel-branch"
+      "symbol": "pixel-branch",
+      "grid": 16
     },
     {
       "name": "btrieve",
       "file": "icons/btrieve.svg",
-      "symbol": "pixel-btrieve"
+      "symbol": "pixel-btrieve",
+      "grid": 16
     },
     {
       "name": "bug",
       "file": "icons/bug.svg",
-      "symbol": "pixel-bug"
+      "symbol": "pixel-bug",
+      "grid": 16
+    },
+    {
+      "name": "cassette",
+      "file": "icons/cassette.svg",
+      "symbol": "pixel-cassette",
+      "grid": 32
     },
     {
       "name": "check-pixel",
       "file": "icons/check-pixel.svg",
-      "symbol": "pixel-check-pixel"
+      "symbol": "pixel-check-pixel",
+      "grid": 16
     },
     {
       "name": "cloud-run",
       "file": "icons/cloud-run.svg",
-      "symbol": "pixel-cloud-run"
+      "symbol": "pixel-cloud-run",
+      "grid": 16
+    },
+    {
+      "name": "compass-draft",
+      "file": "icons/compass-draft.svg",
+      "symbol": "pixel-compass-draft",
+      "grid": 32
     },
     {
       "name": "compute-engine",
       "file": "icons/compute-engine.svg",
-      "symbol": "pixel-compute-engine"
+      "symbol": "pixel-compute-engine",
+      "grid": 16
     },
     {
       "name": "copy",
       "file": "icons/copy.svg",
-      "symbol": "pixel-copy"
+      "symbol": "pixel-copy",
+      "grid": 16
     },
     {
       "name": "cpu",
       "file": "icons/cpu.svg",
-      "symbol": "pixel-cpu"
+      "symbol": "pixel-cpu",
+      "grid": 16
     },
     {
       "name": "cross-pixel",
       "file": "icons/cross-pixel.svg",
-      "symbol": "pixel-cross-pixel"
+      "symbol": "pixel-cross-pixel",
+      "grid": 16
     },
     {
       "name": "database",
       "file": "icons/database.svg",
-      "symbol": "pixel-database"
+      "symbol": "pixel-database",
+      "grid": 16
     },
     {
       "name": "dataflow",
       "file": "icons/dataflow.svg",
-      "symbol": "pixel-dataflow"
+      "symbol": "pixel-dataflow",
+      "grid": 16
     },
     {
       "name": "db2",
       "file": "icons/db2.svg",
-      "symbol": "pixel-db2"
+      "symbol": "pixel-db2",
+      "grid": 16
     },
     {
       "name": "docker",
       "file": "icons/docker.svg",
-      "symbol": "pixel-docker"
+      "symbol": "pixel-docker",
+      "grid": 16
     },
     {
       "name": "gemini",
       "file": "icons/gemini.svg",
-      "symbol": "pixel-gemini"
+      "symbol": "pixel-gemini",
+      "grid": 16
     },
     {
       "name": "gemma",
       "file": "icons/gemma.svg",
-      "symbol": "pixel-gemma"
+      "symbol": "pixel-gemma",
+      "grid": 16
     },
     {
       "name": "go-gopher",
       "file": "icons/go-gopher.svg",
-      "symbol": "pixel-go-gopher"
+      "symbol": "pixel-go-gopher",
+      "grid": 16
     },
     {
       "name": "google-cloud",
       "file": "icons/google-cloud.svg",
-      "symbol": "pixel-google-cloud"
+      "symbol": "pixel-google-cloud",
+      "grid": 16
     },
     {
       "name": "identity-platform",
       "file": "icons/identity-platform.svg",
-      "symbol": "pixel-identity-platform"
+      "symbol": "pixel-identity-platform",
+      "grid": 16
     },
     {
       "name": "jdbc-jar",
       "file": "icons/jdbc-jar.svg",
-      "symbol": "pixel-jdbc-jar"
+      "symbol": "pixel-jdbc-jar",
+      "grid": 16
     },
     {
       "name": "key",
       "file": "icons/key.svg",
-      "symbol": "pixel-key"
+      "symbol": "pixel-key",
+      "grid": 16
     },
     {
       "name": "lock",
       "file": "icons/lock.svg",
-      "symbol": "pixel-lock"
+      "symbol": "pixel-lock",
+      "grid": 16
     },
     {
       "name": "maxdb",
       "file": "icons/maxdb.svg",
-      "symbol": "pixel-maxdb"
+      "symbol": "pixel-maxdb",
+      "grid": 16
     },
     {
       "name": "moon",
       "file": "icons/moon.svg",
-      "symbol": "pixel-moon"
+      "symbol": "pixel-moon",
+      "grid": 16
     },
     {
       "name": "play",
       "file": "icons/play.svg",
-      "symbol": "pixel-play"
+      "symbol": "pixel-play",
+      "grid": 16
+    },
+    {
+      "name": "puppet-hand",
+      "file": "icons/puppet-hand.svg",
+      "symbol": "pixel-puppet-hand",
+      "grid": 32
     },
     {
       "name": "radar",
       "file": "icons/radar.svg",
-      "symbol": "pixel-radar"
+      "symbol": "pixel-radar",
+      "grid": 16
     },
     {
       "name": "rewind",
       "file": "icons/rewind.svg",
-      "symbol": "pixel-rewind"
+      "symbol": "pixel-rewind",
+      "grid": 16
     },
     {
       "name": "satellite",
       "file": "icons/satellite.svg",
-      "symbol": "pixel-satellite"
+      "symbol": "pixel-satellite",
+      "grid": 16
     },
     {
       "name": "server",
       "file": "icons/server.svg",
-      "symbol": "pixel-server"
+      "symbol": "pixel-server",
+      "grid": 16
     },
     {
       "name": "shield-check",
       "file": "icons/shield-check.svg",
-      "symbol": "pixel-shield-check"
+      "symbol": "pixel-shield-check",
+      "grid": 16
     },
     {
       "name": "sparkle",
       "file": "icons/sparkle.svg",
-      "symbol": "pixel-sparkle"
+      "symbol": "pixel-sparkle",
+      "grid": 16
     },
     {
       "name": "sun",
       "file": "icons/sun.svg",
-      "symbol": "pixel-sun"
+      "symbol": "pixel-sun",
+      "grid": 16
     },
     {
       "name": "tailscale",
       "file": "icons/tailscale.svg",
-      "symbol": "pixel-tailscale"
+      "symbol": "pixel-tailscale",
+      "grid": 16
+    },
+    {
+      "name": "telescope",
+      "file": "icons/telescope.svg",
+      "symbol": "pixel-telescope",
+      "grid": 32
     },
     {
       "name": "terminal",
       "file": "icons/terminal.svg",
-      "symbol": "pixel-terminal"
+      "symbol": "pixel-terminal",
+      "grid": 16
     },
     {
       "name": "vertex-ai",
       "file": "icons/vertex-ai.svg",
-      "symbol": "pixel-vertex-ai"
+      "symbol": "pixel-vertex-ai",
+      "grid": 16
     },
     {
       "name": "zoom-in",
       "file": "icons/zoom-in.svg",
-      "symbol": "pixel-zoom-in"
+      "symbol": "pixel-zoom-in",
+      "grid": 16
     },
     {
       "name": "zoom-out",
       "file": "icons/zoom-out.svg",
-      "symbol": "pixel-zoom-out"
+      "symbol": "pixel-zoom-out",
+      "grid": 16
     }
   ]
 }
