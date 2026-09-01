@@ -368,9 +368,13 @@ def _finish(mc, source: str, cartridge: str, table: str, accepted: list[dict],
             rejected: list[dict], read: int, beam_version: str,
             quarantine_label) -> dict[str, Any]:
     """Shared tally, quarantine narration and COMPILED handoff."""
-    classes = accepted[0].pop("_classes") if accepted else {}
-    for row in accepted[1:]:
-        row.pop("_classes", None)
+    # Take the union, not the first row's view. EBS resolves ATTRIBUTE1 against
+    # the row's own context, so a CUSTOMER_EXT row lands customer_tier while a
+    # SUPPLIER_EXT row lands payment_profile. Reading the schema off row one
+    # would silently drop every column the first row happened not to carry.
+    classes: dict[str, str] = {}
+    for row in accepted:
+        classes.update(row.pop("_classes", {}))
 
     _step(mc, source, 6, "Result", f"target table {table}")
     for name, category in sorted(classes.items()):
