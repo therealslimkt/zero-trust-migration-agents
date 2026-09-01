@@ -1507,9 +1507,7 @@
 .creator-spotlight__letter {
   display: inline-block;
   color: var(--hue-3);
-  animation: phrase-wave 6s var(--ease-linear) infinite;
-  animation-delay: calc(var(--i) * -0.28s);
-  will-change: color;
+  will-change: color, transform;
 }
 
 .creator-spotlight__space {
@@ -1517,8 +1515,6 @@
   width: 0.5em;
 }
 
-@keyframes phrase-wave {
-  0%, 13% { color: var(--hue-1); }
   25%, 38% { color: var(--hue-2); }
   50%, 63% { color: var(--hue-3); }
   75%, 88% { color: var(--hue-4); }
@@ -1551,7 +1547,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .creator-spotlight__letter {
-    animation: none;
     color: var(--hue-3);
   }
 }
