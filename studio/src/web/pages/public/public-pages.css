@@ -1422,7 +1422,10 @@
 .mc-conn--connecting { color: var(--pixel-status-warning); }
 .mc-pill { display: inline-block; padding: 5px 12px; border-radius: 999px; font-size: 0.66rem;
   letter-spacing: 0.14em; text-transform: uppercase; border: 1px solid var(--pixel-border-muted); color: var(--pixel-text-secondary); }
-.mc-pill--completed { border-color: var(--pixel-status-success); color: var(--pixel-status-success); }
+.mc-pill--idle { border-color: var(--pixel-border-muted); color: var(--pixel-text-muted); }
+.mc-pill--sandbox-ready { border-color: var(--pixel-accent-primary); color: var(--pixel-accent-primary); }
+.mc-pill--converted { border-color: var(--pixel-status-warning); color: var(--pixel-status-warning); }
+.mc-pill--landed { border-color: var(--pixel-status-success); color: var(--pixel-status-success); }
 .mc-pill--awaiting-approval { border-color: var(--pixel-status-warning); color: var(--pixel-status-warning); }
 .mc-pill--approved, .mc-pill--executing, .mc-pill--verifying { border-color: var(--pixel-accent-primary); color: var(--pixel-accent-primary); }
 .mc-pill--failed { border-color: var(--pixel-status-critical); color: var(--pixel-status-critical); }

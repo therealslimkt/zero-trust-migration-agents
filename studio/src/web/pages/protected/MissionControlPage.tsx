@@ -83,7 +83,9 @@ function useLiveClient(): LiveWebClient {
 }
 
 function StatePill({ state }: { readonly state: string }) {
-  return <span className={`mc-pill mc-pill--${state.replace(/_/g, '-')}`}>{state.replace(/_/g, ' ')}</span>
+  return (
+    <span className={`mc-pill mc-pill--${state.replace(/[ _]/g, '-')}`}>{state}</span>
+  )
 }
 
 export function MissionControlPage() {
@@ -152,7 +154,12 @@ export function MissionControlPage() {
           </p>
         </div>
         <div className="mc-status">
-          {run ? <StatePill state={run.state} /> : <span className="mc-pill">no run</span>}
+          {/* This page drives the stages directly, so it reports its own
+              progress. The run's portfolio state belongs to the full pipeline
+              and would otherwise show a stale COMPLETED from an earlier run. */}
+          <StatePill state={
+            landed ? 'landed' : compiled ? 'converted' : loaded ? 'sandbox ready' : 'idle'
+          } />
           <span className="mc-runid">{run?.runId ?? '—'}</span>
           <span className={`mc-conn mc-conn--${terminal.connection}`}>
             stream {terminal.connection}

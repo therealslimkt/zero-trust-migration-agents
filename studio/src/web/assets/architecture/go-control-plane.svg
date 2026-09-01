@@ -1,196 +1,170 @@
-<svg font-family="var(--font-mono-tactical)" viewBox="0 0 1640 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keraun Go control plane">
-<defs>
-<marker id="g" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,1 L7,4 L0,7 Z" fill="var(--dg-arrow)"/></marker>
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-</defs>
-<rect width="1640" height="720" fill="var(--dg-bg)"/>
-<g transform="translate(28 14) scale(0.82)"><g fill="#101820"><rect x="4" y="0" width="3" height="1"/><rect x="28" y="0" width="3" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="11" y="1" width="12" height="1"/><rect x="27" y="1" width="1" height="1"/><rect x="31" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="8" y="2" width="3" height="1"/><rect x="23" y="2" width="4" height="1"/><rect x="32" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="5" y="3" width="2" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="25" y="3" width="5" height="1"/><rect x="32" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="7" y="4" width="1" height="1"/><rect x="26" y="4" width="2" height="1"/><rect x="30" y="4" width="1" height="1"/><rect x="32" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="28" y="5" width="1" height="1"/><rect x="32" y="5" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="27" y="6" width="2" height="1"/><rect x="31" y="6" width="1" height="1"/><rect x="4" y="7" width="2" height="1"/><rect x="29" y="7" width="2" height="1"/><rect x="5" y="8" width="1" height="1"/><rect x="29" y="8" width="1" height="1"/><rect x="4" y="9" width="1" height="1"/><rect x="11" y="9" width="1" height="1"/><rect x="22" y="9" width="1" height="1"/><rect x="30" y="9" width="1" height="1"/><rect x="4" y="10" width="1" height="1"/><rect x="10" y="10" width="3" height="1"/><rect x="21" y="10" width="3" height="1"/><rect x="30" y="10" width="1" height="1"/><rect x="4" y="11" width="1" height="1"/><rect x="10" y="11" width="3" height="1"/><rect x="16" y="11" width="2" height="1"/><rect x="21" y="11" width="3" height="1"/><rect x="30" y="11" width="1" height="1"/><rect x="4" y="12" width="1" height="1"/><rect x="13" y="12" width="3" height="1"/><rect x="17" y="12" width="4" height="1"/><rect x="26" y="12" width="1" height="1"/><rect x="30" y="12" width="1" height="1"/><rect x="4" y="13" width="1" height="1"/><rect x="12" y="13" width="1" height="1"/><rect x="16" y="13" width="2" height="1"/><rect x="21" y="13" width="1" height="1"/><rect x="30" y="13" width="1" height="1"/><rect x="2" y="14" width="6" height="1"/><rect x="11" y="14" width="1" height="1"/><rect x="22" y="14" width="2" height="1"/><rect x="26" y="14" width="7" height="1"/><rect x="35" y="14" width="2" height="1"/><rect x="4" y="15" width="1" height="1"/><rect x="11" y="15" width="1" height="1"/><rect x="22" y="15" width="1" height="1"/><rect x="29" y="15" width="2" height="1"/><rect x="34" y="15" width="1" height="1"/><rect x="37" y="15" width="1" height="1"/><rect x="4" y="16" width="4" height="1"/><rect x="11" y="16" width="1" height="1"/><rect x="22" y="16" width="1" height="1"/><rect x="27" y="16" width="4" height="1"/><rect x="33" y="16" width="1" height="1"/><rect x="37" y="16" width="1" height="1"/><rect x="3" y="17" width="2" height="1"/><rect x="12" y="17" width="1" height="1"/><rect x="16" y="17" width="2" height="1"/><rect x="21" y="17" width="2" height="1"/><rect x="30" y="17" width="2" height="1"/><rect x="33" y="17" width="1" height="1"/><rect x="37" y="17" width="1" height="1"/><rect x="2" y="18" width="1" height="1"/><rect x="5" y="18" width="1" height="1"/><rect x="13" y="18" width="3" height="1"/><rect x="18" y="18" width="4" height="1"/><rect x="29" y="18" width="1" height="1"/><rect x="32" y="18" width="1" height="1"/><rect x="37" y="18" width="1" height="1"/><rect x="5" y="19" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="18" y="19" width="2" height="1"/><rect x="29" y="19" width="1" height="1"/><rect x="31" y="19" width="1" height="1"/><rect x="37" y="19" width="1" height="1"/><rect x="5" y="20" width="2" height="1"/><rect x="16" y="20" width="3" height="1"/><rect x="28" y="20" width="3" height="1"/><rect x="36" y="20" width="1" height="1"/><rect x="4" y="21" width="1" height="1"/><rect x="6" y="21" width="2" height="1"/><rect x="27" y="21" width="2" height="1"/><rect x="31" y="21" width="1" height="1"/><rect x="35" y="21" width="1" height="1"/><rect x="3" y="22" width="1" height="1"/><rect x="8" y="22" width="4" height="1"/><rect x="22" y="22" width="6" height="1"/><rect x="31" y="22" width="1" height="1"/><rect x="35" y="22" width="1" height="1"/><rect x="2" y="23" width="1" height="1"/><rect x="12" y="23" width="10" height="1"/><rect x="32" y="23" width="1" height="1"/><rect x="34" y="23" width="1" height="1"/><rect x="2" y="24" width="1" height="1"/><rect x="32" y="24" width="2" height="1"/><rect x="1" y="25" width="2" height="1"/><rect x="31" y="25" width="1" height="1"/><rect x="1" y="26" width="3" height="1"/><rect x="5" y="26" width="1" height="1"/><rect x="1" y="27" width="1" height="1"/><rect x="3" y="27" width="1" height="1"/><rect x="5" y="27" width="1" height="1"/><rect x="29" y="27" width="1" height="1"/><rect x="1" y="28" width="1" height="1"/><rect x="4" y="28" width="2" height="1"/><rect x="29" y="28" width="1" height="1"/><rect x="0" y="29" width="1" height="1"/><rect x="5" y="29" width="1" height="1"/><rect x="29" y="29" width="1" height="1"/><rect x="0" y="30" width="1" height="1"/><rect x="5" y="30" width="1" height="1"/><rect x="29" y="30" width="1" height="1"/><rect x="0" y="31" width="1" height="1"/><rect x="5" y="31" width="1" height="1"/><rect x="29" y="31" width="1" height="1"/><rect x="0" y="32" width="1" height="1"/><rect x="5" y="32" width="1" height="1"/><rect x="29" y="32" width="1" height="1"/><rect x="0" y="33" width="1" height="1"/><rect x="4" y="33" width="2" height="1"/><rect x="29" y="33" width="1" height="1"/><rect x="1" y="34" width="1" height="1"/><rect x="4" y="34" width="2" height="1"/><rect x="28" y="34" width="2" height="1"/><rect x="2" y="35" width="2" height="1"/><rect x="5" y="35" width="3" height="1"/><rect x="26" y="35" width="4" height="1"/><rect x="5" y="36" width="1" height="1"/><rect x="8" y="36" width="19" height="1"/><rect x="28" y="36" width="2" height="1"/><rect x="6" y="37" width="1" height="1"/><rect x="27" y="37" width="2" height="1"/><rect x="6" y="38" width="1" height="1"/><rect x="27" y="38" width="1" height="1"/><rect x="7" y="39" width="1" height="1"/><rect x="26" y="39" width="2" height="1"/><rect x="8" y="40" width="1" height="1"/><rect x="25" y="40" width="1" height="1"/><rect x="8" y="41" width="1" height="1"/><rect x="13" y="41" width="8" height="1"/><rect x="25" y="41" width="1" height="1"/><rect x="8" y="42" width="1" height="1"/><rect x="13" y="42" width="1" height="1"/><rect x="20" y="42" width="1" height="1"/><rect x="25" y="42" width="1" height="1"/><rect x="8" y="43" width="1" height="1"/><rect x="13" y="43" width="1" height="1"/><rect x="20" y="43" width="1" height="1"/><rect x="25" y="43" width="1" height="1"/><rect x="7" y="44" width="2" height="1"/><rect x="13" y="44" width="1" height="1"/><rect x="20" y="44" width="1" height="1"/><rect x="25" y="44" width="3" height="1"/><rect x="5" y="45" width="2" height="1"/><rect x="13" y="45" width="8" height="1"/><rect x="27" y="45" width="2" height="1"/><rect x="2" y="46" width="5" height="1"/><rect x="13" y="46" width="8" height="1"/><rect x="27" y="46" width="6" height="1"/><rect x="2" y="47" width="31" height="1"/><rect x="4" y="48" width="27" height="1"/></g>
+<svg font-family="var(--font-mono-tactical)" viewBox="0 0 2400 1080" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keraun Go control plane">
+<defs><symbol id="pixel-activity" viewBox="0 0 16 16"><path d="M0 8h4v2H0V8zm3 0h2v-4H3v4zm2-4h2v10H5V4zm2 10h2v-7H7v7zm2-7h2v5H9V7zm2 5h2v-2h-2v2zm2-2h3v2h-3v-2z"/></symbol>
+  <symbol id="pixel-alert-triangle" viewBox="0 0 16 16"><path d="M7 1h2v2H7V1zm-1 2h4v2H6V3zm-1 2h6v2H5V5zm-1 2h8v2H4V7zm-1 2h10v2H3V9zm-1 2h12v2H2v-2zm-1 2h14v2H1v-2zm6-7h2v4H7V6zm0 5h2v2H7v-2z"/></symbol>
+  <symbol id="pixel-apache-beam" viewBox="0 0 16 16"><path d="M1 1h6v14H1V1zm2 2v4h2V3H3zm0 6v4h2V9H3zm5-7h2v2H8V2zm2 2h2v2h-2V4zm2 2h3v2h-3V6zm-2 4h5v2h-5v-2zm-2 2h2v2H8v-2z"/></symbol>
+  <symbol id="pixel-artifact-registry" viewBox="0 0 16 16"><path d="M7 0h2v2h4v2h2v8h-2v2H9v2H7v-2H3v-2H1V4h2V2h4V0zM4 4h8v2H4V4zm0 3v5h3V7H4zm5 0v5h3V7H9zM5 8h1v2H5V8zm5 0h1v2h-1V8z"/></symbol>
+  <symbol id="pixel-bigquery" viewBox="0 0 16 16"><path d="M4 0h7v2h2v2h2v7h-2v2h-2v2H4v-2H2v-2H0V4h2V2h2V0zm0 3v9h7v-1h2V4h-2V3H4zm1 6h1v2H5V9zm2-3h1v5H7V6zm2 1h1v4H9V7zm2 5h2v2h-2v-2zm2 2h2v2h-2v-2z"/></symbol>
+  <symbol id="pixel-bolt" viewBox="0 0 16 16"><path d="M8 0h3v1h-3zM7 1h3v1h-3zM6 2h3v1h-3zM5 3h3v1h-3zM4 4h3v1h-3zM3 5h7v1h-7zM2 6h7v1h-7zM7 7h3v1h-3zM6 8h3v1h-3zM5 9h3v1h-3zM4 10h3v1h-3zM3 11h3v1h-3zM2 12h3v1h-3zM1 13h3v1h-3z"/></symbol>
+  <symbol id="pixel-branch" viewBox="0 0 16 16"><path d="M2 1h3v3H2V1zm1 1v1h1V2H3zm0 2h1v8H3V4zm0 8h1v3H3v-3zm0 3H2v-3h1v3zm8-13h3v3h-3V2zm1 1v1h1V3h-1zm0 2h1v2h-1V5zm-1 3h2v1h-2V8zm-2 1h2v1H8V9zm-2 1h2v1H6v-1zm-2 1h2v1H4v-1zm7 0h3v3h-3v-3zm1 1v1h1v-1h-1z"/></symbol>
+  <symbol id="pixel-btrieve" viewBox="0 0 16 16"><path d="M3 1h9v1h2v12h-2v1H3v-1H1V2h2V1zm2 2v10h5v-1h2V9h-2V7h2V4h-2V3H5zm2 2h3v2H7V5zm0 4h3v2H7V9z"/></symbol>
+  <symbol id="pixel-bug" viewBox="0 0 16 16"><path d="M4 1h1v2H4V1zm7 0h1v2h-1V1zM5 3h6v2H5V3zm-3 3h2v1H2V6zm10 0h2v1h-2V6zM1 9h3v1H1V9zm11 0h3v1h-3V9zm1 3h2v1h-2v-1zM2 12h2v1H2v-1zm2-6h8v7H4V6zm2 2h4v4H6V8z"/></symbol>
+  <symbol id="pixel-check-pixel" viewBox="0 0 16 16"><path d="M14 3h2v2h-2V3zm-2 2h2v2h-2V5zm-2 2h2v2h-2V7zm-2 2h2v2H8V9zM6 11h2v2H6v-2zM4 9h2v2H4V9zM2 7h2v2H2V7zm-2 0h2v2H0V7z"/></symbol>
+  <symbol id="pixel-cloud-run" viewBox="0 0 16 16"><path d="M3 0h10v2h2v4h-2v2h-2V6h2V2H3v4h2v2H3V6H1V2h2V0zm4 4h2v8h3v2H9v2H7v-2H4v-2h3V4zm-2 5h2v2H5V9zm4 0h2v2H9V9z"/></symbol>
+  <symbol id="pixel-compute-engine" viewBox="0 0 16 16"><path d="M4 0h8v2h2v2h2v8h-2v2h-2v2H4v-2H2v-2H0V4h2V2h2V0zm0 3v10h8V3H4zm2 2h4v4H6V5zm1 1v2h2V6H7zm-2 5h6v1H5v-1z"/></symbol>
+  <symbol id="pixel-copy" viewBox="0 0 16 16"><path d="M2 1h9v1h-9zM2 2h1v1h-1zM10 2h1v1h-1zM2 3h1v1h-1zM10 3h1v1h-1zM2 4h1v1h-1zM5 4h9v1h-9zM2 5h1v1h-1zM5 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM13 6h1v1h-1zM2 7h4v1h-4zM13 7h1v1h-1zM5 8h1v1h-1zM13 8h1v1h-1zM5 9h1v1h-1zM13 9h1v1h-1zM5 10h1v1h-1zM13 10h1v1h-1zM5 11h1v1h-1zM13 11h1v1h-1zM5 12h9v1h-9z"/></symbol>
+  <symbol id="pixel-cpu" viewBox="0 0 16 16"><path d="M4 0h1v2H4V0zm7 0h1v2h-1V0zM0 4h2v1H0V4zm0 7h2v1H0v-1zm14-7h2v1h-2V4zm0 7h2v1h-2v-1zM4 14h1v2H4v-2zm7 0h1v2h-1v-2zM2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5zm1 1v4h4V6H6z"/></symbol>
+  <symbol id="pixel-cross-pixel" viewBox="0 0 16 16"><path d="M2 2h3v2H2V2zm9 0h3v2h-3V2zm-2 2h2v2H9V4zm-4 0h2v2H5V4zm2 2h2v2H7V6zm-2 2h2v2H5V8zm4 0h2v2H9V8zm-4 2h2v2H5v-2zm4 0h2v2H9v-2zm-6 2h3v2H3v-2zm8 0h3v2h-3v-2z"/></symbol>
+  <symbol id="pixel-database" viewBox="0 0 16 16"><path d="M4 1h8v1H4V1zM2 2h2v1H2V2zm10 0h2v1h-2V2zM1 3h1v2H1V3zm14 0h1v2h-1V3zM2 5h2v1H2V5zm10 0h2v1h-2V5zm-8 1h8v1H4V6zm-3 1h1v2H1V7zm14 0h1v2h-1V7zM2 9h2v1H2V9zm10 0h2v1h-2V9zm-8 1h8v1H4v-1zm-3 1h1v2H1v-2zm14 0h1v2h-1v-2zm-13 2h2v1H2v-1zm10 0h2v1h-2v-1zm-8 1h8v1H4v-1z"/></symbol>
+  <symbol id="pixel-dataflow" viewBox="0 0 16 16"><path d="M0 2h4v4H0V2zm1 1v2h2V3H1zm0 7h4v4H1v-4zm1 1v2h2v-2H2zM6 6h4v4H6V6zm1 1v2h2V7H7zm5-5h4v4h-4V2zm1 1v2h2V3h-2zm-1 7h4v4h-4v-4zm1 1v2h2v-2h-2zM4 4h2v1H4V4zm6 0h2v1h-2V4zM4 11h2v1H4v-1zm6 0h2v1h-2v-1z"/></symbol>
+  <symbol id="pixel-db2" viewBox="0 0 16 16"><path d="M3 1h10v1h2v3h-2v8h-2v2H3v-2H1V5h1V2h1V1zm1 2v2h8V3H4zM3 7h10V6H3v1zm0 3h7V8H3v2zm0 3h8v-2H3v2zm8-5h2v1h-2V8zm0 2h2v1h-2v-1z"/></symbol>
+  <symbol id="pixel-docker" viewBox="0 0 16 16"><path d="M7 1h2v1h-2zM6 2h1v1h-1zM9 2h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM2 4h2v1h-2zM6 4h4v1h-4zM12 4h2v1h-2zM2 5h2v1h-2zM6 5h1v1h-1zM9 5h1v1h-1zM12 5h2v1h-2zM2 6h12v1h-12zM2 7h1v1h-1zM4 7h2v1h-2zM7 7h2v1h-2zM10 7h2v1h-2zM13 7h1v1h-1zM2 8h12v1h-12zM2 9h1v1h-1zM4 9h2v1h-2zM7 9h2v1h-2zM10 9h2v1h-2zM13 9h1v1h-1zM2 10h12v1h-12zM1 11h14v1h-14zM2 12h12v1h-12zM3 13h10v1h-10z"/></symbol>
+  <symbol id="pixel-gemini" viewBox="0 0 16 16"><path d="M7 0h2v3h2v2h2v2h3v2h-3v2h-2v2H9v3H7v-3H5v-2H3V9H0V7h3V5h2V3h2V0zm0 5v2H5v2h2v2h2V9h2V7H9V5H7z"/></symbol>
+  <symbol id="pixel-gemma" viewBox="0 0 16 16"><path d="M3 1h10v2h2v4h-2v2h-2v2H9v2H7v-2H5V9H3V7H1V3h2V1zm1 2v3h3V3H4zm5 0v3h3V3H9zM3 7l4 4V7H3zm6 0v4l4-4H9z"/></symbol>
+  <symbol id="pixel-go-gopher" viewBox="0 0 16 16"><path d="M4 0h1v1h-1zM11 0h1v1h-1zM3 1h3v1h-3zM10 1h3v1h-3zM3 2h3v1h-3zM10 2h3v1h-3zM2 3h12v1h-12zM1 4h14v1h-14zM1 5h3v1h-3zM6 5h4v1h-4zM12 5h3v1h-3zM1 6h3v1h-3zM6 6h4v1h-4zM12 6h3v1h-3zM1 7h14v1h-14zM1 8h5v1h-5zM10 8h5v1h-5zM1 9h4v1h-4zM6 9h4v1h-4zM11 9h4v1h-4zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM2 13h12v1h-12zM2 14h3v1h-3zM11 14h3v1h-3z"/></symbol>
+  <symbol id="pixel-google-cloud" viewBox="0 0 16 16"><path d="M6 2h5v2h2v2h2v6h-2v2H3v-1H1v-2H0V8h2V6h2V4h2V2zm0 3v2H4v2H2v2h2v1h8v-1h1V8h-2V6H9V5H6z"/></symbol>
+  <symbol id="pixel-identity-platform" viewBox="0 0 16 16"><path d="M2 1h12v7c0 4-3 6-6 8-3-2-6-4-6-8V1zm2 2v5c0 2 2 4 4 5 2-1 4-3 4-5V3H4zm3 1h2v3H7V4zM5 8h6v3H5V8zm2 1v1h2V9H7z"/></symbol>
+  <symbol id="pixel-jdbc-jar" viewBox="0 0 16 16"><path d="M4 0h7v2H4V0zM3 2h9v2H3V2zM2 4h11v10H2V4zm2 2v6h7V6H4zm2 1h3v1H6V7zm0 2h4v1H6V9zm7-4h2v2h-2V5zm0 4h2v2h-2V9zm1-2h2v2h-2V7z"/></symbol>
+  <symbol id="pixel-key" viewBox="0 0 16 16"><path d="M10 1h4v1h-4V1zM9 2h1v4H9V2zm5 0h1v4h-1V2zm-4 4h4v1h-4V6zm-8 4h7v2H2v-2zm0-2h2v2H2V8zm3 4h2v2H5v-2zm-3 2h1v1H2v-1zm10-7h2v2h-2V7zm-1-4h2v2h-2V3z"/></symbol>
+  <symbol id="pixel-lock" viewBox="0 0 16 16"><path d="M5 2h6v2H5V2zm-2 2h2v3H3V4zm8 0h2v3h-2V4zM1 7h14v8H1V7zm2 2v4h10V9H3zm4 1h2v1H7v-1zm0 1h2v1H7v-1z"/></symbol>
+  <symbol id="pixel-maxdb" viewBox="0 0 16 16"><path d="M3 1h10v1h2v12h-2v1H3v-1H1V2h2V1zm1 2v3h2V4h1v2h2V4h1v2h2V3H4zm0 5v2h8V8H4zm0 4v1h8v-1H4z"/></symbol>
+  <symbol id="pixel-moon" viewBox="0 0 16 16"><path d="M6 1h4v1H6V1zM4 2h2v1H4V2zm6 0h2v2h-2V2zM3 3h1v2H3V3zm8 1h1v2h-1V4zM2 5h1v6H2V5zm9 1h1v4h-1V6zM3 11h1v2H3v-2zm8-1h1v2h-1v-2zm-5 4h4v1H6v-1zm4-1h2v-2h-2v2zm-6 0h2v1H4v-1z"/></symbol>
+  <symbol id="pixel-play" viewBox="0 0 16 16"><path d="M4 2h2v1H4V2zm0 1h3v1H4V3zm0 1h4v1H4V4zm0 1h5v1H4V5zm0 1h6v1H4V6zm0 1h7v2H4V7zm0 2h6v1H4V9zm0 1h5v1H4v-1zm0 1h4v1H4v-1zm0 1h3v1H4v-1zm0 1h2v1H4v-1z"/></symbol>
+  <symbol id="pixel-radar" viewBox="0 0 16 16"><path d="M7 0h2v1H7V0zM3 1h2v1H3V1zm8 0h2v1h-2V1zM1 3h2v1H1V3zm12 0h2v1h-2V3zM0 7h1v2H0V7zm15 0h1v2h-1V7zM1 12h2v1H1v-1zm12 0h2v1h-2v-1zM3 14h2v1H3v-1zm8 0h2v1h-2v-1zM7 15h2v1H7v-1zM7 3h2v4h4v2H9v4H7V9H3V7h4V3zm1 3v2h2V6H8z"/></symbol>
+  <symbol id="pixel-rewind" viewBox="0 0 16 16"><path d="M7 2h1v12H7V2zm-1 2h1v8H6V4zm-1 1h1v6H5V5zm-1 1h1v4H4V6zm-1 1h1v2H3V7zm11-5h1v12h-1V2zm-1 2h1v8h-1V4zm-1 1h1v6h-1V5zm-1 1h1v4h-1V6zm-1 1h1v2h-1V7z"/></symbol>
+  <symbol id="pixel-satellite" viewBox="0 0 16 16"><path d="M0 0h4v2H0V0zm1 2h2v2H1V2zm5 1h1v1H6V3zm1 1h1v1H7V4zm1 1h1v1H8V5zm1 1h1v1H9V6zm-3 2h2v2H6V8zm6-7h4v2h-4V1zm0 2h1v2h-1V3zm2 0h1v2h-1V3zm-2 2h3v1h-3V5zm0 1h1v2h-1V6zm2 0h1v2h-1V6zm-2 2h4v2h-4V8zM1 11h2v4H1v-4zm2 0h2v1H3v-1zm2 2h2v1H5v-1zm-2 2h2v1H3v-1zm8-4h4v4h-4v-4z"/></symbol>
+  <symbol id="pixel-server" viewBox="0 0 16 16"><path d="M1 1h14v4H1V1zm1 1v2h12V2H2zm1 1h1v1H3V3zm2 0h1v1H5V3zm6 0h2v1h-2V3zM1 6h14v4H1V6zm1 1v2h12V7H2zm1 1h1v1H3V8zm2 0h1v1H5V8zm6 0h2v1h-2V8zM1 11h14v4H1v-4zm1 1v2h12v-2H2zm1 1h1v1H3v-1zm2 0h1v1H5v-1zm6 0h2v1h-2v-1z"/></symbol>
+  <symbol id="pixel-shield-check" viewBox="0 0 16 16"><path d="M2 1h12v7c0 3-3 6-6 7-3-1-6-4-6-7V1zm1 1v6c0 2.5 2.5 5 5 5.8 2.5-.8 5-3.3 5-5.8V2H3zm8 3l-4 5-2-2 1-1 1 1 3-4 1 1z"/></symbol>
+  <symbol id="pixel-sparkle" viewBox="0 0 16 16"><path d="M7 0h2v3H7V0zM7 13h2v3H7v-3zM0 7h3v2H0V7zm13 0h3v2h-3V7zm3-4h1v1h-1V3zm-1 1h1v1h-1V4zm-1 1h1v1h-1V5zM3 3h1v1H3V3zm1 1h1v1H4V4zm1 1h1v1H5V5zm6 6h1v1h-1v-1zm1 1h1v1h-1v-1zm1 1h1v1h-1v-1zM5 11h1v1H5v-1zm-1 1h1v1H4v-1zm-1 1h1v1H3v-1zM6 6h4v4H6V6z"/></symbol>
+  <symbol id="pixel-sun" viewBox="0 0 16 16"><path d="M7 0h2v2H7V0zm0 14h2v2H7v-2zM0 7h2v2H0V7zm14 0h2v2h-2V7zM2 2h2v2H2V2zm10 0h2v2h-2V2zM2 12h2v2H2v-2zm10 0h2v2h-2v-2zM5 5h6v6H5V5zm1 1v4h4V6H6z"/></symbol>
+  <symbol id="pixel-tailscale" viewBox="0 0 16 16"><path d="M1 1h4v4H1V1zm5 0h4v4H6V1zm5 0h4v4h-4V1zM1 6h4v4H1V6zm5 0h4v4H6V6zm5 0h4v4h-4V6zM1 11h4v4H1v-4zm5 0h4v4H6v-4zm5 0h4v4h-4v-4zM2 2v2h2V2H2zm5 5v2h2V7H7zm5 5v2h2v-2h-2z"/></symbol>
+  <symbol id="pixel-terminal" viewBox="0 0 16 16"><path d="M1 2h14v12H1V2zm1 1v10h12V3H2zm2 2h2v1H4V5zm2 1h2v1H6V6zm-2 1h2v1H4V7zm5 3h4v1H9v-1z"/></symbol>
+  <symbol id="pixel-vertex-ai" viewBox="0 0 16 16"><path d="M5 0h6v2h2v2h2v8h-2v2h-2v2H5v-2H3v-2H1V4h2V2h2V0zm1 3v3H3v4h3v3h4v-3h3V6h-3V3H6zm1 2h2v2h2v2H9v2H7V9H5V7h2V5z"/></symbol>
+  <symbol id="pixel-zoom-in" viewBox="0 0 16 16"><path d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM3 4h5v1h-5zM10 4h1v1h-1zM0 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h1v1h-1zM3 9h5v1h-5zM8 10h3v1h-3zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></symbol>
+  <symbol id="pixel-zoom-out" viewBox="0 0 16 16"><path d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM3 4h5v1h-5zM10 4h1v1h-1zM0 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h1v1h-1zM3 9h5v1h-5zM8 10h3v1h-3zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></symbol></defs>
+<style>
+  .dg-flow { animation: dg-travel 1.4s linear infinite; }
+  @keyframes dg-travel { to { stroke-dashoffset: -26; } }
+  @media (prefers-reduced-motion: reduce) { .dg-flow { animation: none; opacity: .75; } }
+</style>
+<rect width="2400" height="1080" fill="var(--dg-bg)"/>
+<g transform="translate(44 20) scale(1.15)"><g fill="#101820"><rect x="4" y="0" width="3" height="1"/><rect x="28" y="0" width="3" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="11" y="1" width="12" height="1"/><rect x="27" y="1" width="1" height="1"/><rect x="31" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="8" y="2" width="3" height="1"/><rect x="23" y="2" width="4" height="1"/><rect x="32" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="5" y="3" width="2" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="25" y="3" width="5" height="1"/><rect x="32" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="7" y="4" width="1" height="1"/><rect x="26" y="4" width="2" height="1"/><rect x="30" y="4" width="1" height="1"/><rect x="32" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="28" y="5" width="1" height="1"/><rect x="32" y="5" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="27" y="6" width="2" height="1"/><rect x="31" y="6" width="1" height="1"/><rect x="4" y="7" width="2" height="1"/><rect x="29" y="7" width="2" height="1"/><rect x="5" y="8" width="1" height="1"/><rect x="29" y="8" width="1" height="1"/><rect x="4" y="9" width="1" height="1"/><rect x="11" y="9" width="1" height="1"/><rect x="22" y="9" width="1" height="1"/><rect x="30" y="9" width="1" height="1"/><rect x="4" y="10" width="1" height="1"/><rect x="10" y="10" width="3" height="1"/><rect x="21" y="10" width="3" height="1"/><rect x="30" y="10" width="1" height="1"/><rect x="4" y="11" width="1" height="1"/><rect x="10" y="11" width="3" height="1"/><rect x="16" y="11" width="2" height="1"/><rect x="21" y="11" width="3" height="1"/><rect x="30" y="11" width="1" height="1"/><rect x="4" y="12" width="1" height="1"/><rect x="13" y="12" width="3" height="1"/><rect x="17" y="12" width="4" height="1"/><rect x="26" y="12" width="1" height="1"/><rect x="30" y="12" width="1" height="1"/><rect x="4" y="13" width="1" height="1"/><rect x="12" y="13" width="1" height="1"/><rect x="16" y="13" width="2" height="1"/><rect x="21" y="13" width="1" height="1"/><rect x="30" y="13" width="1" height="1"/><rect x="2" y="14" width="6" height="1"/><rect x="11" y="14" width="1" height="1"/><rect x="22" y="14" width="2" height="1"/><rect x="26" y="14" width="7" height="1"/><rect x="35" y="14" width="2" height="1"/><rect x="4" y="15" width="1" height="1"/><rect x="11" y="15" width="1" height="1"/><rect x="22" y="15" width="1" height="1"/><rect x="29" y="15" width="2" height="1"/><rect x="34" y="15" width="1" height="1"/><rect x="37" y="15" width="1" height="1"/><rect x="4" y="16" width="4" height="1"/><rect x="11" y="16" width="1" height="1"/><rect x="22" y="16" width="1" height="1"/><rect x="27" y="16" width="4" height="1"/><rect x="33" y="16" width="1" height="1"/><rect x="37" y="16" width="1" height="1"/><rect x="3" y="17" width="2" height="1"/><rect x="12" y="17" width="1" height="1"/><rect x="16" y="17" width="2" height="1"/><rect x="21" y="17" width="2" height="1"/><rect x="30" y="17" width="2" height="1"/><rect x="33" y="17" width="1" height="1"/><rect x="37" y="17" width="1" height="1"/><rect x="2" y="18" width="1" height="1"/><rect x="5" y="18" width="1" height="1"/><rect x="13" y="18" width="3" height="1"/><rect x="18" y="18" width="4" height="1"/><rect x="29" y="18" width="1" height="1"/><rect x="32" y="18" width="1" height="1"/><rect x="37" y="18" width="1" height="1"/><rect x="5" y="19" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="18" y="19" width="2" height="1"/><rect x="29" y="19" width="1" height="1"/><rect x="31" y="19" width="1" height="1"/><rect x="37" y="19" width="1" height="1"/><rect x="5" y="20" width="2" height="1"/><rect x="16" y="20" width="3" height="1"/><rect x="28" y="20" width="3" height="1"/><rect x="36" y="20" width="1" height="1"/><rect x="4" y="21" width="1" height="1"/><rect x="6" y="21" width="2" height="1"/><rect x="27" y="21" width="2" height="1"/><rect x="31" y="21" width="1" height="1"/><rect x="35" y="21" width="1" height="1"/><rect x="3" y="22" width="1" height="1"/><rect x="8" y="22" width="4" height="1"/><rect x="22" y="22" width="6" height="1"/><rect x="31" y="22" width="1" height="1"/><rect x="35" y="22" width="1" height="1"/><rect x="2" y="23" width="1" height="1"/><rect x="12" y="23" width="10" height="1"/><rect x="32" y="23" width="1" height="1"/><rect x="34" y="23" width="1" height="1"/><rect x="2" y="24" width="1" height="1"/><rect x="32" y="24" width="2" height="1"/><rect x="1" y="25" width="2" height="1"/><rect x="31" y="25" width="1" height="1"/><rect x="1" y="26" width="3" height="1"/><rect x="5" y="26" width="1" height="1"/><rect x="1" y="27" width="1" height="1"/><rect x="3" y="27" width="1" height="1"/><rect x="5" y="27" width="1" height="1"/><rect x="29" y="27" width="1" height="1"/><rect x="1" y="28" width="1" height="1"/><rect x="4" y="28" width="2" height="1"/><rect x="29" y="28" width="1" height="1"/><rect x="0" y="29" width="1" height="1"/><rect x="5" y="29" width="1" height="1"/><rect x="29" y="29" width="1" height="1"/><rect x="0" y="30" width="1" height="1"/><rect x="5" y="30" width="1" height="1"/><rect x="29" y="30" width="1" height="1"/><rect x="0" y="31" width="1" height="1"/><rect x="5" y="31" width="1" height="1"/><rect x="29" y="31" width="1" height="1"/><rect x="0" y="32" width="1" height="1"/><rect x="5" y="32" width="1" height="1"/><rect x="29" y="32" width="1" height="1"/><rect x="0" y="33" width="1" height="1"/><rect x="4" y="33" width="2" height="1"/><rect x="29" y="33" width="1" height="1"/><rect x="1" y="34" width="1" height="1"/><rect x="4" y="34" width="2" height="1"/><rect x="28" y="34" width="2" height="1"/><rect x="2" y="35" width="2" height="1"/><rect x="5" y="35" width="3" height="1"/><rect x="26" y="35" width="4" height="1"/><rect x="5" y="36" width="1" height="1"/><rect x="8" y="36" width="19" height="1"/><rect x="28" y="36" width="2" height="1"/><rect x="6" y="37" width="1" height="1"/><rect x="27" y="37" width="2" height="1"/><rect x="6" y="38" width="1" height="1"/><rect x="27" y="38" width="1" height="1"/><rect x="7" y="39" width="1" height="1"/><rect x="26" y="39" width="2" height="1"/><rect x="8" y="40" width="1" height="1"/><rect x="25" y="40" width="1" height="1"/><rect x="8" y="41" width="1" height="1"/><rect x="13" y="41" width="8" height="1"/><rect x="25" y="41" width="1" height="1"/><rect x="8" y="42" width="1" height="1"/><rect x="13" y="42" width="1" height="1"/><rect x="20" y="42" width="1" height="1"/><rect x="25" y="42" width="1" height="1"/><rect x="8" y="43" width="1" height="1"/><rect x="13" y="43" width="1" height="1"/><rect x="20" y="43" width="1" height="1"/><rect x="25" y="43" width="1" height="1"/><rect x="7" y="44" width="2" height="1"/><rect x="13" y="44" width="1" height="1"/><rect x="20" y="44" width="1" height="1"/><rect x="25" y="44" width="3" height="1"/><rect x="5" y="45" width="2" height="1"/><rect x="13" y="45" width="8" height="1"/><rect x="27" y="45" width="2" height="1"/><rect x="2" y="46" width="5" height="1"/><rect x="13" y="46" width="8" height="1"/><rect x="27" y="46" width="6" height="1"/><rect x="2" y="47" width="31" height="1"/><rect x="4" y="48" width="27" height="1"/></g>
   <g fill="#1b6eaa"><rect x="4" y="1" width="1" height="1"/><rect x="30" y="1" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="11" y="2" width="12" height="1"/><rect x="31" y="2" width="1" height="1"/><rect x="9" y="3" width="2" height="1"/><rect x="23" y="3" width="2" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="25" y="4" width="1" height="1"/><rect x="3" y="5" width="2" height="1"/><rect x="7" y="5" width="1" height="1"/><rect x="27" y="5" width="1" height="1"/><rect x="31" y="5" width="1" height="1"/><rect x="4" y="6" width="2" height="1"/><rect x="29" y="6" width="2" height="1"/><rect x="6" y="7" width="1" height="1"/><rect x="28" y="7" width="1" height="1"/><rect x="6" y="8" width="1" height="1"/><rect x="28" y="8" width="1" height="1"/><rect x="5" y="9" width="1" height="1"/><rect x="29" y="9" width="1" height="1"/><rect x="5" y="10" width="1" height="1"/><rect x="29" y="10" width="1" height="1"/><rect x="5" y="11" width="1" height="1"/><rect x="29" y="11" width="1" height="1"/><rect x="5" y="12" width="1" height="1"/><rect x="7" y="12" width="1" height="1"/><rect x="27" y="12" width="1" height="1"/><rect x="29" y="12" width="1" height="1"/><rect x="5" y="13" width="1" height="1"/><rect x="8" y="13" width="1" height="1"/><rect x="25" y="13" width="2" height="1"/><rect x="29" y="13" width="1" height="1"/><rect x="5" y="15" width="1" height="1"/><rect x="5" y="17" width="2" height="1"/><rect x="28" y="17" width="2" height="1"/><rect x="6" y="18" width="1" height="1"/><rect x="28" y="18" width="1" height="1"/><rect x="6" y="19" width="2" height="1"/><rect x="27" y="19" width="2" height="1"/><rect x="7" y="20" width="2" height="1"/><rect x="26" y="20" width="2" height="1"/><rect x="35" y="20" width="1" height="1"/><rect x="8" y="21" width="2" height="1"/><rect x="25" y="21" width="2" height="1"/><rect x="34" y="21" width="1" height="1"/><rect x="32" y="22" width="3" height="1"/><rect x="33" y="23" width="1" height="1"/><rect x="16" y="26" width="4" height="1"/><rect x="2" y="27" width="1" height="1"/><rect x="15" y="27" width="3" height="1"/><rect x="19" y="27" width="1" height="1"/><rect x="3" y="28" width="1" height="1"/><rect x="14" y="28" width="1" height="1"/><rect x="4" y="29" width="1" height="1"/><rect x="14" y="29" width="1" height="1"/><rect x="4" y="30" width="1" height="1"/><rect x="14" y="30" width="1" height="1"/><rect x="19" y="30" width="2" height="1"/><rect x="14" y="31" width="1" height="1"/><rect x="20" y="31" width="1" height="1"/><rect x="14" y="32" width="2" height="1"/><rect x="19" y="32" width="2" height="1"/><rect x="15" y="33" width="5" height="1"/><rect x="6" y="36" width="2" height="1"/><rect x="27" y="36" width="1" height="1"/><rect x="7" y="37" width="1" height="1"/><rect x="7" y="38" width="1" height="1"/><rect x="8" y="39" width="2" height="1"/><rect x="24" y="39" width="2" height="1"/><rect x="9" y="40" width="16" height="1"/><rect x="11" y="41" width="2" height="1"/><rect x="21" y="41" width="2" height="1"/><rect x="12" y="42" width="1" height="1"/><rect x="21" y="42" width="1" height="1"/><rect x="12" y="43" width="1" height="1"/><rect x="21" y="43" width="1" height="1"/><rect x="12" y="44" width="1" height="1"/><rect x="21" y="44" width="1" height="1"/><rect x="12" y="45" width="1" height="1"/><rect x="21" y="45" width="1" height="1"/><rect x="7" y="46" width="6" height="1"/><rect x="21" y="46" width="6" height="1"/></g>
   <g fill="#29a5de"><rect x="5" y="1" width="2" height="1"/><rect x="28" y="1" width="2" height="1"/><rect x="4" y="2" width="4" height="1"/><rect x="27" y="2" width="4" height="1"/><rect x="3" y="3" width="2" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="11" y="3" width="12" height="1"/><rect x="30" y="3" width="2" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="9" y="4" width="16" height="1"/><rect x="31" y="4" width="1" height="1"/><rect x="8" y="5" width="19" height="1"/><rect x="7" y="6" width="2" height="1"/><rect x="13" y="6" width="8" height="1"/><rect x="26" y="6" width="1" height="1"/><rect x="7" y="7" width="1" height="1"/><rect x="14" y="7" width="6" height="1"/><rect x="27" y="7" width="1" height="1"/><rect x="15" y="8" width="4" height="1"/><rect x="6" y="9" width="1" height="1"/><rect x="15" y="9" width="4" height="1"/><rect x="28" y="9" width="1" height="1"/><rect x="6" y="10" width="1" height="1"/><rect x="15" y="10" width="4" height="1"/><rect x="28" y="10" width="1" height="1"/><rect x="6" y="11" width="1" height="1"/><rect x="15" y="11" width="1" height="1"/><rect x="18" y="11" width="1" height="1"/><rect x="27" y="11" width="2" height="1"/><rect x="6" y="12" width="1" height="1"/><rect x="28" y="12" width="1" height="1"/><rect x="6" y="13" width="2" height="1"/><rect x="27" y="13" width="2" height="1"/><rect x="8" y="14" width="3" height="1"/><rect x="24" y="14" width="2" height="1"/><rect x="6" y="15" width="5" height="1"/><rect x="23" y="15" width="6" height="1"/><rect x="8" y="16" width="2" height="1"/><rect x="24" y="16" width="3" height="1"/><rect x="7" y="17" width="3" height="1"/><rect x="24" y="17" width="4" height="1"/><rect x="7" y="18" width="3" height="1"/><rect x="24" y="18" width="4" height="1"/><rect x="33" y="18" width="2" height="1"/><rect x="8" y="19" width="2" height="1"/><rect x="25" y="19" width="2" height="1"/><rect x="32" y="19" width="4" height="1"/><rect x="9" y="20" width="2" height="1"/><rect x="24" y="20" width="2" height="1"/><rect x="31" y="20" width="4" height="1"/><rect x="10" y="21" width="2" height="1"/><rect x="23" y="21" width="2" height="1"/><rect x="32" y="21" width="2" height="1"/><rect x="12" y="22" width="1" height="1"/><rect x="19" y="25" width="1" height="1"/><rect x="20" y="27" width="1" height="1"/><rect x="2" y="28" width="1" height="1"/><rect x="15" y="28" width="1" height="1"/><rect x="20" y="28" width="1" height="1"/><rect x="1" y="29" width="1" height="1"/><rect x="3" y="29" width="1" height="1"/><rect x="15" y="29" width="1" height="1"/><rect x="3" y="30" width="1" height="1"/><rect x="15" y="30" width="1" height="1"/><rect x="15" y="31" width="1" height="1"/><rect x="19" y="31" width="1" height="1"/><rect x="16" y="32" width="3" height="1"/><rect x="8" y="37" width="3" height="1"/><rect x="23" y="37" width="4" height="1"/><rect x="8" y="38" width="4" height="1"/><rect x="22" y="38" width="5" height="1"/><rect x="10" y="39" width="14" height="1"/><rect x="9" y="41" width="2" height="1"/><rect x="23" y="41" width="2" height="1"/><rect x="9" y="42" width="3" height="1"/><rect x="22" y="42" width="3" height="1"/><rect x="9" y="43" width="3" height="1"/><rect x="22" y="43" width="3" height="1"/><rect x="9" y="44" width="3" height="1"/><rect x="22" y="44" width="3" height="1"/><rect x="7" y="45" width="5" height="1"/><rect x="22" y="45" width="5" height="1"/></g>
   <g fill="#e88b9a"><rect x="5" y="4" width="2" height="1"/><rect x="28" y="4" width="2" height="1"/><rect x="5" y="5" width="1" height="1"/><rect x="29" y="5" width="1" height="1"/><rect x="14" y="14" width="2" height="1"/><rect x="18" y="14" width="2" height="1"/><rect x="21" y="14" width="1" height="1"/><rect x="12" y="15" width="2" height="1"/><rect x="11" y="17" width="1" height="1"/><rect x="12" y="18" width="1" height="1"/><rect x="13" y="19" width="2" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="14" y="20" width="2" height="1"/><rect x="19" y="20" width="1" height="1"/><rect x="14" y="21" width="1" height="1"/><rect x="16" y="22" width="1" height="1"/></g>
   <g fill="#2b7cc4"><rect x="30" y="5" width="1" height="1"/></g>
   <g fill="#ffffff"><rect x="9" y="6" width="4" height="1"/><rect x="21" y="6" width="5" height="1"/><rect x="8" y="7" width="6" height="1"/><rect x="20" y="7" width="7" height="1"/><rect x="7" y="8" width="8" height="1"/><rect x="19" y="8" width="9" height="1"/><rect x="7" y="9" width="4" height="1"/><rect x="12" y="9" width="3" height="1"/><rect x="19" y="9" width="3" height="1"/><rect x="23" y="9" width="5" height="1"/><rect x="7" y="10" width="3" height="1"/><rect x="13" y="10" width="2" height="1"/><rect x="19" y="10" width="2" height="1"/><rect x="24" y="10" width="4" height="1"/><rect x="8" y="11" width="2" height="1"/><rect x="13" y="11" width="1" height="1"/><rect x="20" y="11" width="1" height="1"/><rect x="24" y="11" width="2" height="1"/><rect x="9" y="12" width="4" height="1"/><rect x="21" y="12" width="4" height="1"/><rect x="13" y="14" width="1" height="1"/><rect x="35" y="15" width="1" height="1"/><rect x="10" y="16" width="1" height="1"/><rect x="23" y="16" width="1" height="1"/><rect x="34" y="16" width="2" height="1"/><rect x="10" y="17" width="1" height="1"/><rect x="23" y="17" width="1" height="1"/><rect x="34" y="17" width="2" height="1"/><rect x="10" y="18" width="2" height="1"/><rect x="16" y="18" width="2" height="1"/><rect x="22" y="18" width="2" height="1"/><rect x="35" y="18" width="1" height="1"/><rect x="10" y="19" width="3" height="1"/><rect x="16" y="19" width="1" height="1"/><rect x="21" y="19" width="4" height="1"/><rect x="11" y="20" width="3" height="1"/><rect x="20" y="20" width="4" height="1"/><rect x="12" y="21" width="2" height="1"/><rect x="15" y="21" width="2" height="1"/><rect x="18" y="21" width="1" height="1"/><rect x="20" y="21" width="3" height="1"/><rect x="30" y="21" width="1" height="1"/><rect x="5" y="22" width="2" height="1"/><rect x="13" y="22" width="3" height="1"/><rect x="17" y="22" width="5" height="1"/><rect x="28" y="22" width="3" height="1"/><rect x="4" y="23" width="8" height="1"/><rect x="22" y="23" width="10" height="1"/><rect x="3" y="24" width="28" height="1"/><rect x="4" y="25" width="2" height="1"/><rect x="7" y="25" width="12" height="1"/><rect x="20" y="25" width="8" height="1"/><rect x="7" y="26" width="9" height="1"/><rect x="20" y="26" width="8" height="1"/><rect x="7" y="27" width="8" height="1"/><rect x="18" y="27" width="1" height="1"/><rect x="21" y="27" width="7" height="1"/><rect x="7" y="28" width="7" height="1"/><rect x="16" y="28" width="4" height="1"/><rect x="21" y="28" width="7" height="1"/><rect x="2" y="29" width="1" height="1"/><rect x="7" y="29" width="7" height="1"/><rect x="16" y="29" width="12" height="1"/><rect x="1" y="30" width="2" height="1"/><rect x="7" y="30" width="7" height="1"/><rect x="16" y="30" width="3" height="1"/><rect x="21" y="30" width="7" height="1"/><rect x="1" y="31" width="3" height="1"/><rect x="7" y="31" width="7" height="1"/><rect x="16" y="31" width="3" height="1"/><rect x="21" y="31" width="7" height="1"/><rect x="1" y="32" width="3" height="1"/><rect x="7" y="32" width="7" height="1"/><rect x="21" y="32" width="7" height="1"/><rect x="1" y="33" width="2" height="1"/><rect x="7" y="33" width="8" height="1"/><rect x="20" y="33" width="7" height="1"/><rect x="8" y="34" width="18" height="1"/><rect x="11" y="37" width="12" height="1"/><rect x="12" y="38" width="10" height="1"/></g>
-  <g fill="#d9a86c"><rect x="13" y="13" width="3" height="1"/><rect x="18" y="13" width="3" height="1"/><rect x="12" y="14" width="1" height="1"/><rect x="16" y="14" width="2" height="1"/><rect x="20" y="14" width="1" height="1"/><rect x="14" y="15" width="8" height="1"/><rect x="12" y="16" width="10" height="1"/><rect x="13" y="17" width="3" height="1"/><rect x="18" y="17" width="3" height="1"/><rect x="17" y="21" width="1" height="1"/><rect x="19" y="21" width="1" height="1"/></g></g><rect x="82" y="26" width="8" height="28" fill="var(--dg-go)"/>
-<text x="104" y="48" font-size="26.8" font-weight="700" fill="var(--dg-ink)" letter-spacing="2">GO CONTROL PLANE</text>
-<text x="430" y="48" font-size="15.2" fill="var(--dg-dim)" text-anchor="start">deterministic · zero LLM</text>
-<text x="1604" y="48" font-size="13.4" fill="var(--dg-go)" text-anchor="end">the browser holds no authority</text>
-<rect x="36" y="72" width="372" height="250" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="50" y="85" width="7" height="7" fill="var(--dg-go)"/>
-<text x="66" y="92" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">INGRESS · THREE DOORS</text>
-<text x="56" y="104" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">loopback-only</text>
-<rect x="56" y="118" width="332" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="63" y="125" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-terminal" x="68" y="130" width="14" height="14" color="var(--dg-go)"/>
-<text x="96" y="142" font-size="14.6" fill="var(--dg-ink)">/internal/v1/terminal</text>
-<text x="96" y="191.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">producer token</text>
-<rect x="56" y="180" width="332" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="63" y="187" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-branch" x="68" y="192" width="14" height="14" color="var(--dg-go)"/>
-<text x="96" y="204" font-size="14.6" fill="var(--dg-ink)">/internal/v1/orchestration</text>
-<text x="96" y="253.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">orchestrator token</text>
-<rect x="56" y="242" width="332" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="63" y="249" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-identity-platform" x="68" y="254" width="14" height="14" color="var(--dg-go)"/>
-<text x="96" y="266" font-size="14.6" fill="var(--dg-ink)">/api/web/v1/…</text>
-<text x="96" y="315.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">Identity Platform</text>
-<rect x="444" y="72" width="340" height="250" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="458" y="85" width="7" height="7" fill="var(--dg-go)"/>
-<text x="474" y="92" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">ADMISSION</text>
-<text x="464" y="104" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">a frame is data</text>
-<rect x="464" y="118" width="300" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="471" y="125" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-shield-check" x="476" y="130" width="14" height="14" color="var(--dg-go)"/>
-<text x="504" y="142" font-size="14.6" fill="var(--dg-ink)">Schema + enum checks</text>
-<rect x="464" y="180" width="300" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="471" y="187" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-lock" x="476" y="192" width="14" height="14" color="var(--dg-go)"/>
-<text x="504" y="204" font-size="14.6" fill="var(--dg-ink)">Credential suppression</text>
-<rect x="464" y="242" width="300" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="471" y="249" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-activity" x="476" y="254" width="14" height="14" color="var(--dg-go)"/>
-<text x="504" y="266" font-size="14.6" fill="var(--dg-ink)">Monotonic ordering</text>
-<text x="504" y="191.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">lane · stream · severity</text>
-<text x="504" y="253.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">patterns refused at the door</text>
-<text x="504" y="315.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">backward stamps rejected</text>
-<path d="M408 197 L442 197" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="820" y="72" width="380" height="250" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="834" y="85" width="7" height="7" fill="var(--dg-go)"/>
-<text x="850" y="92" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">FROZEN STATE MACHINE</text>
-<text x="840" y="104" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">cpAdvanceSteps</text>
-<rect x="840" y="118" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="893" y="138" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">created</text>
-<path d="M946 134 L956 134" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="958" y="118" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="1011" y="138" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">inventorying</text>
-<path d="M1064 134 L1074 134" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1076" y="118" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="1129" y="138" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">redacting</text>
-<path d="M1129 150 L1129 156 L893 156 L893 162" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="840" y="162" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="893" y="182" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">planning</text>
-<path d="M946 178 L956 178" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="958" y="162" width="106" height="32" fill="var(--dg-gold-tint)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<text x="1011" y="182" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">awaiting_approval</text>
-<path d="M1064 178 L1074 178" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1076" y="162" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="1129" y="182" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">approved</text>
-<path d="M1129 194 L1129 200 L893 200 L893 206" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="840" y="206" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="893" y="226" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">executing</text>
-<path d="M946 222 L956 222" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="958" y="206" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<text x="1011" y="226" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">verifying</text>
-<path d="M1064 222 L1074 222" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1076" y="206" width="106" height="32" fill="var(--dg-tile)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<text x="1129" y="226" font-size="11.6" fill="var(--dg-ink)" text-anchor="middle">completed</text>
-<text x="840" y="288" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">each step names the evidence it requires</text>
-<text x="840" y="306" font-size="12.8" fill="var(--dg-red)" text-anchor="start">any other transition fails closed</text>
-<path d="M784 197 L818 197" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1236" y="72" width="368" height="250" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="1250" y="85" width="7" height="7" fill="var(--dg-go)"/>
-<text x="1266" y="92" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">AUTHORITY</text>
-<text x="1256" y="104" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">m3_approval.go</text>
-<rect x="1256" y="118" width="328" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1263" y="125" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-key" x="1268" y="130" width="14" height="14" color="var(--dg-go)"/>
-<text x="1296" y="142" font-size="14.6" fill="var(--dg-ink)">Approver = verified UID</text>
-<rect x="1256" y="180" width="328" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1263" y="187" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-shield-check" x="1268" y="192" width="14" height="14" color="var(--dg-gold)"/>
-<text x="1296" y="204" font-size="14.6" fill="var(--dg-ink)">Digest-bound ledger</text>
-<rect x="1256" y="242" width="328" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1263" y="249" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-check-pixel" x="1268" y="254" width="14" height="14" color="var(--dg-go)"/>
-<text x="1296" y="266" font-size="14.6" fill="var(--dg-ink)">Idempotency + leases</text>
-<text x="1296" y="191.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">a spoofed decidedBy is refused</text>
-<text x="1296" y="253.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">a stale digest is refused</text>
-<text x="1296" y="315.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">duplicate dispatch returns prior</text>
-<path d="M1200 197 L1234 197" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="36" y="348" width="748" height="200" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="50" y="361" width="7" height="7" fill="var(--dg-go)"/>
-<text x="66" y="368" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">DURABLE STATE</text>
-<rect x="56" y="392" width="222" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="63" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-database" x="68" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="96" y="416" font-size="14.6" fill="var(--dg-ink)">Firestore</text>
-<text x="56" y="465.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">runs · events · approvals</text>
-<rect x="298" y="392" width="222" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="305" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-server" x="310" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="338" y="416" font-size="14.6" fill="var(--dg-ink)">Cloud SQL</text>
-<text x="298" y="465.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">replayable episodic history</text>
-<rect x="540" y="392" width="222" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="547" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-artifact-registry" x="552" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="580" y="416" font-size="14.6" fill="var(--dg-ink)">GCS</text>
-<text x="540" y="465.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">content-addressed artifacts</text>
-<text x="56" y="486" font-size="12.8" fill="var(--dg-red)" text-anchor="start">on disagreement Cloud SQL wins and execution fails closed</text>
-<text x="56" y="508" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">state survives process restart; nothing authoritative lives in the browser</text>
-<path d="M410 322 L410 346" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="820" y="348" width="380" height="200" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="834" y="361" width="7" height="7" fill="var(--dg-go)"/>
-<text x="850" y="368" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">EVENT FAN-OUT</text>
-<rect x="840" y="392" width="340" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="847" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-activity" x="852" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="880" y="416" font-size="14.6" fill="var(--dg-ink)">SSE · text/event-stream</text>
-<text x="840" y="465.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">GET …/runs/{id}/events</text>
-<text x="840" y="485.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">GET …/sources/{id}/terminal</text>
-<text x="840" y="496" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">resumable by frame id</text>
-<text x="840" y="516" font-size="12.8" fill="var(--dg-green)" text-anchor="start">no timer · no random value</text>
-<path d="M1010 322 L1010 346" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="1236" y="348" width="368" height="200" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2"/>
-<rect x="1250" y="361" width="7" height="7" fill="var(--dg-go)"/>
-<text x="1266" y="368" font-size="14.0" font-weight="700" fill="var(--dg-go)" letter-spacing="1.3">EVIDENCE</text>
-<rect x="1256" y="392" width="328" height="38" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1263" y="399" width="24" height="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-radar" x="1268" y="404" width="14" height="14" color="var(--dg-go)"/>
-<text x="1296" y="416" font-size="14.6" fill="var(--dg-ink)">trace · job · digest</text>
-<text x="1256" y="465.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">reconciliation rows</text>
-<text x="1256" y="485.0" font-size="12.8" fill="var(--dg-faint)" text-anchor="start">policy denials recorded</text>
-<text x="1256" y="496" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">a success claim without an</text>
-<text x="1256" y="516" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">evidence link is unproven</text>
-<path d="M1420 322 L1420 346" stroke="var(--dg-arrow)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<rect x="560" y="592" width="520" height="46" fill="var(--dg-tile)" stroke="var(--dg-blue)" stroke-width="2"/>
-<rect x="574" y="600" width="30" height="30" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-terminal" x="581" y="607" width="16" height="16" color="var(--dg-blue)"/>
-<text x="616" y="613" font-size="15.9" font-weight="700" fill="var(--dg-blue)">Mission Control · three mirrors</text>
-<text x="616" y="628" font-size="12.8" fill="var(--dg-dim)" text-anchor="start">every visible frame originates in a persisted backend event</text>
-<path d="M1010 548 L1010 590" stroke="var(--dg-go)" stroke-width="2" fill="none" marker-end="url(#g)"/>
-<text x="1024" y="576" font-size="12.8" fill="var(--dg-go)" text-anchor="start">SSE</text>
+  <g fill="#d9a86c"><rect x="13" y="13" width="3" height="1"/><rect x="18" y="13" width="3" height="1"/><rect x="12" y="14" width="1" height="1"/><rect x="16" y="14" width="2" height="1"/><rect x="20" y="14" width="1" height="1"/><rect x="14" y="15" width="8" height="1"/><rect x="12" y="16" width="10" height="1"/><rect x="13" y="17" width="3" height="1"/><rect x="18" y="17" width="3" height="1"/><rect x="17" y="21" width="1" height="1"/><rect x="19" y="21" width="1" height="1"/></g></g>
+<text x="132" y="62" font-size="28" font-weight="700" fill="var(--dg-ink)" letter-spacing="2">GO CONTROL PLANE</text>
+<text x="560" y="62" font-size="15" font-weight="400" fill="var(--dg-faint)" text-anchor="start">studio-backend/ · deterministic · zero LLM</text>
+<text x="2356" y="62" font-size="13" font-weight="400" fill="var(--dg-go)" text-anchor="end">the browser reads it but never owns it</text>
+<rect x="50" y="130" width="520" height="560" rx="26" fill="var(--dg-go)" opacity="0.045"/>
+<rect x="50" y="130" width="520" height="560" rx="26" fill="none" stroke="var(--dg-go)" stroke-width="2" opacity="0.5"/>
+<text x="76" y="164" font-size="15" font-weight="700" fill="var(--dg-go)" letter-spacing="1.8">THREE DOORS</text>
+<text x="76" y="186" font-size="12.5" fill="var(--dg-faint)">loopback only · Origin refused</text>
+<circle cx="190" cy="250" r="28" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-terminal" x="176" y="236" width="29" height="29" color="var(--dg-go)"/>
+<text x="190" y="302" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">/internal/v1/terminal</text>
+<text x="190" y="322" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">producer token</text>
+<text x="190" y="340" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">frames in</text>
+<circle cx="190" cy="402" r="28" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-branch" x="176" y="388" width="29" height="29" color="var(--dg-go)"/>
+<text x="190" y="454" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">/internal/v1/orchestration</text>
+<text x="190" y="474" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">orchestrator token</text>
+<text x="190" y="492" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">state transitions</text>
+<circle cx="190" cy="554" r="28" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-identity-platform" x="176" y="540" width="29" height="29" color="var(--dg-blue)"/>
+<text x="190" y="606" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">/api/web/v1/…</text>
+<text x="190" y="626" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">Identity Platform</text>
+<text x="190" y="644" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">the browser's door</text>
+<circle cx="760" cy="320" r="34" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-shield-check" x="743" y="303" width="35" height="35" color="var(--dg-green)"/>
+<text x="760" y="378" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">Admission</text>
+<text x="760" y="398" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">schema · enum · ordering</text>
+<text x="760" y="416" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">credentials suppressed</text>
+<text x="760" y="440" font-size="12.5" font-weight="400" fill="var(--dg-red)" text-anchor="middle">a frame is data, never a command</text>
+<path d="M228 250 Q473 315 726 320" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M228 250 Q473 315 726 320" stroke="var(--dg-go)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<path d="M228 402 Q482 391 726 320" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M228 402 Q482 391 726 320" stroke="var(--dg-go)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<path d="M228 554 Q491 467 726 320" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M228 554 Q491 467 726 320" stroke="var(--dg-go)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<rect x="1080" y="130" width="700" height="560" rx="26" fill="var(--dg-go)" opacity="0.045"/>
+<rect x="1080" y="130" width="700" height="560" rx="26" fill="none" stroke="var(--dg-go)" stroke-width="2" opacity="0.5"/>
+<text x="1106" y="164" font-size="15" font-weight="700" fill="var(--dg-go)" letter-spacing="1.8">FROZEN STATE MACHINE</text>
+<text x="1106" y="186" font-size="12.5" fill="var(--dg-faint)">each step names the evidence it requires</text>
+<circle cx="1430" cy="235" r="11" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<text x="1430" y="215" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="middle">created</text>
+<circle cx="1549" cy="278" r="11" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<text x="1549" y="258" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="middle">inventorying</text>
+<circle cx="1612" cy="388" r="11" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<text x="1632" y="393" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="start">redacting</text>
+<circle cx="1590" cy="512" r="11" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<text x="1610" y="518" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="start">planning</text>
+<circle cx="1493" cy="594" r="11" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="2.5"/>
+<text x="1493" y="620" font-size="12.5" font-weight="700" fill="var(--dg-gold)" text-anchor="middle">awaiting_approval</text>
+<circle cx="1367" cy="594" r="11" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<text x="1367" y="620" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="middle">approved</text>
+<circle cx="1270" cy="512" r="11" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<text x="1250" y="518" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="end">executing</text>
+<circle cx="1248" cy="388" r="11" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<text x="1228" y="393" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="end">verifying</text>
+<circle cx="1311" cy="278" r="11" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<text x="1311" y="258" font-size="12.5" font-weight="700" fill="var(--dg-green)" text-anchor="middle">completed</text>
+<path d="M1430.0 235.0 Q1487 264 1548.9157077920097 278.2817780229891" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<polygon points="1549,278 1535,282 1538,269" fill="var(--dg-go)"/>
+<path d="M1548.9157077920097 278.2817780229891 Q1574 337 1612.1894343072586 387.8750871316179" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<polygon points="1612,388 1599,382 1610,373" fill="var(--dg-go)"/>
+<path d="M1612.1894343072586 387.8750871316179 Q1594 449 1590.2146997001212 512.5" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<polygon points="1590,512 1584,499 1598,500" fill="var(--dg-go)"/>
+<path d="M1590.2146997001212 512.5 Q1537 547 1493.2737265152487 593.843134845393" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<polygon points="1493,594 1497,580 1507,589" fill="var(--dg-go)"/>
+<path d="M1493.2737265152487 593.843134845393 Q1430 586 1366.7262734847513 593.843134845393" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M1493.2737265152487 593.843134845393 Q1430 586 1366.7262734847513 593.843134845393" stroke="var(--dg-go)" stroke-width="2.5" fill="none" stroke-dasharray="6 10" stroke-linecap="round"/>
+<polygon points="1367,594 1379,585 1380,599" fill="var(--dg-go)"/>
+<path d="M1366.7262734847513 593.843134845393 Q1323 547 1269.7853002998788 512.5" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<polygon points="1270,512 1284,514 1277,525" fill="var(--dg-go)"/>
+<path d="M1269.7853002998788 512.5 Q1266 449 1247.8105656927414 387.87508713161793" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<polygon points="1248,388 1258,398 1245,402" fill="var(--dg-go)"/>
+<path d="M1247.8105656927414 387.87508713161793 Q1286 337 1311.0842922079903 278.2817780229891" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<polygon points="1311,278 1312,293 1300,287" fill="var(--dg-go)"/>
+<use fill="currentColor" href="#pixel-key" x="1414" y="390" width="32" height="32" color="var(--dg-gold)"/>
+<text x="1430" y="436" font-size="13" font-weight="700" fill="var(--dg-gold)" text-anchor="middle">one human decision</text>
+<text x="1430" y="456" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">bound to an exact digest</text>
+<path d="M794 320 Q1021 353 1250 340" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M794 320 Q1021 353 1250 340" stroke="var(--dg-green)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="1250,340 1237,348 1237,334" fill="var(--dg-green)"/>
+<rect x="1860" y="130" width="496" height="560" rx="26" fill="var(--dg-green)" opacity="0.045"/>
+<rect x="1860" y="130" width="496" height="560" rx="26" fill="none" stroke="var(--dg-green)" stroke-width="2" opacity="0.5"/>
+<text x="1886" y="164" font-size="15" font-weight="700" fill="var(--dg-green)" letter-spacing="1.8">WHAT SURVIVES</text>
+<text x="1886" y="186" font-size="12.5" fill="var(--dg-faint)">state outlives the process</text>
+<circle cx="2110" cy="250" r="28" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-database" x="2096" y="236" width="29" height="29" color="var(--dg-green)"/>
+<text x="2110" y="302" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">Firestore</text>
+<text x="2110" y="322" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">runs · events · approvals</text>
+<circle cx="2110" cy="400" r="28" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-server" x="2096" y="386" width="29" height="29" color="var(--dg-green)"/>
+<text x="2110" y="452" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">Cloud SQL</text>
+<text x="2110" y="472" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">replayable history</text>
+<circle cx="2110" cy="550" r="28" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-artifact-registry" x="2096" y="536" width="29" height="29" color="var(--dg-green)"/>
+<text x="2110" y="602" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">GCS</text>
+<text x="2110" y="622" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">content-addressed evidence</text>
+<path d="M1618 420 Q1844 386 2056 300" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M1618 420 Q1844 386 2056 300" stroke="var(--dg-go)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="2056,300 2047,311 2041,298" fill="var(--dg-go)"/>
+<text x="2110" y="664" font-size="12" font-weight="400" fill="var(--dg-red)" text-anchor="middle">on disagreement Cloud SQL wins</text>
+<text x="2110" y="682" font-size="12" font-weight="400" fill="var(--dg-red)" text-anchor="middle">and execution fails closed</text>
+<circle cx="1200" cy="830" r="30" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-activity" x="1185" y="815" width="31" height="31" color="var(--dg-go)"/>
+<text x="1200" y="884" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">SSE fan-out</text>
+<text x="1200" y="904" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">text/event-stream · resumable by frame id</text>
+<path d="M1430 616 Q1317 687 1240 796" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M1430 616 Q1317 687 1240 796" stroke="var(--dg-go)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="1240,796 1242,781 1253,789" fill="var(--dg-go)"/>
+<path d="M2110 462 Q1662 583 1256 806" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M2110 462 Q1662 583 1256 806" stroke="var(--dg-green)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="1256,806 1264,794 1271,806" fill="var(--dg-green)"/>
+<text x="1200" y="930" font-size="12.5" font-weight="700" fill="var(--dg-green)" text-anchor="middle">no timer · no random value · no generated line</text>
+<text x="1200" y="958" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">every visible frame originates in a persisted event</text>
+<text x="50" y="1010" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="start">INGRESS → ADMISSION → STATE → EVIDENCE → STREAM   ·   authority never leaves this process</text>
 </svg>

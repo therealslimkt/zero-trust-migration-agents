@@ -1,7 +1,5 @@
-<svg font-family="var(--font-mono-tactical)" viewBox="0 0 2000 1420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keraun platform architecture">
-<defs>
-<marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,1 L8,4.5 L0,8 Z" fill="var(--dg-arrow)"/></marker>
-<symbol id="pixel-activity" viewBox="0 0 16 16"><path d="M0 8h4v2H0V8zm3 0h2v-4H3v4zm2-4h2v10H5V4zm2 10h2v-7H7v7zm2-7h2v5H9V7zm2 5h2v-2h-2v2zm2-2h3v2h-3v-2z"/></symbol>
+<svg font-family="var(--font-mono-tactical)" viewBox="0 0 2400 1280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keraun platform architecture">
+<defs><symbol id="pixel-activity" viewBox="0 0 16 16"><path d="M0 8h4v2H0V8zm3 0h2v-4H3v4zm2-4h2v10H5V4zm2 10h2v-7H7v7zm2-7h2v5H9V7zm2 5h2v-2h-2v2zm2-2h3v2h-3v-2z"/></symbol>
   <symbol id="pixel-alert-triangle" viewBox="0 0 16 16"><path d="M7 1h2v2H7V1zm-1 2h4v2H6V3zm-1 2h6v2H5V5zm-1 2h8v2H4V7zm-1 2h10v2H3V9zm-1 2h12v2H2v-2zm-1 2h14v2H1v-2zm6-7h2v4H7V6zm0 5h2v2H7v-2z"/></symbol>
   <symbol id="pixel-apache-beam" viewBox="0 0 16 16"><path d="M1 1h6v14H1V1zm2 2v4h2V3H3zm0 6v4h2V9H3zm5-7h2v2H8V2zm2 2h2v2h-2V4zm2 2h3v2h-3V6zm-2 4h5v2h-5v-2zm-2 2h2v2H8v-2z"/></symbol>
   <symbol id="pixel-artifact-registry" viewBox="0 0 16 16"><path d="M7 0h2v2h4v2h2v8h-2v2H9v2H7v-2H3v-2H1V4h2V2h4V0zM4 4h8v2H4V4zm0 3v5h3V7H4zm5 0v5h3V7H9zM5 8h1v2H5V8zm5 0h1v2h-1V8z"/></symbol>
@@ -19,9 +17,10 @@
   <symbol id="pixel-database" viewBox="0 0 16 16"><path d="M4 1h8v1H4V1zM2 2h2v1H2V2zm10 0h2v1h-2V2zM1 3h1v2H1V3zm14 0h1v2h-1V3zM2 5h2v1H2V5zm10 0h2v1h-2V5zm-8 1h8v1H4V6zm-3 1h1v2H1V7zm14 0h1v2h-1V7zM2 9h2v1H2V9zm10 0h2v1h-2V9zm-8 1h8v1H4v-1zm-3 1h1v2H1v-2zm14 0h1v2h-1v-2zm-13 2h2v1H2v-1zm10 0h2v1h-2v-1zm-8 1h8v1H4v-1z"/></symbol>
   <symbol id="pixel-dataflow" viewBox="0 0 16 16"><path d="M0 2h4v4H0V2zm1 1v2h2V3H1zm0 7h4v4H1v-4zm1 1v2h2v-2H2zM6 6h4v4H6V6zm1 1v2h2V7H7zm5-5h4v4h-4V2zm1 1v2h2V3h-2zm-1 7h4v4h-4v-4zm1 1v2h2v-2h-2zM4 4h2v1H4V4zm6 0h2v1h-2V4zM4 11h2v1H4v-1zm6 0h2v1h-2v-1z"/></symbol>
   <symbol id="pixel-db2" viewBox="0 0 16 16"><path d="M3 1h10v1h2v3h-2v8h-2v2H3v-2H1V5h1V2h1V1zm1 2v2h8V3H4zM3 7h10V6H3v1zm0 3h7V8H3v2zm0 3h8v-2H3v2zm8-5h2v1h-2V8zm0 2h2v1h-2v-1z"/></symbol>
+  <symbol id="pixel-docker" viewBox="0 0 16 16"><path d="M7 1h2v1h-2zM6 2h1v1h-1zM9 2h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM2 4h2v1h-2zM6 4h4v1h-4zM12 4h2v1h-2zM2 5h2v1h-2zM6 5h1v1h-1zM9 5h1v1h-1zM12 5h2v1h-2zM2 6h12v1h-12zM2 7h1v1h-1zM4 7h2v1h-2zM7 7h2v1h-2zM10 7h2v1h-2zM13 7h1v1h-1zM2 8h12v1h-12zM2 9h1v1h-1zM4 9h2v1h-2zM7 9h2v1h-2zM10 9h2v1h-2zM13 9h1v1h-1zM2 10h12v1h-12zM1 11h14v1h-14zM2 12h12v1h-12zM3 13h10v1h-10z"/></symbol>
   <symbol id="pixel-gemini" viewBox="0 0 16 16"><path d="M7 0h2v3h2v2h2v2h3v2h-3v2h-2v2H9v3H7v-3H5v-2H3V9H0V7h3V5h2V3h2V0zm0 5v2H5v2h2v2h2V9h2V7H9V5H7z"/></symbol>
   <symbol id="pixel-gemma" viewBox="0 0 16 16"><path d="M3 1h10v2h2v4h-2v2h-2v2H9v2H7v-2H5V9H3V7H1V3h2V1zm1 2v3h3V3H4zm5 0v3h3V3H9zM3 7l4 4V7H3zm6 0v4l4-4H9z"/></symbol>
-  <symbol id="pixel-go-gopher" viewBox="0 0 16 16"><path d="M4 0h1v1h-1zM11 0h1v1h-1zM4 1h1v1h-1zM11 1h1v1h-1zM3 2h3v1h-3zM10 2h3v1h-3zM3 3h10v1h-10zM2 4h12v1h-12zM2 5h1v1h-1zM4 5h2v1h-2zM10 5h2v1h-2zM13 5h1v1h-1zM2 6h12v1h-12zM2 7h5v1h-5zM9 7h5v1h-5zM2 8h4v1h-4zM7 8h2v1h-2zM10 8h4v1h-4zM2 9h12v1h-12zM3 10h10v1h-10zM3 11h10v1h-10zM3 12h10v1h-10zM3 13h10v1h-10zM3 14h2v1h-2zM7 14h2v1h-2zM11 14h2v1h-2zM3 15h1v1h-1zM8 15h1v1h-1zM13 15h1v1h-1z"/></symbol>
+  <symbol id="pixel-go-gopher" viewBox="0 0 16 16"><path d="M4 0h1v1h-1zM11 0h1v1h-1zM3 1h3v1h-3zM10 1h3v1h-3zM3 2h3v1h-3zM10 2h3v1h-3zM2 3h12v1h-12zM1 4h14v1h-14zM1 5h3v1h-3zM6 5h4v1h-4zM12 5h3v1h-3zM1 6h3v1h-3zM6 6h4v1h-4zM12 6h3v1h-3zM1 7h14v1h-14zM1 8h5v1h-5zM10 8h5v1h-5zM1 9h4v1h-4zM6 9h4v1h-4zM11 9h4v1h-4zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM2 13h12v1h-12zM2 14h3v1h-3zM11 14h3v1h-3z"/></symbol>
   <symbol id="pixel-google-cloud" viewBox="0 0 16 16"><path d="M6 2h5v2h2v2h2v6h-2v2H3v-1H1v-2H0V8h2V6h2V4h2V2zm0 3v2H4v2H2v2h2v1h8v-1h1V8h-2V6H9V5H6z"/></symbol>
   <symbol id="pixel-identity-platform" viewBox="0 0 16 16"><path d="M2 1h12v7c0 4-3 6-6 8-3-2-6-4-6-8V1zm2 2v5c0 2 2 4 4 5 2-1 4-3 4-5V3H4zm3 1h2v3H7V4zM5 8h6v3H5V8zm2 1v1h2V9H7z"/></symbol>
   <symbol id="pixel-jdbc-jar" viewBox="0 0 16 16"><path d="M4 0h7v2H4V0zM3 2h9v2H3V2zM2 4h11v10H2V4zm2 2v6h7V6H4zm2 1h3v1H6V7zm0 2h4v1H6V9zm7-4h2v2h-2V5zm0 4h2v2h-2V9zm1-2h2v2h-2V7z"/></symbol>
@@ -41,256 +40,191 @@
   <symbol id="pixel-terminal" viewBox="0 0 16 16"><path d="M1 2h14v12H1V2zm1 1v10h12V3H2zm2 2h2v1H4V5zm2 1h2v1H6V6zm-2 1h2v1H4V7zm5 3h4v1H9v-1z"/></symbol>
   <symbol id="pixel-vertex-ai" viewBox="0 0 16 16"><path d="M5 0h6v2h2v2h2v8h-2v2h-2v2H5v-2H3v-2H1V4h2V2h2V0zm1 3v3H3v4h3v3h4v-3h3V6h-3V3H6zm1 2h2v2h2v2H9v2H7V9H5V7h2V5z"/></symbol>
   <symbol id="pixel-zoom-in" viewBox="0 0 16 16"><path d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM3 4h5v1h-5zM10 4h1v1h-1zM0 5h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h1v1h-1zM3 9h5v1h-5zM8 10h3v1h-3zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></symbol>
-  <symbol id="pixel-zoom-out" viewBox="0 0 16 16"><path d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM3 4h5v1h-5zM10 4h1v1h-1zM0 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h1v1h-1zM3 9h5v1h-5zM8 10h3v1h-3zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></symbol>
-</defs>
-<rect width="2000" height="1580" fill="var(--dg-bg)"/>
-<g transform="translate(40 22) scale(0.83)"><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" transform="translate(1.6 1.4)" fill="#e2b0e8" opacity="0.68"/><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" fill="#e2b0e8" stroke="#e2b0e8" stroke-width="1.25" stroke-linejoin="round"/><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" transform="translate(7.2 6.9) scale(0.7)" fill="#fa07c9"/></g><rect x="96" y="30" width="9" height="34" fill="var(--dg-gold)"/>
-<text x="122" y="58" font-size="28" font-weight="700" fill="var(--dg-ink)" letter-spacing="2.5">KERAUN</text>
-<text x="292" y="58" font-size="15" font-weight="400" fill="var(--dg-faint)" text-anchor="start">PLATFORM ARCHITECTURE</text>
-<text x="1956" y="58" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="end">google cloud · ztm-agent-9049c3</text>
-<rect x="44" y="88" width="560" height="340" fill="var(--dg-panel)" stroke="var(--dg-red)" stroke-width="2.5" stroke-dasharray="8 5"/>
-<rect x="60" y="104" width="9" height="9" fill="var(--dg-red)"/>
-<text x="79" y="113" font-size="14" font-weight="700" fill="var(--dg-red)" letter-spacing="1.6">PRIVATE LEGACY PERIMETER</text>
-<text x="354.6" y="113" font-size="12.5" fill="var(--dg-faint)">gVisor · no external IP</text>
-<rect x="70" y="144.0" width="268" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="79" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-db2" x="84" y="147" width="16" height="16" color="var(--dg-blue)"/>
-<text x="115" y="153" font-size="14" fill="var(--dg-ink)">IBM Db2 for i</text>
-<text x="115" y="168" font-size="11.5" fill="var(--dg-faint)">JD Edwards E1 9.2</text>
-<rect x="70" y="188" width="268" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="79" y="198" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-database" x="84" y="203" width="16" height="16" color="var(--dg-blue)"/>
-<text x="115" y="209" font-size="14" fill="var(--dg-ink)">SQL Server</text>
-<text x="115" y="224" font-size="11.5" fill="var(--dg-faint)">Dynamics AX 2012 R3</text>
-<rect x="70" y="244" width="268" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="79" y="254" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-database" x="84" y="259" width="16" height="16" color="var(--dg-blue)"/>
-<text x="115" y="265" font-size="14" fill="var(--dg-ink)">Oracle 19c</text>
-<text x="115" y="280" font-size="11.5" fill="var(--dg-faint)">E-Business Suite</text>
-<rect x="70" y="306" width="268" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="79" y="316" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-lock" x="84" y="321" width="16" height="16" color="var(--dg-green)"/>
-<text x="115" y="327" font-size="14" fill="var(--dg-ink)">Query runner</text>
-<text x="115" y="342" font-size="11.5" fill="var(--dg-faint)">the only container permitted to query</text>
-<text x="70" y="380" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="start">read-only role · count-only egress</text>
-<text x="70" y="404" font-size="12.5" font-weight="700" fill="var(--dg-red)" text-anchor="start">sanitized artifacts only</text>
-<rect x="356" y="144.0" width="226" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="365" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-cpu" x="370" y="147" width="16" height="16" color="var(--dg-gold)"/>
-<text x="401" y="153" font-size="14" fill="var(--dg-ink)">Gemma 2 · edge</text>
-<text x="401" y="168" font-size="11.5" fill="var(--dg-faint)">residual privacy review</text>
-<text x="356" y="208" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="start">runs beside the source,</text>
-<text x="356" y="228" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="start">never in the cloud</text>
-<text x="356" y="252" font-size="12" font-weight="400" fill="var(--dg-red)" text-anchor="start">uncertainty fails closed</text>
-<path d="M204 290 L204 302" stroke="var(--dg-arrow)" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
-<rect x="636" y="88" width="380" height="340" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
-<rect x="652" y="104" width="9" height="9" fill="var(--dg-go)"/>
-<text x="671" y="113" font-size="14" font-weight="700" fill="var(--dg-go)" letter-spacing="1.6">GO CONTROL PLANE</text>
-<text x="863.4" y="113" font-size="12.5" fill="var(--dg-faint)">source of truth</text>
-<rect x="662" y="144.0" width="328" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="671" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-server" x="676" y="147" width="16" height="16" color="var(--dg-go)"/>
-<text x="707" y="161" font-size="14" fill="var(--dg-ink)">Three ingress doors</text>
-<rect x="662" y="188" width="328" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="671" y="198" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-branch" x="676" y="203" width="16" height="16" color="var(--dg-go)"/>
-<text x="707" y="217" font-size="14" fill="var(--dg-ink)">Frozen state machine</text>
-<rect x="662" y="244" width="328" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="671" y="254" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-terminal" x="676" y="259" width="16" height="16" color="var(--dg-go)"/>
-<text x="707" y="273" font-size="14" fill="var(--dg-ink)">Frame admission</text>
-<rect x="662" y="300" width="328" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="671" y="310" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-database" x="676" y="315" width="16" height="16" color="var(--dg-go)"/>
-<text x="707" y="329" font-size="14" fill="var(--dg-ink)">Durable state</text>
-<rect x="662" y="356" width="328" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="671" y="366" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-activity" x="676" y="371" width="16" height="16" color="var(--dg-go)"/>
-<text x="707" y="385" font-size="14" fill="var(--dg-ink)">SSE fan-out</text>
-<text x="662" y="412" font-size="12.5" font-weight="700" fill="var(--dg-go)" text-anchor="start">detailed in the second drawing ↓</text>
-<path d="M604 258 L632 258" stroke="var(--dg-arrow)" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
-<rect x="1048" y="88" width="440" height="340" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="2.5"/>
-<rect x="1064" y="104" width="9" height="9" fill="var(--dg-blue)"/>
-<text x="1083" y="113" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1.6">VERTEX AI</text>
-<text x="1202.6" y="113" font-size="12.5" fill="var(--dg-faint)">Antigravity SDK 0.1.14</text>
-<rect x="1074" y="144.0" width="388" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1083" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-vertex-ai" x="1088" y="147" width="16" height="16" color="var(--dg-blue)"/>
-<text x="1119" y="153" font-size="14" fill="var(--dg-ink)">gemini-3.5-flash</text>
-<text x="1119" y="168" font-size="11.5" fill="var(--dg-faint)">location us</text>
-<text x="1074" y="216" font-size="12.5" font-weight="400" fill="var(--dg-green)" text-anchor="start">may choose   rename · cast · drop</text>
-<text x="1074" y="240" font-size="12.5" font-weight="400" fill="var(--dg-red)" text-anchor="start">may not   emit or execute code</text>
-<rect x="1074" y="258" width="388" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1083" y="268" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-identity-platform" x="1088" y="273" width="16" height="16" color="var(--dg-blue)"/>
-<text x="1119" y="279" font-size="14" fill="var(--dg-ink)">Identity Platform</text>
-<text x="1119" y="294" font-size="11.5" fill="var(--dg-faint)">approver = verified UID</text>
-<rect x="1074" y="330" width="388" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1083" y="340" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-key" x="1088" y="345" width="16" height="16" color="var(--dg-gold)"/>
-<text x="1119" y="351" font-size="14" fill="var(--dg-ink)">Digest-bound approval</text>
-<text x="1119" y="366" font-size="11.5" fill="var(--dg-faint)">a stale digest is refused</text>
-<path d="M1016 258 L1044 258" stroke="var(--dg-arrow)" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
-<rect x="1520" y="88" width="436" height="340" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
-<rect x="1536" y="104" width="9" height="9" fill="var(--dg-green)"/>
-<text x="1555" y="113" font-size="14" font-weight="700" fill="var(--dg-green)" letter-spacing="1.6">TRUSTED EXECUTION</text>
-<text x="1757.8" y="113" font-size="12.5" fill="var(--dg-faint)">after approval only</text>
-<rect x="1546" y="144.0" width="384" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1555" y="142" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-apache-beam" x="1560" y="147" width="16" height="16" color="var(--dg-green)"/>
-<text x="1591" y="153" font-size="14" fill="var(--dg-ink)">Apache Beam 2.75.0</text>
-<text x="1591" y="168" font-size="11.5" fill="var(--dg-faint)">real pipeline, not a stub</text>
-<rect x="1546" y="202" width="384" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1555" y="212" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-cpu" x="1560" y="217" width="16" height="16" color="var(--dg-green)"/>
-<text x="1591" y="223" font-size="14" fill="var(--dg-ink)">ParDo · DecodeJDERecord</text>
-<text x="1591" y="238" font-size="11.5" fill="var(--dg-faint)">bad row tagged, bundle survives</text>
-<rect x="1546" y="272" width="384" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1555" y="282" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-bigquery" x="1560" y="287" width="16" height="16" color="var(--dg-green)"/>
-<text x="1591" y="293" font-size="14" fill="var(--dg-ink)">BigQuery</text>
-<text x="1591" y="308" font-size="11.5" fill="var(--dg-faint)">explicit schema, never autodetect</text>
-<rect x="1546" y="342" width="384" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1555" y="352" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-check-pixel" x="1560" y="357" width="16" height="16" color="var(--dg-green)"/>
-<text x="1591" y="363" font-size="14" fill="var(--dg-ink)">Ledger reconciles</text>
-<text x="1591" y="378" font-size="11.5" fill="var(--dg-faint)">read = accepted + rejected</text>
-<text x="1546" y="414" font-size="12.5" font-weight="700" fill="var(--dg-green)" text-anchor="start">500 read · 498 accepted · 2 rejected · MATCHED</text>
-<path d="M1488 258 L1516 258" stroke="var(--dg-arrow)" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
-<rect x="44" y="456" width="1912" height="330" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="2.5"/>
-<rect x="60" y="472" width="9" height="9" fill="var(--dg-blue)"/>
-<text x="79" y="481" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1.6">THE FLEET · every agent, its authority, and its limit</text>
-<text x="656.2" y="481" font-size="12.5" fill="var(--dg-faint)">typed envelope · scoped identity · allowlisted tools · evidence obligation</text>
-<rect x="70" y="500" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="70" y="500" width="4" height="62" fill="var(--dg-go)"/>
-<rect x="84" y="517" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-satellite" x="89" y="522" width="18" height="18" color="var(--dg-go)"/>
-<text x="122" y="527" font-size="14" font-weight="700" fill="var(--dg-go)" letter-spacing="1">ATLAS</text>
-<text x="122" y="546" font-size="12" fill="var(--dg-dim)">Delegates bounded work; cannot approve or execute</text>
-<rect x="540" y="500" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="540" y="500" width="4" height="62" fill="var(--dg-gold)"/>
-<rect x="554" y="517" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-lock" x="559" y="522" width="18" height="18" color="var(--dg-gold)"/>
-<text x="592" y="527" font-size="14" font-weight="700" fill="var(--dg-gold)" letter-spacing="1">JETTY</text>
-<text x="592" y="546" font-size="12" fill="var(--dg-dim)">Guards the edge; holds no cloud credentials</text>
-<rect x="1010" y="500" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1010" y="500" width="4" height="62" fill="var(--dg-blue)"/>
-<rect x="1024" y="517" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-db2" x="1029" y="522" width="18" height="18" color="var(--dg-blue)"/>
-<text x="1062" y="527" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1">RUNE</text>
-<text x="1062" y="546" font-size="12" fill="var(--dg-dim)">Decodes JDE EBCDIC and packed decimal</text>
-<rect x="1480" y="500" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1480" y="500" width="4" height="62" fill="var(--dg-blue)"/>
-<rect x="1494" y="517" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-maxdb" x="1499" y="522" width="18" height="18" color="var(--dg-blue)"/>
-<text x="1532" y="527" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1">MARA</text>
-<text x="1532" y="546" font-size="12" fill="var(--dg-dim)">Maps MaxDB clustered records</text>
-<rect x="70" y="584" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="70" y="584" width="4" height="62" fill="var(--dg-blue)"/>
-<rect x="84" y="601" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-btrieve" x="89" y="606" width="18" height="18" color="var(--dg-blue)"/>
-<text x="122" y="611" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1">BRIX</text>
-<text x="122" y="630" font-size="12" fill="var(--dg-dim)">Reconstructs Btrieve pages; fails closed</text>
-<rect x="540" y="584" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="540" y="584" width="4" height="62" fill="var(--dg-blue)"/>
-<rect x="554" y="601" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-jdbc-jar" x="559" y="606" width="18" height="18" color="var(--dg-blue)"/>
-<text x="592" y="611" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1">MAVEN</text>
-<text x="592" y="630" font-size="12" fill="var(--dg-dim)">Fingerprints drivers; never executes the JAR</text>
-<rect x="1010" y="584" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1010" y="584" width="4" height="62" fill="var(--dg-blue)"/>
-<rect x="1024" y="601" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-gemini" x="1029" y="606" width="18" height="18" color="var(--dg-blue)"/>
-<text x="1062" y="611" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1">PRISMA</text>
-<text x="1062" y="630" font-size="12" fill="var(--dg-dim)">Proposes declarative plans; emits no code</text>
-<rect x="1480" y="584" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1480" y="584" width="4" height="62" fill="var(--dg-green)"/>
-<rect x="1494" y="601" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-shield-check" x="1499" y="606" width="18" height="18" color="var(--dg-green)"/>
-<text x="1532" y="611" font-size="14" font-weight="700" fill="var(--dg-green)" letter-spacing="1">VALE</text>
-<text x="1532" y="630" font-size="12" fill="var(--dg-dim)">Rejects or certifies; cannot widen authority</text>
-<rect x="70" y="668" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="70" y="668" width="4" height="62" fill="var(--dg-gold)"/>
-<rect x="84" y="685" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-key" x="89" y="690" width="18" height="18" color="var(--dg-gold)"/>
-<text x="122" y="695" font-size="14" font-weight="700" fill="var(--dg-gold)" letter-spacing="1">THE STEWARD</text>
-<text x="122" y="714" font-size="12" fill="var(--dg-dim)">One irreversible, digest-bound human decision</text>
-<rect x="540" y="668" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="540" y="668" width="4" height="62" fill="var(--dg-green)"/>
-<rect x="554" y="685" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-apache-beam" x="559" y="690" width="18" height="18" color="var(--dg-green)"/>
-<text x="592" y="695" font-size="14" font-weight="700" fill="var(--dg-green)" letter-spacing="1">FLOW</text>
-<text x="592" y="714" font-size="12" fill="var(--dg-dim)">Launches allowlisted transforms after approval</text>
-<rect x="1010" y="668" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1010" y="668" width="4" height="62" fill="var(--dg-green)"/>
-<rect x="1024" y="685" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-check-pixel" x="1029" y="690" width="18" height="18" color="var(--dg-green)"/>
-<text x="1062" y="695" font-size="14" font-weight="700" fill="var(--dg-green)" letter-spacing="1">LEDGER</text>
-<text x="1062" y="714" font-size="12" fill="var(--dg-dim)">Proves destination matches governed input</text>
-<rect x="1480" y="668" width="450" height="62" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1480" y="668" width="4" height="62" fill="var(--dg-blue)"/>
-<rect x="1494" y="685" width="28" height="28" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-radar" x="1499" y="690" width="18" height="18" color="var(--dg-blue)"/>
-<text x="1532" y="695" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="1">SCOUT</text>
-<text x="1532" y="714" font-size="12" fill="var(--dg-dim)">Interprets catalog intent; bypasses no query</text>
-<text x="70" y="758.0" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="start">reasoning is an agent node · predictable work is a function node · no agent may approve its own work</text>
-<rect x="640" y="818.0" width="720" height="60" fill="var(--dg-gold-tint)" stroke="var(--dg-gold)" stroke-width="2.5"/>
-<rect x="658" y="830.0" width="36" height="36" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-key" x="665" y="837.0" width="22" height="22" color="var(--dg-gold)"/>
-<text x="710" y="845.0" font-size="16" font-weight="700" fill="var(--dg-gold)">THE STEWARD · one human decision</text>
-<text x="710" y="866.0" font-size="12" font-weight="400" fill="var(--dg-dim)" text-anchor="start">binds this run to one exact portfolio digest; a stale digest is refused, never overridden</text>
-<rect x="44" y="914.0" width="1912" height="200" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="2.5"/>
-<rect x="60" y="930.0" width="9" height="9" fill="var(--dg-gold)"/>
-<text x="79" y="939.0" font-size="14" font-weight="700" fill="var(--dg-gold)" letter-spacing="1.6">DISCOVERY &amp; CATALOGING</text>
-<text x="333.8" y="1109" font-size="12.5" fill="var(--dg-faint)">no run auto-publishes</text>
-<rect x="70" y="960.0" width="340" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="79" y="970.0" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-radar" x="84" y="975.0" width="16" height="16" color="var(--dg-blue)"/>
-<text x="115" y="981.0" font-size="14" fill="var(--dg-ink)">Search registry</text>
-<text x="115" y="996.0" font-size="11.5" fill="var(--dg-faint)">is there an agent for my system?</text>
-<path d="M410 983.0 L442 983.0" stroke="var(--dg-gold)" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
-<rect x="448" y="960.0" width="340" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="457" y="970.0" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-sparkle" x="462" y="975.0" width="16" height="16" color="var(--dg-blue)"/>
-<text x="493" y="981.0" font-size="14" fill="var(--dg-ink)">Research if missing</text>
-<text x="493" y="996.0" font-size="11.5" fill="var(--dg-faint)">long-running worker, resumes across restarts</text>
-<path d="M788 983.0 L820 983.0" stroke="var(--dg-gold)" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
-<rect x="826" y="960.0" width="340" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="835" y="970.0" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-shield-check" x="840" y="975.0" width="16" height="16" color="var(--dg-green)"/>
-<text x="871" y="981.0" font-size="14" fill="var(--dg-ink)">Verify contract</text>
-<text x="871" y="996.0" font-size="11.5" fill="var(--dg-faint)">deterministic gates + sealed sandbox</text>
-<path d="M1166 983.0 L1198 983.0" stroke="var(--dg-gold)" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
-<rect x="1204" y="960.0" width="340" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1213" y="970.0" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-key" x="1218" y="975.0" width="16" height="16" color="var(--dg-gold)"/>
-<text x="1249" y="981.0" font-size="14" fill="var(--dg-ink)">Human promotion</text>
-<text x="1249" y="996.0" font-size="11.5" fill="var(--dg-faint)">registration needs explicit approval</text>
-<path d="M1544 983.0 L1576 983.0" stroke="var(--dg-gold)" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
-<rect x="1582" y="960.0" width="340" height="46" fill="var(--dg-tile)" stroke="var(--dg-line)" stroke-width="1.5"/>
-<rect x="1591" y="970.0" width="26" height="26" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="1.5"/>
-<use fill="currentColor" href="#pixel-artifact-registry" x="1596" y="975.0" width="16" height="16" color="var(--dg-blue)"/>
-<text x="1627" y="981.0" font-size="14" fill="var(--dg-ink)">Cataloged</text>
-<text x="1627" y="996.0" font-size="11.5" fill="var(--dg-faint)">A2A card + Agent Plugin 1.0</text>
-<path d="M1662 1026.0 L1662 1062.0 L240 1062.0 L240 1026.0" stroke="var(--dg-gold)" stroke-width="2.5" fill="none" marker-end="url(#a)" stroke-dasharray="6 5"/>
-<text x="860" y="1056.0" font-size="12.5" font-weight="400" fill="var(--dg-gold)" text-anchor="start">the next engineer's search finds it</text>
-<rect x="70" y="1152.0" width="13" height="13" fill="var(--dg-blue)"/>
-<text x="92" y="1163.0" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="start">LLM agent node</text>
-<rect x="448" y="1152.0" width="13" height="13" fill="var(--dg-green)"/>
-<text x="470" y="1163.0" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="start">deterministic function node</text>
-<rect x="826" y="1152.0" width="13" height="13" fill="var(--dg-gold)"/>
-<text x="848" y="1163.0" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="start">human decision</text>
-<rect x="1204" y="1152.0" width="13" height="13" fill="var(--dg-red)"/>
-<text x="1226" y="1163.0" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="start">trust boundary</text>
-<rect x="1582" y="1152.0" width="13" height="13" fill="var(--dg-go)"/>
-<text x="1604" y="1163.0" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="start">Go control plane</text>
-<text x="70" y="1230.0" font-size="13" font-weight="700" fill="var(--dg-green)" text-anchor="start">VERIFIED 2026-09-01</text>
-<use fill="currentColor" href="#pixel-check-pixel" x="70" y="1250.0" width="14" height="14" color="var(--dg-green)"/>
-<text x="94" y="1262.0" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="start">Gemini 3.5 Flash answered on Vertex AI (location us)</text>
-<use fill="currentColor" href="#pixel-check-pixel" x="70" y="1276.0" width="14" height="14" color="var(--dg-green)"/>
-<text x="94" y="1288.0" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="start">Apache Beam 2.75.0 DirectRunner · 500 records from the sealed VM</text>
-<use fill="currentColor" href="#pixel-check-pixel" x="70" y="1302.0" width="14" height="14" color="var(--dg-green)"/>
-<text x="94" y="1314.0" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="start">498 accepted · 2 rejected on malformed COMP-3 · reconciled in BigQuery</text>
-<use fill="currentColor" href="#pixel-check-pixel" x="70" y="1328.0" width="14" height="14" color="var(--dg-green)"/>
-<text x="94" y="1340.0" font-size="12.5" font-weight="400" fill="var(--dg-dim)" text-anchor="start">sealed emulators on an internal-only network, read-only role</text>
+  <symbol id="pixel-zoom-out" viewBox="0 0 16 16"><path d="M3 0h5v1h-5zM2 1h1v1h-1zM8 1h1v1h-1zM1 2h1v1h-1zM9 2h1v1h-1zM0 3h1v1h-1zM10 3h1v1h-1zM0 4h1v1h-1zM3 4h5v1h-5zM10 4h1v1h-1zM0 5h1v1h-1zM10 5h1v1h-1zM0 6h1v1h-1zM10 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h1v1h-1zM3 9h5v1h-5zM8 10h3v1h-3zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></symbol></defs>
+<style>
+  .dg-flow { animation: dg-travel 1.4s linear infinite; }
+  @keyframes dg-travel { to { stroke-dashoffset: -26; } }
+  @media (prefers-reduced-motion: reduce) { .dg-flow { animation: none; opacity: .75; } }
+</style>
+<rect width="2400" height="1280" fill="var(--dg-bg)"/>
+<g transform="translate(44 26) scale(0.9)"><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" transform="translate(1.6 1.4)" fill="#e2b0e8" opacity="0.68"/><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" fill="#e2b0e8" stroke="#e2b0e8" stroke-width="1.25" stroke-linejoin="round"/><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" transform="translate(7.2 6.9) scale(0.7)" fill="#fa07c9"/></g>
+<text x="112" y="62" font-size="30" font-weight="700" fill="var(--dg-ink)" letter-spacing="2.5">KERAUN</text>
+<text x="292" y="62" font-size="15" font-weight="400" fill="var(--dg-faint)" text-anchor="start">how a legacy record becomes a governed warehouse row</text>
+<text x="2356" y="62" font-size="13" font-weight="400" fill="var(--dg-faint)" text-anchor="end">google cloud · ztm-agent-9049c3</text>
+<rect x="50" y="116" width="600" height="620" rx="26" fill="var(--dg-red)" opacity="0.045"/>
+<rect x="50" y="116" width="600" height="620" rx="26" fill="none" stroke="var(--dg-red)" stroke-width="2" stroke-dasharray="10 8" opacity="0.55"/>
+<text x="76" y="150" font-size="15" font-weight="700" fill="var(--dg-red)" letter-spacing="1.8">SEALED PERIMETER</text>
+<text x="76" y="172" font-size="12.5" fill="var(--dg-faint)">gVisor · internal-only network · no external IP</text>
+<circle cx="170" cy="260" r="30" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-db2" x="155" y="245" width="31" height="31" color="var(--dg-blue)"/>
+<text x="170" y="314" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">JD Edwards</text>
+<text x="170" y="334" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">IBM Db2 for i</text>
+<circle cx="170" cy="420" r="30" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-database" x="155" y="405" width="31" height="31" color="var(--dg-blue)"/>
+<text x="170" y="474" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">Dynamics AX</text>
+<text x="170" y="494" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">SQL Server</text>
+<circle cx="170" cy="580" r="30" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-database" x="155" y="565" width="31" height="31" color="var(--dg-blue)"/>
+<text x="170" y="634" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">Oracle EBS</text>
+<text x="170" y="654" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">Oracle 19c</text>
+<circle cx="500" cy="420" r="34" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-lock" x="483" y="403" width="35" height="35" color="var(--dg-green)"/>
+<text x="500" y="478" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">Query runner</text>
+<text x="500" y="498" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">the only container</text>
+<text x="500" y="516" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">allowed to ask</text>
+<path d="M206 260 Q310 382 466 420" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M206 260 Q310 382 466 420" stroke="var(--dg-blue)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="466,420 452,424 455,410" fill="var(--dg-blue)"/>
+<path d="M206 420 Q336 446 466 420" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M206 420 Q336 446 466 420" stroke="var(--dg-blue)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="466,420 455,429 452,416" fill="var(--dg-blue)"/>
+<path d="M206 580 Q362 542 466 420" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M206 580 Q362 542 466 420" stroke="var(--dg-blue)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="466,420 463,434 452,425" fill="var(--dg-blue)"/>
+<circle cx="500" cy="620" r="26" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-cpu" x="487" y="607" width="27" height="27" color="var(--dg-gold)"/>
+<text x="500" y="670" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">Gemma 2</text>
+<text x="500" y="690" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">reviews at the edge</text>
+<text x="500" y="708" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">before anything leaves</text>
+<path d="M500 586 Q485 522 500 458" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M500 586 Q485 522 500 458" stroke="var(--dg-gold)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="500,458 504,472 490,469" fill="var(--dg-gold)"/>
+<path d="M700 120 L700 736" stroke="var(--dg-red)" stroke-width="2.5" stroke-dasharray="9 7" opacity="0.8"/>
+<text x="700" y="108" font-size="12.5" font-weight="700" fill="var(--dg-red)" text-anchor="middle">TRUST BOUNDARY</text>
+<text x="700" y="392" font-size="12" font-weight="400" fill="var(--dg-red)" text-anchor="middle">sanitized artifacts only</text>
+<text x="700" y="752" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">counts, digests and schema cross.</text>
+<text x="700" y="770" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">raw rows, credentials and connection strings do not.</text>
+<g transform="translate(880 300) scale(1.55)"><g fill="#101820"><rect x="4" y="0" width="3" height="1"/><rect x="28" y="0" width="3" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="11" y="1" width="12" height="1"/><rect x="27" y="1" width="1" height="1"/><rect x="31" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="8" y="2" width="3" height="1"/><rect x="23" y="2" width="4" height="1"/><rect x="32" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="5" y="3" width="2" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="25" y="3" width="5" height="1"/><rect x="32" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="7" y="4" width="1" height="1"/><rect x="26" y="4" width="2" height="1"/><rect x="30" y="4" width="1" height="1"/><rect x="32" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="28" y="5" width="1" height="1"/><rect x="32" y="5" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="27" y="6" width="2" height="1"/><rect x="31" y="6" width="1" height="1"/><rect x="4" y="7" width="2" height="1"/><rect x="29" y="7" width="2" height="1"/><rect x="5" y="8" width="1" height="1"/><rect x="29" y="8" width="1" height="1"/><rect x="4" y="9" width="1" height="1"/><rect x="11" y="9" width="1" height="1"/><rect x="22" y="9" width="1" height="1"/><rect x="30" y="9" width="1" height="1"/><rect x="4" y="10" width="1" height="1"/><rect x="10" y="10" width="3" height="1"/><rect x="21" y="10" width="3" height="1"/><rect x="30" y="10" width="1" height="1"/><rect x="4" y="11" width="1" height="1"/><rect x="10" y="11" width="3" height="1"/><rect x="16" y="11" width="2" height="1"/><rect x="21" y="11" width="3" height="1"/><rect x="30" y="11" width="1" height="1"/><rect x="4" y="12" width="1" height="1"/><rect x="13" y="12" width="3" height="1"/><rect x="17" y="12" width="4" height="1"/><rect x="26" y="12" width="1" height="1"/><rect x="30" y="12" width="1" height="1"/><rect x="4" y="13" width="1" height="1"/><rect x="12" y="13" width="1" height="1"/><rect x="16" y="13" width="2" height="1"/><rect x="21" y="13" width="1" height="1"/><rect x="30" y="13" width="1" height="1"/><rect x="2" y="14" width="6" height="1"/><rect x="11" y="14" width="1" height="1"/><rect x="22" y="14" width="2" height="1"/><rect x="26" y="14" width="7" height="1"/><rect x="35" y="14" width="2" height="1"/><rect x="4" y="15" width="1" height="1"/><rect x="11" y="15" width="1" height="1"/><rect x="22" y="15" width="1" height="1"/><rect x="29" y="15" width="2" height="1"/><rect x="34" y="15" width="1" height="1"/><rect x="37" y="15" width="1" height="1"/><rect x="4" y="16" width="4" height="1"/><rect x="11" y="16" width="1" height="1"/><rect x="22" y="16" width="1" height="1"/><rect x="27" y="16" width="4" height="1"/><rect x="33" y="16" width="1" height="1"/><rect x="37" y="16" width="1" height="1"/><rect x="3" y="17" width="2" height="1"/><rect x="12" y="17" width="1" height="1"/><rect x="16" y="17" width="2" height="1"/><rect x="21" y="17" width="2" height="1"/><rect x="30" y="17" width="2" height="1"/><rect x="33" y="17" width="1" height="1"/><rect x="37" y="17" width="1" height="1"/><rect x="2" y="18" width="1" height="1"/><rect x="5" y="18" width="1" height="1"/><rect x="13" y="18" width="3" height="1"/><rect x="18" y="18" width="4" height="1"/><rect x="29" y="18" width="1" height="1"/><rect x="32" y="18" width="1" height="1"/><rect x="37" y="18" width="1" height="1"/><rect x="5" y="19" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="18" y="19" width="2" height="1"/><rect x="29" y="19" width="1" height="1"/><rect x="31" y="19" width="1" height="1"/><rect x="37" y="19" width="1" height="1"/><rect x="5" y="20" width="2" height="1"/><rect x="16" y="20" width="3" height="1"/><rect x="28" y="20" width="3" height="1"/><rect x="36" y="20" width="1" height="1"/><rect x="4" y="21" width="1" height="1"/><rect x="6" y="21" width="2" height="1"/><rect x="27" y="21" width="2" height="1"/><rect x="31" y="21" width="1" height="1"/><rect x="35" y="21" width="1" height="1"/><rect x="3" y="22" width="1" height="1"/><rect x="8" y="22" width="4" height="1"/><rect x="22" y="22" width="6" height="1"/><rect x="31" y="22" width="1" height="1"/><rect x="35" y="22" width="1" height="1"/><rect x="2" y="23" width="1" height="1"/><rect x="12" y="23" width="10" height="1"/><rect x="32" y="23" width="1" height="1"/><rect x="34" y="23" width="1" height="1"/><rect x="2" y="24" width="1" height="1"/><rect x="32" y="24" width="2" height="1"/><rect x="1" y="25" width="2" height="1"/><rect x="31" y="25" width="1" height="1"/><rect x="1" y="26" width="3" height="1"/><rect x="5" y="26" width="1" height="1"/><rect x="1" y="27" width="1" height="1"/><rect x="3" y="27" width="1" height="1"/><rect x="5" y="27" width="1" height="1"/><rect x="29" y="27" width="1" height="1"/><rect x="1" y="28" width="1" height="1"/><rect x="4" y="28" width="2" height="1"/><rect x="29" y="28" width="1" height="1"/><rect x="0" y="29" width="1" height="1"/><rect x="5" y="29" width="1" height="1"/><rect x="29" y="29" width="1" height="1"/><rect x="0" y="30" width="1" height="1"/><rect x="5" y="30" width="1" height="1"/><rect x="29" y="30" width="1" height="1"/><rect x="0" y="31" width="1" height="1"/><rect x="5" y="31" width="1" height="1"/><rect x="29" y="31" width="1" height="1"/><rect x="0" y="32" width="1" height="1"/><rect x="5" y="32" width="1" height="1"/><rect x="29" y="32" width="1" height="1"/><rect x="0" y="33" width="1" height="1"/><rect x="4" y="33" width="2" height="1"/><rect x="29" y="33" width="1" height="1"/><rect x="1" y="34" width="1" height="1"/><rect x="4" y="34" width="2" height="1"/><rect x="28" y="34" width="2" height="1"/><rect x="2" y="35" width="2" height="1"/><rect x="5" y="35" width="3" height="1"/><rect x="26" y="35" width="4" height="1"/><rect x="5" y="36" width="1" height="1"/><rect x="8" y="36" width="19" height="1"/><rect x="28" y="36" width="2" height="1"/><rect x="6" y="37" width="1" height="1"/><rect x="27" y="37" width="2" height="1"/><rect x="6" y="38" width="1" height="1"/><rect x="27" y="38" width="1" height="1"/><rect x="7" y="39" width="1" height="1"/><rect x="26" y="39" width="2" height="1"/><rect x="8" y="40" width="1" height="1"/><rect x="25" y="40" width="1" height="1"/><rect x="8" y="41" width="1" height="1"/><rect x="13" y="41" width="8" height="1"/><rect x="25" y="41" width="1" height="1"/><rect x="8" y="42" width="1" height="1"/><rect x="13" y="42" width="1" height="1"/><rect x="20" y="42" width="1" height="1"/><rect x="25" y="42" width="1" height="1"/><rect x="8" y="43" width="1" height="1"/><rect x="13" y="43" width="1" height="1"/><rect x="20" y="43" width="1" height="1"/><rect x="25" y="43" width="1" height="1"/><rect x="7" y="44" width="2" height="1"/><rect x="13" y="44" width="1" height="1"/><rect x="20" y="44" width="1" height="1"/><rect x="25" y="44" width="3" height="1"/><rect x="5" y="45" width="2" height="1"/><rect x="13" y="45" width="8" height="1"/><rect x="27" y="45" width="2" height="1"/><rect x="2" y="46" width="5" height="1"/><rect x="13" y="46" width="8" height="1"/><rect x="27" y="46" width="6" height="1"/><rect x="2" y="47" width="31" height="1"/><rect x="4" y="48" width="27" height="1"/></g>
+  <g fill="#1b6eaa"><rect x="4" y="1" width="1" height="1"/><rect x="30" y="1" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="11" y="2" width="12" height="1"/><rect x="31" y="2" width="1" height="1"/><rect x="9" y="3" width="2" height="1"/><rect x="23" y="3" width="2" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="25" y="4" width="1" height="1"/><rect x="3" y="5" width="2" height="1"/><rect x="7" y="5" width="1" height="1"/><rect x="27" y="5" width="1" height="1"/><rect x="31" y="5" width="1" height="1"/><rect x="4" y="6" width="2" height="1"/><rect x="29" y="6" width="2" height="1"/><rect x="6" y="7" width="1" height="1"/><rect x="28" y="7" width="1" height="1"/><rect x="6" y="8" width="1" height="1"/><rect x="28" y="8" width="1" height="1"/><rect x="5" y="9" width="1" height="1"/><rect x="29" y="9" width="1" height="1"/><rect x="5" y="10" width="1" height="1"/><rect x="29" y="10" width="1" height="1"/><rect x="5" y="11" width="1" height="1"/><rect x="29" y="11" width="1" height="1"/><rect x="5" y="12" width="1" height="1"/><rect x="7" y="12" width="1" height="1"/><rect x="27" y="12" width="1" height="1"/><rect x="29" y="12" width="1" height="1"/><rect x="5" y="13" width="1" height="1"/><rect x="8" y="13" width="1" height="1"/><rect x="25" y="13" width="2" height="1"/><rect x="29" y="13" width="1" height="1"/><rect x="5" y="15" width="1" height="1"/><rect x="5" y="17" width="2" height="1"/><rect x="28" y="17" width="2" height="1"/><rect x="6" y="18" width="1" height="1"/><rect x="28" y="18" width="1" height="1"/><rect x="6" y="19" width="2" height="1"/><rect x="27" y="19" width="2" height="1"/><rect x="7" y="20" width="2" height="1"/><rect x="26" y="20" width="2" height="1"/><rect x="35" y="20" width="1" height="1"/><rect x="8" y="21" width="2" height="1"/><rect x="25" y="21" width="2" height="1"/><rect x="34" y="21" width="1" height="1"/><rect x="32" y="22" width="3" height="1"/><rect x="33" y="23" width="1" height="1"/><rect x="16" y="26" width="4" height="1"/><rect x="2" y="27" width="1" height="1"/><rect x="15" y="27" width="3" height="1"/><rect x="19" y="27" width="1" height="1"/><rect x="3" y="28" width="1" height="1"/><rect x="14" y="28" width="1" height="1"/><rect x="4" y="29" width="1" height="1"/><rect x="14" y="29" width="1" height="1"/><rect x="4" y="30" width="1" height="1"/><rect x="14" y="30" width="1" height="1"/><rect x="19" y="30" width="2" height="1"/><rect x="14" y="31" width="1" height="1"/><rect x="20" y="31" width="1" height="1"/><rect x="14" y="32" width="2" height="1"/><rect x="19" y="32" width="2" height="1"/><rect x="15" y="33" width="5" height="1"/><rect x="6" y="36" width="2" height="1"/><rect x="27" y="36" width="1" height="1"/><rect x="7" y="37" width="1" height="1"/><rect x="7" y="38" width="1" height="1"/><rect x="8" y="39" width="2" height="1"/><rect x="24" y="39" width="2" height="1"/><rect x="9" y="40" width="16" height="1"/><rect x="11" y="41" width="2" height="1"/><rect x="21" y="41" width="2" height="1"/><rect x="12" y="42" width="1" height="1"/><rect x="21" y="42" width="1" height="1"/><rect x="12" y="43" width="1" height="1"/><rect x="21" y="43" width="1" height="1"/><rect x="12" y="44" width="1" height="1"/><rect x="21" y="44" width="1" height="1"/><rect x="12" y="45" width="1" height="1"/><rect x="21" y="45" width="1" height="1"/><rect x="7" y="46" width="6" height="1"/><rect x="21" y="46" width="6" height="1"/></g>
+  <g fill="#29a5de"><rect x="5" y="1" width="2" height="1"/><rect x="28" y="1" width="2" height="1"/><rect x="4" y="2" width="4" height="1"/><rect x="27" y="2" width="4" height="1"/><rect x="3" y="3" width="2" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="11" y="3" width="12" height="1"/><rect x="30" y="3" width="2" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="9" y="4" width="16" height="1"/><rect x="31" y="4" width="1" height="1"/><rect x="8" y="5" width="19" height="1"/><rect x="7" y="6" width="2" height="1"/><rect x="13" y="6" width="8" height="1"/><rect x="26" y="6" width="1" height="1"/><rect x="7" y="7" width="1" height="1"/><rect x="14" y="7" width="6" height="1"/><rect x="27" y="7" width="1" height="1"/><rect x="15" y="8" width="4" height="1"/><rect x="6" y="9" width="1" height="1"/><rect x="15" y="9" width="4" height="1"/><rect x="28" y="9" width="1" height="1"/><rect x="6" y="10" width="1" height="1"/><rect x="15" y="10" width="4" height="1"/><rect x="28" y="10" width="1" height="1"/><rect x="6" y="11" width="1" height="1"/><rect x="15" y="11" width="1" height="1"/><rect x="18" y="11" width="1" height="1"/><rect x="27" y="11" width="2" height="1"/><rect x="6" y="12" width="1" height="1"/><rect x="28" y="12" width="1" height="1"/><rect x="6" y="13" width="2" height="1"/><rect x="27" y="13" width="2" height="1"/><rect x="8" y="14" width="3" height="1"/><rect x="24" y="14" width="2" height="1"/><rect x="6" y="15" width="5" height="1"/><rect x="23" y="15" width="6" height="1"/><rect x="8" y="16" width="2" height="1"/><rect x="24" y="16" width="3" height="1"/><rect x="7" y="17" width="3" height="1"/><rect x="24" y="17" width="4" height="1"/><rect x="7" y="18" width="3" height="1"/><rect x="24" y="18" width="4" height="1"/><rect x="33" y="18" width="2" height="1"/><rect x="8" y="19" width="2" height="1"/><rect x="25" y="19" width="2" height="1"/><rect x="32" y="19" width="4" height="1"/><rect x="9" y="20" width="2" height="1"/><rect x="24" y="20" width="2" height="1"/><rect x="31" y="20" width="4" height="1"/><rect x="10" y="21" width="2" height="1"/><rect x="23" y="21" width="2" height="1"/><rect x="32" y="21" width="2" height="1"/><rect x="12" y="22" width="1" height="1"/><rect x="19" y="25" width="1" height="1"/><rect x="20" y="27" width="1" height="1"/><rect x="2" y="28" width="1" height="1"/><rect x="15" y="28" width="1" height="1"/><rect x="20" y="28" width="1" height="1"/><rect x="1" y="29" width="1" height="1"/><rect x="3" y="29" width="1" height="1"/><rect x="15" y="29" width="1" height="1"/><rect x="3" y="30" width="1" height="1"/><rect x="15" y="30" width="1" height="1"/><rect x="15" y="31" width="1" height="1"/><rect x="19" y="31" width="1" height="1"/><rect x="16" y="32" width="3" height="1"/><rect x="8" y="37" width="3" height="1"/><rect x="23" y="37" width="4" height="1"/><rect x="8" y="38" width="4" height="1"/><rect x="22" y="38" width="5" height="1"/><rect x="10" y="39" width="14" height="1"/><rect x="9" y="41" width="2" height="1"/><rect x="23" y="41" width="2" height="1"/><rect x="9" y="42" width="3" height="1"/><rect x="22" y="42" width="3" height="1"/><rect x="9" y="43" width="3" height="1"/><rect x="22" y="43" width="3" height="1"/><rect x="9" y="44" width="3" height="1"/><rect x="22" y="44" width="3" height="1"/><rect x="7" y="45" width="5" height="1"/><rect x="22" y="45" width="5" height="1"/></g>
+  <g fill="#e88b9a"><rect x="5" y="4" width="2" height="1"/><rect x="28" y="4" width="2" height="1"/><rect x="5" y="5" width="1" height="1"/><rect x="29" y="5" width="1" height="1"/><rect x="14" y="14" width="2" height="1"/><rect x="18" y="14" width="2" height="1"/><rect x="21" y="14" width="1" height="1"/><rect x="12" y="15" width="2" height="1"/><rect x="11" y="17" width="1" height="1"/><rect x="12" y="18" width="1" height="1"/><rect x="13" y="19" width="2" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="14" y="20" width="2" height="1"/><rect x="19" y="20" width="1" height="1"/><rect x="14" y="21" width="1" height="1"/><rect x="16" y="22" width="1" height="1"/></g>
+  <g fill="#2b7cc4"><rect x="30" y="5" width="1" height="1"/></g>
+  <g fill="#ffffff"><rect x="9" y="6" width="4" height="1"/><rect x="21" y="6" width="5" height="1"/><rect x="8" y="7" width="6" height="1"/><rect x="20" y="7" width="7" height="1"/><rect x="7" y="8" width="8" height="1"/><rect x="19" y="8" width="9" height="1"/><rect x="7" y="9" width="4" height="1"/><rect x="12" y="9" width="3" height="1"/><rect x="19" y="9" width="3" height="1"/><rect x="23" y="9" width="5" height="1"/><rect x="7" y="10" width="3" height="1"/><rect x="13" y="10" width="2" height="1"/><rect x="19" y="10" width="2" height="1"/><rect x="24" y="10" width="4" height="1"/><rect x="8" y="11" width="2" height="1"/><rect x="13" y="11" width="1" height="1"/><rect x="20" y="11" width="1" height="1"/><rect x="24" y="11" width="2" height="1"/><rect x="9" y="12" width="4" height="1"/><rect x="21" y="12" width="4" height="1"/><rect x="13" y="14" width="1" height="1"/><rect x="35" y="15" width="1" height="1"/><rect x="10" y="16" width="1" height="1"/><rect x="23" y="16" width="1" height="1"/><rect x="34" y="16" width="2" height="1"/><rect x="10" y="17" width="1" height="1"/><rect x="23" y="17" width="1" height="1"/><rect x="34" y="17" width="2" height="1"/><rect x="10" y="18" width="2" height="1"/><rect x="16" y="18" width="2" height="1"/><rect x="22" y="18" width="2" height="1"/><rect x="35" y="18" width="1" height="1"/><rect x="10" y="19" width="3" height="1"/><rect x="16" y="19" width="1" height="1"/><rect x="21" y="19" width="4" height="1"/><rect x="11" y="20" width="3" height="1"/><rect x="20" y="20" width="4" height="1"/><rect x="12" y="21" width="2" height="1"/><rect x="15" y="21" width="2" height="1"/><rect x="18" y="21" width="1" height="1"/><rect x="20" y="21" width="3" height="1"/><rect x="30" y="21" width="1" height="1"/><rect x="5" y="22" width="2" height="1"/><rect x="13" y="22" width="3" height="1"/><rect x="17" y="22" width="5" height="1"/><rect x="28" y="22" width="3" height="1"/><rect x="4" y="23" width="8" height="1"/><rect x="22" y="23" width="10" height="1"/><rect x="3" y="24" width="28" height="1"/><rect x="4" y="25" width="2" height="1"/><rect x="7" y="25" width="12" height="1"/><rect x="20" y="25" width="8" height="1"/><rect x="7" y="26" width="9" height="1"/><rect x="20" y="26" width="8" height="1"/><rect x="7" y="27" width="8" height="1"/><rect x="18" y="27" width="1" height="1"/><rect x="21" y="27" width="7" height="1"/><rect x="7" y="28" width="7" height="1"/><rect x="16" y="28" width="4" height="1"/><rect x="21" y="28" width="7" height="1"/><rect x="2" y="29" width="1" height="1"/><rect x="7" y="29" width="7" height="1"/><rect x="16" y="29" width="12" height="1"/><rect x="1" y="30" width="2" height="1"/><rect x="7" y="30" width="7" height="1"/><rect x="16" y="30" width="3" height="1"/><rect x="21" y="30" width="7" height="1"/><rect x="1" y="31" width="3" height="1"/><rect x="7" y="31" width="7" height="1"/><rect x="16" y="31" width="3" height="1"/><rect x="21" y="31" width="7" height="1"/><rect x="1" y="32" width="3" height="1"/><rect x="7" y="32" width="7" height="1"/><rect x="21" y="32" width="7" height="1"/><rect x="1" y="33" width="2" height="1"/><rect x="7" y="33" width="8" height="1"/><rect x="20" y="33" width="7" height="1"/><rect x="8" y="34" width="18" height="1"/><rect x="11" y="37" width="12" height="1"/><rect x="12" y="38" width="10" height="1"/></g>
+  <g fill="#d9a86c"><rect x="13" y="13" width="3" height="1"/><rect x="18" y="13" width="3" height="1"/><rect x="12" y="14" width="1" height="1"/><rect x="16" y="14" width="2" height="1"/><rect x="20" y="14" width="1" height="1"/><rect x="14" y="15" width="8" height="1"/><rect x="12" y="16" width="10" height="1"/><rect x="13" y="17" width="3" height="1"/><rect x="18" y="17" width="3" height="1"/><rect x="17" y="21" width="1" height="1"/><rect x="19" y="21" width="1" height="1"/></g></g>
+<text x="925" y="178" font-size="16" font-weight="700" fill="var(--dg-go)" text-anchor="middle">GO CONTROL PLANE</text>
+<text x="925" y="200" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">the only source of truth</text>
+<path d="M534 420 Q701 430 866 400" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M534 420 Q701 430 866 400" stroke="var(--dg-red)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="866,400 854,409 852,395" fill="var(--dg-red)"/>
+<circle cx="806" cy="208" r="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-server" x="796" y="198" width="20" height="20" color="var(--dg-go)"/>
+<text x="806" y="256" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">three doors</text>
+<path d="M834 236 Q853 273 885 300" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<circle cx="1060" cy="250" r="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-branch" x="1050" y="240" width="20" height="20" color="var(--dg-go)"/>
+<text x="1060" y="298" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">state machine</text>
+<path d="M1032 278 Q996 282 965 300" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<circle cx="790" cy="560" r="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-terminal" x="780" y="550" width="20" height="20" color="var(--dg-go)"/>
+<text x="790" y="608" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">frame admission</text>
+<path d="M818 532 Q860 499 885 452" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<circle cx="1060" cy="560" r="24" fill="var(--dg-panel)" stroke="var(--dg-go)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-database" x="1050" y="550" width="20" height="20" color="var(--dg-go)"/>
+<text x="1060" y="608" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">durable state</text>
+<path d="M1032 532 Q1006 485 965 452" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<text x="925" y="700" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">every frame the browser sees was admitted here first</text>
+<rect x="1220" y="116" width="560" height="620" rx="26" fill="var(--dg-blue)" opacity="0.045"/>
+<rect x="1220" y="116" width="560" height="620" rx="26" fill="none" stroke="var(--dg-blue)" stroke-width="2" opacity="0.55"/>
+<text x="1246" y="150" font-size="15" font-weight="700" fill="var(--dg-blue)" letter-spacing="1.8">THE FLEET DECIDES</text>
+<text x="1246" y="172" font-size="12.5" fill="var(--dg-faint)">reasoning on Vertex AI, bounded by code</text>
+<circle cx="1360" cy="250" r="32" fill="var(--dg-panel)" stroke="var(--dg-blue)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-gemini" x="1344" y="234" width="33" height="33" color="var(--dg-blue)"/>
+<text x="1360" y="306" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">PRISMA</text>
+<text x="1360" y="326" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">plans on gemini-3.5-flash</text>
+<text x="1360" y="344" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">rename · cast · drop only</text>
+<circle cx="1640" cy="250" r="32" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-shield-check" x="1624" y="234" width="33" height="33" color="var(--dg-green)"/>
+<text x="1640" y="306" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">VALE</text>
+<text x="1640" y="326" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">certifies or rejects;</text>
+<text x="1640" y="344" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">cannot widen authority</text>
+<circle cx="1500" cy="500" r="34" fill="var(--dg-panel)" stroke="var(--dg-gold)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-key" x="1483" y="483" width="35" height="35" color="var(--dg-gold)"/>
+<text x="1500" y="558" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">THE STEWARD</text>
+<text x="1500" y="578" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">one irreversible decision,</text>
+<text x="1500" y="596" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">bound to an exact digest</text>
+<path d="M1392 282 Q1500 347 1608 282" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M1392 282 Q1500 347 1608 282" stroke="var(--dg-blue)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="1608,282 1600,295 1593,283" fill="var(--dg-blue)"/>
+<text x="1500" y="196" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">a closed declarative contract</text>
+<path d="M1640 282 Q1557 358 1534 468" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M1640 282 Q1557 358 1534 468" stroke="var(--dg-green)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="1534,468 1530,454 1544,457" fill="var(--dg-green)"/>
+<path d="M1360 282 Q1443 358 1466 468" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<polygon points="1466,468 1456,457 1470,454" fill="var(--dg-blue)"/>
+<path d="M985 400 Q1172 359 1328 250" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M985 400 Q1172 359 1328 250" stroke="var(--dg-go)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="1328,250 1321,263 1313,252" fill="var(--dg-go)"/>
+<text x="1150" y="392" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">typed task envelope</text>
+<text x="1500" y="640" font-size="12" font-weight="400" fill="var(--dg-red)" text-anchor="middle">a stale digest is refused, never overridden</text>
+<rect x="1830" y="116" width="526" height="620" rx="26" fill="var(--dg-green)" opacity="0.045"/>
+<rect x="1830" y="116" width="526" height="620" rx="26" fill="none" stroke="var(--dg-green)" stroke-width="2" opacity="0.55"/>
+<text x="1856" y="150" font-size="15" font-weight="700" fill="var(--dg-green)" letter-spacing="1.8">TRUSTED EXECUTION</text>
+<text x="1856" y="172" font-size="12.5" fill="var(--dg-faint)">only reachable after approval</text>
+<circle cx="1960" cy="250" r="32" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-apache-beam" x="1944" y="234" width="33" height="33" color="var(--dg-green)"/>
+<text x="1960" y="306" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">Apache Beam</text>
+<text x="1960" y="326" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">2.75.0 · DirectRunner</text>
+<text x="1960" y="344" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">code we own, not the model</text>
+<circle cx="2230" cy="400" r="32" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-bigquery" x="2214" y="384" width="33" height="33" color="var(--dg-green)"/>
+<text x="2230" y="456" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">BigQuery</text>
+<text x="2230" y="476" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">explicit schema,</text>
+<text x="2230" y="494" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">never autodetect</text>
+<circle cx="1960" cy="560" r="30" fill="var(--dg-panel)" stroke="var(--dg-green)" stroke-width="2.5"/>
+<use fill="currentColor" href="#pixel-check-pixel" x="1945" y="545" width="31" height="31" color="var(--dg-green)"/>
+<text x="1960" y="614" font-size="15" font-weight="700" fill="var(--dg-ink)" text-anchor="middle">LEDGER</text>
+<text x="1960" y="634" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">read = accepted + rejected</text>
+<text x="1960" y="652" font-size="12.5" fill="var(--dg-faint)" text-anchor="middle">or completion is blocked</text>
+<path d="M1534 468 Q1705 320 1928 282" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M1534 468 Q1705 320 1928 282" stroke="var(--dg-gold)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="1928,282 1916,291 1914,277" fill="var(--dg-gold)"/>
+<text x="1740" y="452" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">approved plan</text>
+<path d="M1992 282 Q2080 364 2200 372" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M1992 282 Q2080 364 2200 372" stroke="var(--dg-green)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="2200,372 2187,378 2187,364" fill="var(--dg-green)"/>
+<text x="2130" y="268" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="middle">typed rows</text>
+<path d="M2202 428 Q2081 451 1990 534" stroke="var(--dg-line)" stroke-width="2.5" fill="none"/>
+<path class="dg-flow" d="M2202 428 Q2081 451 1990 534" stroke="var(--dg-green)" stroke-width="2.5" fill="none" stroke-dasharray="10 16" stroke-linecap="round"/>
+<polygon points="1990,534 1995,520 2004,530" fill="var(--dg-green)"/>
+<text x="2093" y="700" font-size="12.5" font-weight="700" fill="var(--dg-green)" text-anchor="middle">500 read · 498 accepted · 2 rejected · MATCHED</text>
+<text x="50" y="872" font-size="16" font-weight="700" fill="var(--dg-ink)" text-anchor="start">THE FLEET</text>
+<text x="160" y="872" font-size="12.5" font-weight="400" fill="var(--dg-faint)" text-anchor="start">every agent carries a typed envelope, a scoped identity, an allowlisted tool set and an evidence obligation</text>
+<use fill="currentColor" href="#pixel-satellite" x="60" y="904" width="19" height="19" color="var(--dg-go)"/>
+<text x="90" y="918" font-size="14" font-weight="700" fill="var(--dg-go)" letter-spacing="0.6">ATLAS</text>
+<text x="154.0" y="918" font-size="12.5" fill="var(--dg-dim)">delegates; cannot approve or execute</text>
+<use fill="currentColor" href="#pixel-lock" x="850" y="904" width="19" height="19" color="var(--dg-gold)"/>
+<text x="880" y="918" font-size="14" font-weight="700" fill="var(--dg-gold)" letter-spacing="0.6">JETTY</text>
+<text x="944.0" y="918" font-size="12.5" fill="var(--dg-dim)">guards the edge; holds no cloud keys</text>
+<use fill="currentColor" href="#pixel-db2" x="1640" y="904" width="19" height="19" color="var(--dg-blue)"/>
+<text x="1670" y="918" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">RUNE</text>
+<text x="1724.4" y="918" font-size="12.5" fill="var(--dg-dim)">decodes JDE EBCDIC and packed decimal</text>
+<use fill="currentColor" href="#pixel-maxdb" x="60" y="966" width="19" height="19" color="var(--dg-blue)"/>
+<text x="90" y="980" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">MARA</text>
+<text x="144.4" y="980" font-size="12.5" fill="var(--dg-dim)">maps MaxDB clustered records</text>
+<use fill="currentColor" href="#pixel-btrieve" x="850" y="966" width="19" height="19" color="var(--dg-blue)"/>
+<text x="880" y="980" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">BRIX</text>
+<text x="934.4" y="980" font-size="12.5" fill="var(--dg-dim)">reconstructs Btrieve pages</text>
+<use fill="currentColor" href="#pixel-jdbc-jar" x="1640" y="966" width="19" height="19" color="var(--dg-blue)"/>
+<text x="1670" y="980" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">MAVEN</text>
+<text x="1734.0" y="980" font-size="12.5" fill="var(--dg-dim)">fingerprints drivers; never runs the JAR</text>
+<use fill="currentColor" href="#pixel-gemini" x="60" y="1028" width="19" height="19" color="var(--dg-blue)"/>
+<text x="90" y="1042" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">PRISMA</text>
+<text x="163.6" y="1042" font-size="12.5" fill="var(--dg-dim)">proposes plans; emits no code</text>
+<use fill="currentColor" href="#pixel-shield-check" x="850" y="1028" width="19" height="19" color="var(--dg-green)"/>
+<text x="880" y="1042" font-size="14" font-weight="700" fill="var(--dg-green)" letter-spacing="0.6">VALE</text>
+<text x="934.4" y="1042" font-size="12.5" fill="var(--dg-dim)">rejects or certifies</text>
+<use fill="currentColor" href="#pixel-key" x="1640" y="1028" width="19" height="19" color="var(--dg-gold)"/>
+<text x="1670" y="1042" font-size="14" font-weight="700" fill="var(--dg-gold)" letter-spacing="0.6">THE STEWARD</text>
+<text x="1791.6" y="1042" font-size="12.5" fill="var(--dg-dim)">one irreversible human decision</text>
+<use fill="currentColor" href="#pixel-apache-beam" x="60" y="1090" width="19" height="19" color="var(--dg-green)"/>
+<text x="90" y="1104" font-size="14" font-weight="700" fill="var(--dg-green)" letter-spacing="0.6">FLOW</text>
+<text x="144.4" y="1104" font-size="12.5" fill="var(--dg-dim)">launches allowlisted transforms</text>
+<use fill="currentColor" href="#pixel-check-pixel" x="850" y="1090" width="19" height="19" color="var(--dg-green)"/>
+<text x="880" y="1104" font-size="14" font-weight="700" fill="var(--dg-green)" letter-spacing="0.6">LEDGER</text>
+<text x="953.6" y="1104" font-size="12.5" fill="var(--dg-dim)">proves destination matches input</text>
+<use fill="currentColor" href="#pixel-radar" x="1640" y="1090" width="19" height="19" color="var(--dg-blue)"/>
+<text x="1670" y="1104" font-size="14" font-weight="700" fill="var(--dg-blue)" letter-spacing="0.6">SCOUT</text>
+<text x="1734.0" y="1104" font-size="12.5" fill="var(--dg-dim)">reads catalog intent; bypasses no query</text>
+<text x="60" y="1188" font-size="12" font-weight="400" fill="var(--dg-faint)" text-anchor="start">reasoning is an agent node · predictable work is a function node · no agent may approve its own work</text>
+<text x="60" y="1236" font-size="12.5" font-weight="700" fill="var(--dg-green)" text-anchor="start">VERIFIED 2026-09-01   ·   Gemini 3.5 Flash on Vertex AI   ·   Beam 2.75.0 over 500 sealed records   ·   reconciled in BigQuery</text>
 </svg>
