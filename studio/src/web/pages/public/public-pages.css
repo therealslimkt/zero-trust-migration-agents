@@ -1413,9 +1413,7 @@
   box-shadow: 0 0 0 2px var(--pixel-surface-panel);
 }
 
-}
 
-}
 
 .creator-spotlight__name {
   font-family: var(--font-mono-tactical);
@@ -1513,12 +1511,6 @@
 .creator-spotlight__space {
   display: inline-block;
   width: 0.5em;
-}
-
-  25%, 38% { color: var(--hue-2); }
-  50%, 63% { color: var(--hue-3); }
-  75%, 88% { color: var(--hue-4); }
-  100% { color: var(--hue-1); }
 }
 
 /* --- Light theme --- */
