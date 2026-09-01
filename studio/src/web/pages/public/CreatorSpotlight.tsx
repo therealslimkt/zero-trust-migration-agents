@@ -16,7 +16,7 @@ const identityFacets: ReadonlyArray<{
 }> = [
   { key: "creator", word: "Creator", icon: "puppet-hand", shape: "circle" },
   { key: "artist", word: "Artist", icon: "cassette", shape: "square" },
-  { key: "architect", word: "Architect", icon: "compass-draft", shape: "triangle" },
+  { key: "architect", word: "Architect", icon: "robot-head", shape: "triangle" },
   { key: "explorer", word: "Explorer", icon: "telescope", shape: "diamond" },
 ];
 

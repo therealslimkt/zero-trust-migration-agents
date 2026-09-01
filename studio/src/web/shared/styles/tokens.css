@@ -71,6 +71,11 @@
   --keraun-sage-light: #a8c98a;
   --keraun-sage-tint: rgba(143, 174, 124, 0.14);
   --keraun-sage-glow: 0 0 16px rgba(143, 174, 124, 0.45);
+  /* The portrait rim wants the green to read as light rather than pigment, so
+     it uses this rather than the muted sage the rest of the system does. */
+  --keraun-sage-neon: #5cf2a0;
+  --keraun-sage-neon-soft: #a9f8cc;
+  --keraun-sage-neon-glow: 0 0 22px rgba(92, 242, 160, 0.55);
 
   --keraun-magenta: #fa07c9;
   --keraun-magenta-hover: #ff45d8;

@@ -1077,21 +1077,8 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
-
-.about-system-map { overflow: hidden; }
-.about-system-map__rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; align-items: stretch; }
-.about-system-map__segment { position: relative; display: flex; min-width: 0; }
-.about-system-stage { flex: 1; min-width: 0; padding: 18px; border: 1px solid var(--pixel-border-muted); background: linear-gradient(180deg, var(--pixel-surface-raised), var(--pixel-surface-sunken)); }
-.about-system-stage > header { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
-.about-system-stage > header > span { display: grid; place-items: center; width: 28px; height: 28px; color: var(--google-yellow); background: var(--google-yellow-tint); font: 800 10px var(--font-mono-tactical); }
-.about-system-stage h3 { margin: 0; font-size: .9rem; }
-.about-system-stage p { min-height: 7.5em; margin: 0 0 14px; color: var(--pixel-text-secondary); font-size: .75rem; line-height: 1.55; }
-.about-system-stage ul { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
-.about-system-stage li { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 8px; border: 1px solid var(--pixel-border-subtle); background: var(--pixel-surface-panel); color: var(--pixel-text-secondary); font: 650 10px var(--font-mono-tactical); }
 .about-tech-icon { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 auto; border: 1px solid currentColor; background: var(--pixel-surface-sunken); }
 .about-tech-icon--google-blue { color: var(--google-blue); }.about-tech-icon--google-red { color: var(--google-red); }.about-tech-icon--google-yellow { color: var(--google-yellow); }.about-tech-icon--google-green { color: var(--google-green); }
-.about-system-map__connector { position: absolute; z-index: 2; top: 50%; right: -12px; display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--google-yellow); background: var(--pixel-surface-overlay); transform: translateY(-50%); }
-.about-system-map__connector > span { position: absolute; right: 100%; width: 16px; height: 1px; background: var(--google-yellow); }
 .about-trust-spine { display: flex; align-items: center; justify-content: center; gap: 9px; padding: 14px; border: 1px solid var(--pixel-border-muted); border-top: 0; color: var(--pixel-text-secondary); background: var(--pixel-surface-sunken); font: 650 10px var(--font-mono-tactical); }
 .about-trust-spine > span { color: var(--pixel-text-muted); }
 
@@ -1246,7 +1233,7 @@
   padding: var(--rim);
   border-radius: 50%;
   isolation: isolate;
-  box-shadow: 0 0 26px -2px var(--keraun-magenta-tint), 0 0 14px -4px var(--keraun-sage-tint);
+  box-shadow: 0 0 30px -2px var(--keraun-magenta-tint), 0 0 26px -6px rgba(92, 242, 160, 0.5);
 }
 
 /* Both pseudo-elements are masked to the same annulus. */
@@ -1264,13 +1251,14 @@
 .creator-portrait::before {
   background: conic-gradient(
     from 210deg,
-    var(--keraun-sage) 0deg,
-    var(--keraun-sage) 80deg,
+    var(--keraun-sage-neon) 0deg,
+    var(--keraun-sage-neon) 70deg,
+    var(--keraun-sage-neon-soft) 100deg,
     var(--keraun-magenta-light) 140deg,
     var(--keraun-magenta) 180deg,
     var(--keraun-magenta) 260deg,
     var(--keraun-magenta-light) 310deg,
-    var(--keraun-sage) 360deg
+    var(--keraun-sage-neon) 360deg
   );
   animation: iris-drift 26s var(--ease-linear) infinite;
 }
@@ -1432,7 +1420,7 @@
 }
 
 [data-theme="light"] .creator-portrait {
-  box-shadow: 0 0 26px -4px rgba(250, 7, 201, 0.3), 0 0 16px -6px rgba(143, 174, 124, 0.4);
+  box-shadow: 0 0 26px -4px rgba(250, 7, 201, 0.3), 0 0 22px -6px rgba(45, 200, 120, 0.45);
 }
 
 [data-theme="light"] .creator-portrait__photo {
@@ -1487,15 +1475,11 @@
   .about-architecture-grid {
     grid-template-columns: 1fr;
   }
-  .about-system-map__rail { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .about-system-map__connector { display: none; }
-  .about-system-stage p { min-height: 0; }
   .about-agent-loop { grid-template-columns: repeat(3, 1fr); }
   .about-agent-loop__step:nth-child(3) { border-right: 0; }
 }
 
 @media (max-width: 620px) {
-  .about-system-map__rail { grid-template-columns: 1fr; }
   .about-trust-spine { align-items: flex-start; flex-direction: column; }
   .about-trust-spine > span { display: none; }
   .about-fleet-command { grid-template-columns: auto minmax(0, 1fr); }

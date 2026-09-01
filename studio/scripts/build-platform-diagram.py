@@ -20,11 +20,11 @@ def node(x, y, icon, label, sub=None, accent=BLUE, r=30, size=None):
     s = size or int(r * 1.05)
     p.append(f'<use fill="currentColor" href="#pixel-{icon}" x="{x-s//2}" y="{y-s//2}" '
              f'width="{s}" height="{s}" color="{accent}"/>')
-    p.append(f'<text x="{x}" y="{y+r+24}" font-size="15" font-weight="700" fill="{INK}" '
+    p.append(f'<text x="{x}" y="{y+r+24}" font-size="18" font-weight="700" fill="{INK}" '
              f'text-anchor="middle">{esc(label)}</text>')
     if sub:
         for i, line in enumerate(sub if isinstance(sub, list) else [sub]):
-            p.append(f'<text x="{x}" y="{y+r+44+i*18}" font-size="12.5" fill="{FAINT}" '
+            p.append(f'<text x="{x}" y="{y+r+44+i*18}" font-size="15" fill="{FAINT}" '
                      f'text-anchor="middle">{esc(line)}</text>')
 
 def curve(x1, y1, x2, y2, bow=0.28, accent=BLUE, label=None, flow=True, dash="10 16", head=True):
@@ -43,19 +43,47 @@ def curve(x1, y1, x2, y2, bow=0.28, accent=BLUE, label=None, flow=True, dash="10
     if head:
         p.append(f'<polygon points="{x2:.0f},{y2:.0f} {ax+px_:.0f},{ay+py_:.0f} {ax-px_:.0f},{ay-py_:.0f}" fill="{accent}"/>')
     if label:
-        p.append(f'<text x="{cx:.0f}" y="{cy-18:.0f}" font-size="12" fill="{FAINT}" '
+        p.append(f'<text x="{cx:.0f}" y="{cy-18:.0f}" font-size="14" fill="{FAINT}" '
                  f'text-anchor="middle">{esc(label)}</text>')
+    return d
+
 
 def region(x, y, w, h, label, sub, accent, dashed=False):
     """A soft field, not a container: no fill weight, label sits outside the flow."""
     p.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="26" fill="{accent}" opacity="0.045"/>')
     p.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="26" fill="none" stroke="{accent}" '
              f'stroke-width="2"{" stroke-dasharray=\"10 8\"" if dashed else ""} opacity="0.55"/>')
-    p.append(f'<text x="{x+26}" y="{y+34}" font-size="15" font-weight="700" fill="{accent}" letter-spacing="1.8">{esc(label)}</text>')
+    p.append(f'<text x="{x+26}" y="{y+34}" font-size="18" font-weight="700" fill="{accent}" letter-spacing="1.8">{esc(label)}</text>')
     if sub:
-        p.append(f'<text x="{x+26}" y="{y+56}" font-size="12.5" fill="{FAINT}">{esc(sub)}</text>')
+        p.append(f'<text x="{x+26}" y="{y+56}" font-size="15" fill="{FAINT}">{esc(sub)}</text>')
 
-def note(x, y, t, c=DIM, size=12.5, anchor="start", weight="400", style=""):
+def packets(d, accent, count=3, dur=2.8, size=9, kind="byte"):
+    """Send discrete things along a path so a lane reads as traffic.
+
+    On the source side these are bytes leaving a sealed emulator; past the
+    boundary they are records that have already been decoded and checked.
+    """
+    half = size / 2
+    for i in range(count):
+        begin = f"{(dur / count) * i:.2f}s"
+        body = (f'<circle r="{half:.1f}" fill="{accent}"/>' if kind == "byte" else
+                f'<rect x="{-half:.1f}" y="{-half:.1f}" width="{size}" height="{size}" rx="2" '
+                f'fill="{accent}" stroke="{PANEL}" stroke-width="1.5"/>')
+        p.append(f'<g class="dg-packets">{body}'
+                 f'<animateMotion dur="{dur}s" begin="{begin}" repeatCount="indefinite" '
+                 f'path="{d}" keyPoints="0;1" keyTimes="0;1" calcMode="linear"/></g>')
+
+
+def pulse(x, y, r, accent, dur=2.4):
+    """A ring leaving a node: this one is working right now."""
+    p.append(f'<circle class="dg-pulse" cx="{x}" cy="{y}" r="{r}" fill="none" '
+             f'stroke="{accent}" stroke-width="2.5">'
+             f'<animate attributeName="r" values="{r};{r+26}" dur="{dur}s" repeatCount="indefinite"/>'
+             f'<animate attributeName="opacity" values="0.7;0" dur="{dur}s" repeatCount="indefinite"/>'
+             f'</circle>')
+
+
+def note(x, y, t, c=DIM, size=15, anchor="start", weight="400", style=""):
     p.append(f'<text x="{x}" y="{y}" font-size="{size}" font-weight="{weight}" fill="{c}" '
              f'text-anchor="{anchor}"{style}>{esc(t)}</text>')
 
@@ -64,8 +92,8 @@ p.append(f'<g transform="translate(44 26) scale(0.9)">'
          f'<path d="{BOLT}" transform="translate(1.6 1.4)" fill="#e2b0e8" opacity="0.68"/>'
          f'<path d="{BOLT}" fill="#e2b0e8" stroke="#e2b0e8" stroke-width="1.25" stroke-linejoin="round"/>'
          f'<path d="{BOLT}" transform="translate(7.2 6.9) scale(0.7)" fill="#fa07c9"/></g>')
-p.append(f'<text x="112" y="62" font-size="30" font-weight="700" fill="{INK}" letter-spacing="2.5">KERAUN</text>')
-note(292, 62, "how a legacy record becomes a governed warehouse row", FAINT, 15)
+p.append(f'<text x="112" y="62" font-size="36" font-weight="700" fill="{INK}" letter-spacing="2.5">KERAUN</text>')
+note(292, 62, "how a legacy record becomes a governed warehouse row", FAINT, 17)
 note(2356, 62, "google cloud · ztm-agent-9049c3", FAINT, 13, "end")
 
 # ── the sealed perimeter ────────────────────────────────────────────────
@@ -74,23 +102,26 @@ node(170, 260, "db2", "JD Edwards", "IBM Db2 for i", BLUE, 30)
 node(170, 420, "database", "Dynamics AX", "SQL Server", BLUE, 30)
 node(170, 580, "database", "Oracle EBS", "Oracle 19c", BLUE, 30)
 node(500, 420, "lock", "Query runner", ["the only container", "allowed to ask"], GREEN, 34)
+pulse(500, 420, 34, GREEN, 2.6)
 for sy in (260, 420, 580):
-    curve(206, sy, 466, 420, 0.10 if sy == 420 else 0.16, BLUE, flow=True)
+    # Raw bytes leaving a sealed emulator, one lane per cartridge.
+    packets(curve(206, sy, 466, 420, 0.10 if sy == 420 else 0.16, BLUE, flow=True),
+            BLUE, count=4, dur=2.6, size=8, kind="byte")
 node(500, 620, "cpu", "Gemma 2", ["reviews at the edge", "before anything leaves"], GOLD, 26)
 curve(500, 586, 500, 458, -0.12, GOLD, flow=True)
 
 # ── the trust boundary ──────────────────────────────────────────────────
 p.append(f'<path d="M700 120 L700 736" stroke="{RED}" stroke-width="2.5" stroke-dasharray="9 7" opacity="0.8"/>')
-note(700, 108, "TRUST BOUNDARY", RED, 12.5, "middle", "700")
-note(700, 392, "sanitized artifacts only", RED, 12, "middle")
-note(700, 752, "counts, digests and schema cross.", FAINT, 12, "middle")
-note(700, 770, "raw rows, credentials and connection strings do not.", FAINT, 12, "middle")
+note(700, 108, "TRUST BOUNDARY", RED, 15, "middle", "700")
+note(700, 392, "sanitized artifacts only", RED, 14, "middle")
+note(700, 752, "counts, digests and schema cross.", FAINT, 14, "middle")
+note(700, 770, "raw rows, credentials and connection strings do not.", FAINT, 14, "middle")
 
 # ── the control plane ───────────────────────────────────────────────────
 p.append(f'<g transform="translate(880 300) scale(1.55)">{GOPHER}</g>')
-note(925, 178, "GO CONTROL PLANE", GO, 16, "middle", "700")
-note(925, 200, "the only source of truth", FAINT, 12.5, "middle")
-curve(534, 420, 866, 400, 0.06, RED)
+note(925, 150, "GO CONTROL PLANE", GO, 19, "middle", "700")
+note(925, 172, "the only source of truth", FAINT, 15, "middle")
+packets(curve(534, 420, 866, 400, 0.06, RED), RED, count=3, dur=3.0, size=10, kind="frame")
 for i, (x, y, ic, lb) in enumerate([(806, 208, "server", "three doors"),
                                     (1060, 250, "branch", "state machine"),
                                     (790, 560, "terminal", "frame admission"),
@@ -99,7 +130,7 @@ for i, (x, y, ic, lb) in enumerate([(806, 208, "server", "three doors"),
     curve(x + (28 if x < 925 else -28), y + (28 if y < 400 else -28),
           925 + (-40 if x < 925 else 40), 300 if y < 400 else 452,
           0.10, GO, flow=False, head=False)
-note(925, 700, "every frame the browser sees was admitted here first", FAINT, 12, "middle")
+note(925, 700, "every frame the browser sees was admitted here first", FAINT, 14, "middle")
 
 # ── the fleet decides ───────────────────────────────────────────────────
 region(1220, 116, 560, 620, "THE FLEET DECIDES", "reasoning on Vertex AI, bounded by code", BLUE)
@@ -107,27 +138,27 @@ node(1360, 250, "gemini", "PRISMA", ["plans on gemini-3.5-flash", "rename · cas
 node(1640, 250, "shield-check", "VALE", ["certifies or rejects;", "cannot widen authority"], GREEN, 32)
 node(1500, 500, "key", "THE STEWARD", ["one irreversible decision,", "bound to an exact digest"], GOLD, 34)
 curve(1392, 282, 1608, 282, 0.30, BLUE)
-note(1500, 196, "a closed declarative contract", FAINT, 12, "middle")
+note(1500, 196, "a closed declarative contract", FAINT, 14, "middle")
 curve(1640, 282, 1534, 468, 0.16, GREEN)
 curve(1360, 282, 1466, 468, -0.16, BLUE, flow=False)
-curve(985, 400, 1328, 250, 0.10, GO)
-note(1150, 392, "typed task envelope", FAINT, 12, "middle")
-note(1500, 640, "a stale digest is refused, never overridden", RED, 12, "middle")
+packets(curve(985, 400, 1328, 250, 0.10, GO), GO, count=3, dur=2.8, size=10, kind="frame")
+note(1150, 392, "typed task envelope", FAINT, 14, "middle")
+note(1500, 640, "a stale digest is refused, never overridden", RED, 14, "middle")
 
 # ── execution ───────────────────────────────────────────────────────────
 region(1830, 116, 526, 620, "TRUSTED EXECUTION", "only reachable after approval", GREEN)
 node(1960, 250, "apache-beam", "Apache Beam", ["2.75.0 · DirectRunner", "code we own, not the model"], GREEN, 32)
 node(2230, 400, "bigquery", "BigQuery", ["explicit schema,", "never autodetect"], GREEN, 32)
 node(1960, 560, "check-pixel", "LEDGER", ["read = accepted + rejected", "or completion is blocked"], GREEN, 30)
-curve(1534, 468, 1928, 282, -0.14, GOLD)
-note(1740, 452, "approved plan", FAINT, 12, "middle")
-curve(1992, 282, 2200, 372, 0.18, GREEN)
-note(2130, 268, "typed rows", FAINT, 12, "middle")
+packets(curve(1534, 468, 1928, 282, -0.14, GOLD), GOLD, count=3, dur=2.6, size=10, kind="frame")
+note(1740, 452, "approved plan", FAINT, 14, "middle")
+packets(curve(1992, 282, 2200, 372, 0.18, GREEN), GREEN, count=3, dur=2.4, size=10, kind="frame")
+note(2130, 268, "typed rows", FAINT, 14, "middle")
 curve(2202, 428, 1990, 534, 0.14, GREEN)
 note(2093, 700, "500 read · 498 accepted · 2 rejected · MATCHED", GREEN, 12.5, "middle", "700")
 
 # ── the fleet roster, as a legend rather than a grid ────────────────────
-note(50, 872, "THE FLEET", INK, 16, weight="700")
+note(50, 872, "THE FLEET", INK, 19, weight="700")
 note(160, 872, "every agent carries a typed envelope, a scoped identity, an allowlisted tool set and an evidence obligation", FAINT, 12.5)
 roster = [("satellite", "ATLAS", "delegates; cannot approve or execute", GO),
           ("lock", "JETTY", "guards the edge; holds no cloud keys", GOLD),
@@ -145,8 +176,8 @@ for i, (ic, nm, duty, c) in enumerate(roster):
     col, row = i % 3, i // 3
     x, y = 60 + col * 790, 918 + row * 62
     p.append(f'<use fill="currentColor" href="#pixel-{ic}" x="{x}" y="{y-14}" width="19" height="19" color="{c}"/>')
-    p.append(f'<text x="{x+30}" y="{y}" font-size="14" font-weight="700" fill="{c}" letter-spacing="0.6">{esc(nm)}</text>')
-    p.append(f'<text x="{x+30+len(nm)*9.6+16}" y="{y}" font-size="12.5" fill="{DIM}">{esc(duty)}</text>')
+    p.append(f'<text x="{x+30}" y="{y}" font-size="16" font-weight="700" fill="{c}" letter-spacing="0.6">{esc(nm)}</text>')
+    p.append(f'<text x="{x+30+len(nm)*9.6+16}" y="{y}" font-size="15" fill="{DIM}">{esc(duty)}</text>')
 note(60, 1188, "reasoning is an agent node · predictable work is a function node · no agent may approve its own work", FAINT, 12)
 note(60, 1236, "VERIFIED 2026-09-01   ·   Gemini 3.5 Flash on Vertex AI   ·   Beam 2.75.0 over 500 sealed records   ·   reconciled in BigQuery", GREEN, 12.5, weight="700")
 
@@ -155,6 +186,10 @@ svg = f'''<svg font-family="var(--font-mono-tactical)" viewBox="0 0 {W} {H}" xml
 <style>
   .dg-flow {{ animation: dg-travel 1.4s linear infinite; }}
   @keyframes dg-travel {{ to {{ stroke-dashoffset: -26; }} }}
+  @media (prefers-reduced-motion: reduce) {{
+    /* animateMotion cannot be paused from CSS, so the moving parts are removed. */
+    .dg-packets, .dg-pulse {{ display: none; }}
+  }}
   @media (prefers-reduced-motion: reduce) {{ .dg-flow {{ animation: none; opacity: .75; }} }}
 </style>
 <rect width="{W}" height="{H}" fill="var(--dg-bg)"/>

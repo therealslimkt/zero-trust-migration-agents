@@ -75,6 +75,12 @@
       "grid": 16
     },
     {
+      "name": "code-owned",
+      "file": "icons/code-owned.svg",
+      "symbol": "pixel-code-owned",
+      "grid": 32
+    },
+    {
       "name": "compass-draft",
       "file": "icons/compass-draft.svg",
       "symbol": "pixel-compass-draft",
@@ -207,16 +213,40 @@
       "grid": 16
     },
     {
+      "name": "reconcile",
+      "file": "icons/reconcile.svg",
+      "symbol": "pixel-reconcile",
+      "grid": 32
+    },
+    {
+      "name": "refuse-not-repair",
+      "file": "icons/refuse-not-repair.svg",
+      "symbol": "pixel-refuse-not-repair",
+      "grid": 32
+    },
+    {
       "name": "rewind",
       "file": "icons/rewind.svg",
       "symbol": "pixel-rewind",
       "grid": 16
     },
     {
+      "name": "robot-head",
+      "file": "icons/robot-head.svg",
+      "symbol": "pixel-robot-head",
+      "grid": 32
+    },
+    {
       "name": "satellite",
       "file": "icons/satellite.svg",
       "symbol": "pixel-satellite",
       "grid": 16
+    },
+    {
+      "name": "sealed-perimeter",
+      "file": "icons/sealed-perimeter.svg",
+      "symbol": "pixel-sealed-perimeter",
+      "grid": 32
     },
     {
       "name": "server",

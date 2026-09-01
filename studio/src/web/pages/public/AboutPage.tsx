@@ -40,58 +40,23 @@ export interface AboutPageProps {
   sourceRepoUrl?: string;
 }
 
-const architecturePrinciples = [
-  ["Private context", "The surface distinguishes public information from configuration and execution information."],
-  ["Explicit approval", "Approval state is displayed from the control plane rather than assumed by the interface."],
-  ["Evidence first", "Plan and evidence references are represented as data that a connected run may provide."],
-  ["Honest replay", "Public playback is labelled as an exact synthetic recorded replay only when an owner publishes its descriptor."],
-] as const;
-
-const architectureStages: ReadonlyArray<{
-  readonly number: string;
+/** Each of these describes something the code actually does, not something it aims at. */
+const architecturePrinciples: ReadonlyArray<{
   readonly title: string;
   readonly detail: string;
-  readonly technologies: ReadonlyArray<{ readonly name: string; readonly icon: PixelIconName; readonly color: "google-blue" | "google-red" | "google-yellow" | "google-green" }>;
+  readonly icon: PixelIconName;
+  readonly color: "google-blue" | "google-red" | "google-yellow" | "google-green";
 }> = [
-  {
-    number: "01", title: "Private source edge", detail: "Legacy bytes remain on the Google VM and cross the Tailscale private path only as governed records and evidence.",
-    technologies: [
-      { name: "Compute Engine", icon: "compute-engine", color: "google-blue" },
-      { name: "Tailscale", icon: "tailscale", color: "google-blue" },
-      { name: "IBM Db2 for i", icon: "db2", color: "google-blue" },
-      { name: "Microsoft SQL Server", icon: "sqlserver", color: "google-red" },
-      { name: "Oracle 19c", icon: "oracle", color: "google-green" },
-    ],
-  },
-  {
-    number: "02", title: "Agentic compiler", detail: "Local Gemma protects source context; Gemini on Vertex plans declarative transforms against exact driver provenance.",
-    technologies: [
-      { name: "JDBC / JAR", icon: "jdbc-jar", color: "google-red" },
-      { name: "Gemma", icon: "gemma", color: "google-blue" },
-      { name: "Gemini", icon: "gemini", color: "google-yellow" },
-      { name: "Vertex AI", icon: "vertex-ai", color: "google-blue" },
-      { name: "Artifact Registry", icon: "artifact-registry", color: "google-red" },
-    ],
-  },
-  {
-    number: "03", title: "Trusted execution", detail: "The approved plan becomes an Apache Beam pipeline; Dataflow executes only after the portfolio gate records a decision.",
-    technologies: [
-      { name: "Apache Beam", icon: "apache-beam", color: "google-yellow" },
-      { name: "Dataflow", icon: "dataflow", color: "google-blue" },
-      { name: "Cloud Run", icon: "cloud-run", color: "google-green" },
-      { name: "Identity Platform", icon: "identity-platform", color: "google-blue" },
-    ],
-  },
-  {
-    number: "04", title: "Verified destination", detail: "BigQuery rows are presented only beside their reconciliation, job, table, and audit evidence from the exact run.",
-    technologies: [
-      { name: "BigQuery", icon: "bigquery", color: "google-blue" },
-      { name: "Google Cloud", icon: "google-cloud", color: "google-green" },
-      { name: "Approval", icon: "shield-check", color: "google-yellow" },
-      { name: "Evidence", icon: "radar", color: "google-green" },
-    ],
-  },
+  { title: "The source never leaves its perimeter", icon: "sealed-perimeter", color: "google-green",
+    detail: "The emulators sit on an internal Docker network with no egress. Every query runs as a read-only role from inside a locked-down runner, so the migration reads a faithful copy and never reaches the source itself." },
+  { title: "Code owns the decode; the model only chooses parameters", icon: "code-owned", color: "google-blue",
+    detail: "The Beam DoFns are code in this repository. Gemini proposes rename, cast and drop and nothing else — it never emits the transform, and nothing it returns is executed." },
+  { title: "A bad row is refused, never repaired", icon: "refuse-not-repair", color: "google-yellow",
+    detail: "A record that will not decode is tagged to a rejected output instead of being coerced into one that looks fine. Quarantine carries the locating key and the reason, never the row's contents." },
+  { title: "Every count reconciles, or the run says so", icon: "reconcile", color: "google-green",
+    detail: "Read equals accepted plus rejected equals written, checked against the destination on every run and reported as MATCHED or MISMATCHED. The JDE cartridge reads 500, lands 498 and refuses 2." },
 ];
+
 
 type FleetColor = "google-blue" | "google-red" | "google-yellow" | "google-green";
 
@@ -169,21 +134,6 @@ export function AboutPage({
             <div className="about-tags-row"><span className="telemetry-tag"><PixelIcon name="sparkle" size="xs" color="google-yellow" /><span>GEMINI 3.7 FLASH</span></span><span className="telemetry-tag"><PixelIcon name="shield-check" size="xs" color="google-blue" /><span>OWNER-SUPPLIED STATE</span></span><span className="telemetry-tag"><PixelIcon name="rewind" size="xs" color="google-green" /><span>EXACT REPLAY WHEN PUBLISHED</span></span></div>
           </section>
 
-          <section className="about-story-card about-system-map" aria-labelledby="system-map-heading">
-            <div className="about-story-card__header"><PixelIcon name="branch" size="md" color="google-blue" glow /><div><span className="section-head__eyebrow">RUNTIME ARCHITECTURE</span><h2 id="system-map-heading" className="about-story-card__title">One governed path from private bytes to verified rows</h2></div></div>
-            <div className="about-system-map__rail" aria-label="Migration technology architecture">
-              {architectureStages.map((stage, index) => <div className="about-system-map__segment" key={stage.number}>
-                <article className="about-system-stage">
-                  <header><span>{stage.number}</span><h3>{stage.title}</h3></header>
-                  <p>{stage.detail}</p>
-                  <ul>{stage.technologies.map((technology) => <li key={technology.name}><span className={`about-tech-icon about-tech-icon--${technology.color}`}><PixelIcon name={technology.icon} size="sm" color={technology.color} /></span><span>{technology.name}</span></li>)}</ul>
-                </article>
-                {index < architectureStages.length - 1 ? <div className="about-system-map__connector" aria-hidden="true"><span /><PixelIcon name="play" size="xs" color="google-yellow" /></div> : null}
-              </div>)}
-            </div>
-            <div className="about-trust-spine"><PixelIcon name="identity-platform" color="google-blue" /><strong>Identity-derived ownership</strong><span>→</span><PixelIcon name="shield-check" color="google-yellow" /><strong>Portfolio approval</strong><span>→</span><PixelIcon name="radar" color="google-green" /><strong>Immutable evidence</strong></div>
-          </section>
-
           <section className="about-story-card about-fleet" aria-labelledby="fleet-heading">
             <div className="about-story-card__header"><PixelIcon name="satellite" size="md" color="google-yellow" glow /><div><span className="section-head__eyebrow">FORTIFIED ENTERPRISE FLEET</span><h2 id="fleet-heading" className="about-story-card__title">Specialists with names, contracts, and bounded authority</h2></div></div>
             <p className="about-story-card__text">This is not a swarm of interchangeable chatbots. Atlas routes a typed task to the specialist whose tools and authority match it; every handoff returns evidence to the same durable run.</p>
@@ -219,7 +169,7 @@ export function AboutPage({
 
           <section className="about-story-card" aria-labelledby="principles-heading">
             <div className="about-story-card__header"><PixelIcon name="shield-check" size="md" color="google-blue" glow /><h2 id="principles-heading" className="about-story-card__title">Design principles</h2></div>
-            <div className="about-architecture-grid">{architecturePrinciples.map(([title, text]) => <article key={title} className="about-source-card"><h3 className="about-source-card__title">{title}</h3><p>{text}</p></article>)}</div>
+            <div className="about-architecture-grid">{architecturePrinciples.map((principle) => <article key={principle.title} className="about-source-card"><span className={`about-tech-icon about-tech-icon--${principle.color}`}><PixelIcon name={principle.icon} size="lg" color={principle.color} /></span><h3 className="about-source-card__title">{principle.title}</h3><p>{principle.detail}</p></article>)}</div>
           </section>
 
           <section className="about-story-card" aria-labelledby="creators-heading">
@@ -230,8 +180,8 @@ export function AboutPage({
         </div>
 
         <section className="about-architecture" aria-labelledby="arch-diagram-heading">
-          <h2 id="arch-diagram-heading">System architecture</h2>
-          <p>What is actually deployed and verified, not a target-state drawing. Green borders mark components confirmed running on 2026-08-31.</p>
+          <h2 id="arch-diagram-heading">The system as it actually runs</h2>
+          <p>Not a target-state drawing. Every component below was confirmed running on 2026-09-01, when all three cartridges were loaded, compiled, landed and embedded end to end from this URL — 500 records read, 498 landed, 2 refused, reconciled at the destination.</p>
           <ArchitectureDiagram />
         </section>
 </main>
