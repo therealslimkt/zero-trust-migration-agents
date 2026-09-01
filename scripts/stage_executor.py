@@ -38,9 +38,17 @@ sys.path.insert(0, str(ROOT))
 HOST = os.environ.get("KERAUN_STAGE_EXECUTOR_HOST", "127.0.0.1")
 PORT = int(os.environ.get("KERAUN_STAGE_EXECUTOR_PORT", "4345"))
 PROJECT = "keraun-cartridge-lab"
-COMPOSE = ("docker", "compose", "--project-name", PROJECT,
-           "-f", str(ROOT / "cartridge_runtime/host/compose.yaml"),
-           "-f", str(ROOT / "cartridge_runtime/host/compose.local.yaml"))
+# The local preflight stacks compose.local.yaml on top to swap gVisor for runc,
+# because Docker Desktop has no runsc. The hosted lab runs the real thing and
+# must not inherit that override, so the file list is host-configurable.
+_COMPOSE_FILES = tuple(
+    part for part in os.environ.get("KERAUN_COMPOSE_FILES", "").split(":") if part
+) or (
+    str(ROOT / "cartridge_runtime/host/compose.yaml"),
+    str(ROOT / "cartridge_runtime/host/compose.local.yaml"),
+)
+COMPOSE = ("docker", "compose", "--project-name", PROJECT) + tuple(
+    argument for path in _COMPOSE_FILES for argument in ("-f", path))
 IMAGES = {
     "KERAUN_JDE_IMAGE": "keraun-local-jde",
     "KERAUN_AX_IMAGE": "keraun-local-ax",
@@ -141,8 +149,15 @@ def guard_sql(sql: str) -> str:
 
 
 def compose_env() -> dict[str, str]:
+    """Compose needs image refs; the host's own pins take precedence.
+
+    compose.yaml declares every image with `:?digest-pinned image required`, so
+    a host that pins digest-addressed images must be able to supply them. These
+    are defaults for the local preflight, not overrides.
+    """
     env = dict(os.environ)
-    env.update(IMAGES)
+    for key, default in IMAGES.items():
+        env.setdefault(key, default)
     return env
 
 
